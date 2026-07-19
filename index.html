@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hábitos</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="cabecalho">
+      <div class="cabecalho-texto">
+        <h1>Hábitos</h1>
+        <p id="data-hoje" class="data-hoje"></p>
+      </div>
+      <button id="botao-tema" class="botao-tema" aria-label="Alternar tema">☾</button>
+    </header>
+
+    <section id="mascote" class="mascote"></section>
+
+    <section class="adicionar">
+      <div class="adicionar-linha">
+        <input
+          type="text"
+          id="entrada-habito"
+          placeholder="Adicionar um hábito"
+          maxlength="60"
+        />
+        <button id="botao-adicionar">Adicionar</button>
+      </div>
+      <div class="adicionar-opcoes">
+        <select id="entrada-categoria" class="campo-opcao" aria-label="Categoria">
+          <option value="Geral">Geral</option>
+          <option value="Saúde">Saúde</option>
+          <option value="Estudo">Estudo</option>
+          <option value="Trabalho">Trabalho</option>
+          <option value="Lazer">Lazer</option>
+        </select>
+        <select id="entrada-meta" class="campo-opcao" aria-label="Meta semanal">
+          <option value="7">Todo dia</option>
+          <option value="1">1x/semana</option>
+          <option value="2">2x/semana</option>
+          <option value="3">3x/semana</option>
+          <option value="4">4x/semana</option>
+          <option value="5">5x/semana</option>
+          <option value="6">6x/semana</option>
+        </select>
+        <input type="time" id="entrada-horario" class="campo-opcao" aria-label="Horário sugerido" />
+      </div>
+    </section>
+
+    <section class="resumo">
+      <div class="resumo-topo">
+        <span class="resumo-rotulo">Progresso de hoje</span>
+        <span class="resumo-valor"><span id="contador-feitos">0</span>/<span id="contador-total">0</span></span>
+      </div>
+      <div class="barra-fundo">
+        <div id="barra-progresso" class="barra-progresso"></div>
+      </div>
+    </section>
+
+    <div id="filtros" class="filtros"></div>
+
+    <ul id="lista-habitos" class="lista-habitos"></ul>
+
+    <p id="mensagem-vazia" class="mensagem-vazia">
+      Nenhum hábito ainda. Adicione o primeiro acima.
+    </p>
+
+    <section class="bloco">
+      <h2 class="bloco-titulo">Nota de hoje</h2>
+      <textarea
+        id="nota-hoje"
+        class="nota-campo"
+        rows="3"
+        placeholder="Como foi seu dia? O que ajudou ou atrapalhou?"
+      ></textarea>
+    </section>
+
+    <section class="bloco">
+      <h2 class="bloco-titulo">Últimos 7 dias</h2>
+      <div id="grafico-barras" class="grafico-barras"></div>
+    </section>
+
+    <section class="bloco">
+      <h2 class="bloco-titulo">Este mês — não quebre a corrente</h2>
+      <div class="calendario-cabecalho">
+        <span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span>
+      </div>
+      <div id="calendario-grade" class="calendario-grade"></div>
+    </section>
+
+    <section class="bloco">
+      <h2 class="bloco-titulo">Backup dos dados</h2>
+      <div class="dados-botoes">
+        <button id="botao-exportar" class="botao-secundario">Exportar</button>
+        <label class="botao-secundario">
+          Importar
+          <input type="file" id="entrada-importar" accept="application/json" hidden />
+        </label>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,554 @@
+:root {
+  --fundo: #f4f4f5;
+  --superficie: #ffffff;
+  --borda: #e4e4e7;
+  --texto: #18181b;
+  --texto-suave: #71717a;
+  --destaque: #18181b;
+  --sucesso: #3f6212;
+  --sucesso-fundo: #f7fee7;
+  --sucesso-borda: #d9f99d;
+}
+
+[data-tema="escuro"] {
+  --fundo: #18181b;
+  --superficie: #27272a;
+  --borda: #3f3f46;
+  --texto: #fafafa;
+  --texto-suave: #a1a1aa;
+  --destaque: #fafafa;
+  --sucesso: #a3e635;
+  --sucesso-fundo: #1a2e05;
+  --sucesso-borda: #3f6212;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--fundo);
+  color: var(--texto);
+  min-height: 100vh;
+  padding: 48px 16px;
+  line-height: 1.5;
+  transition: background 0.2s, color 0.2s;
+}
+
+.container {
+  max-width: 540px;
+  margin: 0 auto;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 32px;
+}
+
+/* Cabeçalho */
+.cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--borda);
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+.cabecalho h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.data-hoje {
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  margin-top: 4px;
+  text-transform: capitalize;
+}
+
+.botao-tema {
+  background: transparent;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+  color: var(--texto);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.botao-tema:hover {
+  background: var(--fundo);
+}
+
+/* Mascote-chama */
+.mascote {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 24px;
+  background: var(--fundo);
+}
+
+.mascote-svg {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  transform-origin: 50% 90%;
+}
+
+.mascote-svg.chama-viva {
+  animation: tremular 1.8s ease-in-out infinite;
+}
+
+@keyframes tremular {
+  0%, 100% { transform: scale(1, 1) rotate(0deg); }
+  25% { transform: scale(1.03, 0.97) rotate(-1.5deg); }
+  50% { transform: scale(0.97, 1.03) rotate(1.5deg); }
+  75% { transform: scale(1.02, 0.99) rotate(0deg); }
+}
+
+.mascote-streak {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.mascote-msg {
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+  margin-top: 2px;
+}
+
+/* Adicionar hábito */
+.adicionar {
+  margin-bottom: 24px;
+}
+
+.adicionar-linha {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+#entrada-habito {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: var(--texto);
+  background: var(--superficie);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#entrada-habito:focus {
+  border-color: var(--texto);
+}
+
+#botao-adicionar {
+  background: var(--destaque);
+  color: var(--superficie);
+  border: none;
+  border-radius: 8px;
+  padding: 0 18px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+#botao-adicionar:hover {
+  opacity: 0.85;
+}
+
+.adicionar-opcoes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.campo-opcao {
+  flex: 1;
+  min-width: 110px;
+  padding: 8px 10px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--texto);
+  background: var(--superficie);
+  font-family: inherit;
+  outline: none;
+}
+
+.campo-opcao:focus {
+  border-color: var(--texto);
+}
+
+/* Resumo */
+.resumo {
+  margin-bottom: 20px;
+}
+
+.resumo-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.resumo-rotulo {
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+}
+
+.resumo-valor {
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.barra-fundo {
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.barra-progresso {
+  background: var(--destaque);
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+/* Filtros por categoria */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.chip {
+  background: transparent;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.chip:hover {
+  border-color: var(--texto);
+}
+
+.chip.ativo {
+  background: var(--destaque);
+  color: var(--superficie);
+  border-color: var(--destaque);
+}
+
+/* Lista de hábitos */
+.lista-habitos {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item-habito {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  padding: 12px 14px;
+  cursor: grab;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+
+.item-habito.feito {
+  background: var(--sucesso-fundo);
+  border-color: var(--sucesso-borda);
+}
+
+.item-habito.feito .nome-habito {
+  color: var(--texto-suave);
+  text-decoration: line-through;
+}
+
+.item-habito.arrastando {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+.item-habito.alvo {
+  border-color: var(--texto);
+  border-style: dashed;
+}
+
+.checkbox-habito {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--destaque);
+  flex-shrink: 0;
+}
+
+.item-conteudo {
+  flex: 1;
+  min-width: 0;
+}
+
+.nome-habito {
+  font-size: 0.95rem;
+}
+
+.item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 4px;
+}
+
+.tag {
+  font-size: 0.72rem;
+  color: var(--texto-suave);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+.meta-info {
+  font-size: 0.75rem;
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.meta-info.cumprida {
+  color: var(--sucesso);
+  font-weight: 600;
+}
+
+.streak {
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.streak.ativa {
+  color: var(--sucesso);
+  font-weight: 600;
+}
+
+.editar-nome {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid var(--texto);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--texto);
+  background: var(--superficie);
+  outline: none;
+}
+
+.botao-editar,
+.botao-remover {
+  background: transparent;
+  border: none;
+  color: var(--texto-suave);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.botao-editar:hover,
+.botao-remover:hover {
+  background: var(--fundo);
+  color: var(--texto);
+}
+
+.mensagem-vazia {
+  text-align: center;
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  padding: 24px 0;
+}
+
+/* Blocos inferiores (notas, gráfico, calendário, backup) */
+.bloco {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--borda);
+}
+
+.bloco-titulo {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 16px;
+}
+
+/* Nota do dia */
+.nota-campo {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--texto);
+  background: var(--superficie);
+  resize: vertical;
+  outline: none;
+}
+
+.nota-campo:focus {
+  border-color: var(--texto);
+}
+
+/* Gráfico dos últimos 7 dias */
+.grafico-barras {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+  height: 120px;
+}
+
+.grafico-coluna {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+}
+
+.grafico-trilha {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  background: var(--fundo);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.grafico-preenchimento {
+  width: 100%;
+  background: var(--destaque);
+  border-radius: 6px 6px 0 0;
+  min-height: 2px;
+  transition: height 0.4s ease;
+}
+
+.grafico-rotulo {
+  font-size: 0.7rem;
+  color: var(--texto-suave);
+  text-transform: capitalize;
+}
+
+.grafico-percentual {
+  font-size: 0.7rem;
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Calendário "não quebre a corrente" */
+.calendario-cabecalho,
+.calendario-grade {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendario-cabecalho {
+  margin-bottom: 6px;
+}
+
+.calendario-cabecalho span {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--texto-suave);
+}
+
+.dia-cel {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  border-radius: 6px;
+  color: var(--texto-suave);
+  background: var(--fundo);
+}
+
+.dia-cel.vazia {
+  background: transparent;
+}
+
+.dia-cel.nivel-1 { background: #dcfce7; color: #14532d; }
+.dia-cel.nivel-2 { background: #86efac; color: #14532d; }
+.dia-cel.nivel-3 { background: #4ade80; color: #14532d; }
+.dia-cel.nivel-4 { background: #16a34a; color: #ffffff; }
+
+.dia-cel.hoje {
+  outline: 2px solid var(--texto);
+  outline-offset: -2px;
+}
+
+.dia-cel.futuro {
+  opacity: 0.4;
+}
+
+/* Backup */
+.dados-botoes {
+  display: flex;
+  gap: 8px;
+}
+
+.botao-secundario {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--texto);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.botao-secundario:hover {
+  background: var(--fundo);
+}
