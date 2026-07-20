@@ -79,6 +79,9 @@ function aplicarTema(tema) {
   document.documentElement.setAttribute("data-tema", tema);
   botaoTema.textContent = tema === "escuro" ? "☀" : "☾";
   localStorage.setItem("tema", tema);
+  if (!window.syncEstaAplicandoRemoto || !window.syncEstaAplicandoRemoto()) {
+    if (typeof window.agendarSyncNuvem === "function") window.agendarSyncNuvem();
+  }
 }
 
 function alternarTema() {
@@ -89,10 +92,16 @@ function alternarTema() {
 // ============ PERSISTÊNCIA (salvar/carregar) ============
 function salvar() {
   localStorage.setItem("meus-habitos", JSON.stringify(habitos));
+  if (!window.syncEstaAplicandoRemoto || !window.syncEstaAplicandoRemoto()) {
+    if (typeof window.agendarSyncNuvem === "function") window.agendarSyncNuvem();
+  }
 }
 
 function salvarNotas() {
   localStorage.setItem("notas-diarias", JSON.stringify(notas));
+  if (!window.syncEstaAplicandoRemoto || !window.syncEstaAplicandoRemoto()) {
+    if (typeof window.agendarSyncNuvem === "function") window.agendarSyncNuvem();
+  }
 }
 
 function definirNota(chave, texto) {
@@ -859,3 +868,32 @@ carregarNotaHoje();
 carregarNotaDiario(hojeStr());
 ativarPainel(painelAtivo);
 desenhar();
+
+window.getEstadoHabitos = function getEstadoHabitos() {
+  return {
+    habitos,
+    notas,
+    tema: localStorage.getItem("tema") || "claro",
+  };
+};
+
+window.aplicarEstadoRemoto = function aplicarEstadoRemoto(dados) {
+  habitos = Array.isArray(dados.habitos) ? dados.habitos : [];
+  notas = dados.notas && typeof dados.notas === "object" ? dados.notas : {};
+  localStorage.setItem("meus-habitos", JSON.stringify(habitos));
+  localStorage.setItem("notas-diarias", JSON.stringify(notas));
+  if (dados.tema) {
+    document.documentElement.setAttribute("data-tema", dados.tema);
+    botaoTema.textContent = dados.tema === "escuro" ? "☀" : "☾";
+    localStorage.setItem("tema", dados.tema);
+  }
+  carregarNotaHoje();
+  carregarNotaDiario(dataDiarioSelecionada || hojeStr());
+  desenhar();
+};
+
+window.aplicarTema = aplicarTema;
+window.desenhar = desenhar;
+window.carregarNotaHoje = carregarNotaHoje;
+window.carregarNotaDiario = carregarNotaDiario;
+window.hojeStr = hojeStr;

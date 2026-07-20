@@ -791,6 +791,37 @@ body {
   transform: translateY(-1px);
 }
 
+.sync-status {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--marca);
+  margin-bottom: 12px;
+}
+
+.sync-entrar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.sync-codigo-linha {
+  font-size: 1rem;
+  margin-bottom: 12px;
+}
+
+#sync-codigo-atual {
+  font-family: var(--fonte-display);
+  letter-spacing: 0.08em;
+  color: var(--marca);
+}
+
+#sync-entrada-codigo {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
 /* Diário */
 .diario-controles {
   display: flex;
