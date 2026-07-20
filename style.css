@@ -249,10 +249,13 @@ body {
   display: flex;
   gap: 8px;
   margin-bottom: 8px;
+  align-items: stretch;
 }
 
 #entrada-habito {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
   padding: 12px 14px;
   border: 1px solid var(--borda);
   border-radius: 12px;
@@ -274,11 +277,13 @@ body {
   color: var(--destaque-texto);
   border: none;
   border-radius: 12px;
-  padding: 0 18px;
+  padding: 0 16px;
   font-size: 0.9rem;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
   transition: transform 0.15s, opacity 0.15s;
 }
 
@@ -870,12 +875,23 @@ body {
   }
 
   .app {
-    padding: 22px 16px 28px;
+    padding: 22px 14px 28px;
+    overflow-x: hidden;
   }
 
   .nav-item {
     font-size: 0.68rem;
     padding: 9px 2px;
+  }
+
+  .adicionar-linha {
+    flex-direction: column;
+  }
+
+  #botao-adicionar {
+    width: 100%;
+    min-height: 44px;
+    padding: 12px 16px;
   }
 
   .cards-insights {
