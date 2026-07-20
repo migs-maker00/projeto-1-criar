@@ -3,104 +3,158 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hábitos</title>
+  <title>Hábitos — Agenda diária</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="container">
-    <header class="cabecalho">
-      <div class="cabecalho-texto">
-        <h1>Hábitos</h1>
-        <p id="data-hoje" class="data-hoje"></p>
-      </div>
-      <button id="botao-tema" class="botao-tema" aria-label="Alternar tema">☾</button>
-    </header>
+  <div class="ambiente">
+    <main class="app">
+      <header class="cabecalho">
+        <div class="cabecalho-marca">
+          <p class="marca">Hábitos</p>
+          <h1 class="titulo-dia">Agenda de hoje</h1>
+          <p id="data-hoje" class="data-hoje"></p>
+        </div>
+        <button id="botao-tema" class="botao-tema" aria-label="Alternar tema" type="button">☾</button>
+      </header>
 
-    <section id="mascote" class="mascote"></section>
+      <nav class="nav-paineis" aria-label="Seções do app">
+        <button type="button" class="nav-item ativo" data-painel="hoje">Hoje</button>
+        <button type="button" class="nav-item" data-painel="semana">Semana</button>
+        <button type="button" class="nav-item" data-painel="insights">Insights</button>
+        <button type="button" class="nav-item" data-painel="ajustes">Ajustes</button>
+      </nav>
 
-    <section class="adicionar">
-      <div class="adicionar-linha">
-        <input
-          type="text"
-          id="entrada-habito"
-          placeholder="Adicionar um hábito"
-          maxlength="60"
-        />
-        <button id="botao-adicionar">Adicionar</button>
-      </div>
-      <div class="adicionar-opcoes">
-        <select id="entrada-categoria" class="campo-opcao" aria-label="Categoria">
-          <option value="Geral">Geral</option>
-          <option value="Saúde">Saúde</option>
-          <option value="Estudo">Estudo</option>
-          <option value="Trabalho">Trabalho</option>
-          <option value="Lazer">Lazer</option>
-        </select>
-        <select id="entrada-meta" class="campo-opcao" aria-label="Meta semanal">
-          <option value="7">Todo dia</option>
-          <option value="1">1x/semana</option>
-          <option value="2">2x/semana</option>
-          <option value="3">3x/semana</option>
-          <option value="4">4x/semana</option>
-          <option value="5">5x/semana</option>
-          <option value="6">6x/semana</option>
-        </select>
-        <input type="time" id="entrada-horario" class="campo-opcao" aria-label="Horário sugerido" />
-      </div>
-    </section>
+      <!-- HOJE: rotina do dia -->
+      <section id="painel-hoje" class="painel ativo" aria-label="Hoje">
+        <div id="mascote" class="mascote"></div>
 
-    <section class="resumo">
-      <div class="resumo-topo">
-        <span class="resumo-rotulo">Progresso de hoje</span>
-        <span class="resumo-valor"><span id="contador-feitos">0</span>/<span id="contador-total">0</span></span>
-      </div>
-      <div class="barra-fundo">
-        <div id="barra-progresso" class="barra-progresso"></div>
-      </div>
-    </section>
+        <section class="resumo">
+          <div class="resumo-topo">
+            <span class="resumo-rotulo">Progresso de hoje</span>
+            <span class="resumo-valor">
+              <span id="contador-feitos">0</span>/<span id="contador-total">0</span>
+            </span>
+          </div>
+          <div class="barra-fundo">
+            <div id="barra-progresso" class="barra-progresso"></div>
+          </div>
+        </section>
 
-    <div id="filtros" class="filtros"></div>
+        <section class="adicionar">
+          <p class="secao-rotulo">Novo compromisso</p>
+          <div class="adicionar-linha">
+            <input
+              type="text"
+              id="entrada-habito"
+              placeholder="Ex.: caminhar 20 minutos"
+              maxlength="60"
+            />
+            <button id="botao-adicionar" type="button">Adicionar</button>
+          </div>
+          <div class="adicionar-opcoes">
+            <select id="entrada-categoria" class="campo-opcao" aria-label="Categoria">
+              <option value="Geral">Geral</option>
+              <option value="Saúde">Saúde</option>
+              <option value="Estudo">Estudo</option>
+              <option value="Trabalho">Trabalho</option>
+              <option value="Lazer">Lazer</option>
+            </select>
+            <select id="entrada-meta" class="campo-opcao" aria-label="Meta semanal">
+              <option value="7">Todo dia</option>
+              <option value="1">1x/semana</option>
+              <option value="2">2x/semana</option>
+              <option value="3">3x/semana</option>
+              <option value="4">4x/semana</option>
+              <option value="5">5x/semana</option>
+              <option value="6">6x/semana</option>
+            </select>
+            <input type="time" id="entrada-horario" class="campo-opcao" aria-label="Horário sugerido" />
+          </div>
+        </section>
 
-    <ul id="lista-habitos" class="lista-habitos"></ul>
+        <div id="filtros" class="filtros"></div>
+        <ul id="lista-habitos" class="lista-habitos"></ul>
+        <p id="mensagem-vazia" class="mensagem-vazia">
+          Nenhum hábito na agenda. Adicione o primeiro acima — comece com só 1 ou 2.
+        </p>
 
-    <p id="mensagem-vazia" class="mensagem-vazia">
-      Nenhum hábito ainda. Adicione o primeiro acima.
-    </p>
+        <section class="bloco">
+          <h2 class="bloco-titulo">Nota de hoje</h2>
+          <p class="bloco-apoio">Registre o que ajudou ou atrapalhou. Isso treina consciência, não perfeição.</p>
+          <textarea
+            id="nota-hoje"
+            class="nota-campo"
+            rows="3"
+            placeholder="Como foi o dia?"
+          ></textarea>
+        </section>
+      </section>
 
-    <section class="bloco">
-      <h2 class="bloco-titulo">Nota de hoje</h2>
-      <textarea
-        id="nota-hoje"
-        class="nota-campo"
-        rows="3"
-        placeholder="Como foi seu dia? O que ajudou ou atrapalhou?"
-      ></textarea>
-    </section>
+      <!-- SEMANA: visão executiva da semana -->
+      <section id="painel-semana" class="painel" aria-label="Semana" hidden>
+        <section class="bloco bloco-primeiro">
+          <h2 class="bloco-titulo">Últimos 7 dias</h2>
+          <p class="bloco-apoio">Porcentagem de hábitos concluídos por dia.</p>
+          <div id="grafico-barras" class="grafico-barras"></div>
+        </section>
 
-    <section class="bloco">
-      <h2 class="bloco-titulo">Últimos 7 dias</h2>
-      <div id="grafico-barras" class="grafico-barras"></div>
-    </section>
+        <section class="bloco">
+          <h2 class="bloco-titulo">Metas da semana</h2>
+          <p class="bloco-apoio">Quanto falta para cumprir cada meta semanal.</p>
+          <div id="lista-metas-semana" class="lista-metas"></div>
+        </section>
+      </section>
 
-    <section class="bloco">
-      <h2 class="bloco-titulo">Este mês — não quebre a corrente</h2>
-      <div class="calendario-cabecalho">
-        <span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span>
-      </div>
-      <div id="calendario-grade" class="calendario-grade"></div>
-    </section>
+      <!-- INSIGHTS: corrente e visão do mês -->
+      <section id="painel-insights" class="painel" aria-label="Insights" hidden>
+        <section class="bloco bloco-primeiro">
+          <h2 class="bloco-titulo">Resumo</h2>
+          <div id="cards-insights" class="cards-insights"></div>
+        </section>
 
-    <section class="bloco">
-      <h2 class="bloco-titulo">Backup dos dados</h2>
-      <div class="dados-botoes">
-        <button id="botao-exportar" class="botao-secundario">Exportar</button>
-        <label class="botao-secundario">
-          Importar
-          <input type="file" id="entrada-importar" accept="application/json" hidden />
-        </label>
-      </div>
-    </section>
-  </main>
+        <section class="bloco">
+          <h2 class="bloco-titulo">Este mês — não quebre a corrente</h2>
+          <p class="bloco-apoio">Intensidade = quanto da agenda do dia você concluiu.</p>
+          <div class="calendario-cabecalho">
+            <span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span>
+          </div>
+          <div id="calendario-grade" class="calendario-grade"></div>
+        </section>
+      </section>
+
+      <!-- AJUSTES -->
+      <section id="painel-ajustes" class="painel" aria-label="Ajustes" hidden>
+        <section class="bloco bloco-primeiro">
+          <h2 class="bloco-titulo">Backup dos dados</h2>
+          <p class="bloco-apoio">
+            Tudo fica só neste navegador. Exporte com frequência se este app importa para você.
+          </p>
+          <div class="dados-botoes">
+            <button id="botao-exportar" class="botao-secundario" type="button">Exportar</button>
+            <label class="botao-secundario">
+              Importar
+              <input type="file" id="entrada-importar" accept="application/json" hidden />
+            </label>
+          </div>
+        </section>
+
+        <section class="bloco">
+          <h2 class="bloco-titulo">Sobre</h2>
+          <p class="bloco-apoio">
+            Hábitos combina um studio calmo (foco e presença) com uma agenda executiva
+            (clareza do dia, da semana e do mês). Use pouco. Use todo dia.
+          </p>
+        </section>
+      </section>
+    </main>
+  </div>
 
   <script src="script.js"></script>
 </body>

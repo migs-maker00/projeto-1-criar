@@ -18,12 +18,16 @@ const calendarioGrade = document.getElementById("calendario-grade");
 const botaoExportar = document.getElementById("botao-exportar");
 const entradaImportar = document.getElementById("entrada-importar");
 const mascote = document.getElementById("mascote");
+const listaMetasSemana = document.getElementById("lista-metas-semana");
+const cardsInsights = document.getElementById("cards-insights");
+const navPaineis = document.querySelector(".nav-paineis");
 
 // ---- Estado (a "fonte da verdade" do app) ----
 let habitos = [];
 let notas = {};
 let filtroCategoria = "Todas";
 let idArrastando = null;
+let painelAtivo = "hoje";
 
 // ============ DATAS (funções auxiliares) ============
 function chaveData(data) {
@@ -426,6 +430,113 @@ function desenharCalendario() {
   }
 }
 
+function desenharMetasSemana() {
+  listaMetasSemana.innerHTML = "";
+
+  if (habitos.length === 0) {
+    const vazio = document.createElement("p");
+    vazio.className = "meta-vazia";
+    vazio.textContent = "Adicione hábitos na aba Hoje para acompanhar as metas semanais.";
+    listaMetasSemana.appendChild(vazio);
+    return;
+  }
+
+  habitos.forEach((habito) => {
+    const feitos = feitosNaSemana(habito);
+    const alvo = habito.metaSemanal || 7;
+    const pct = Math.min(100, (feitos / alvo) * 100);
+
+    const item = document.createElement("div");
+    item.className = "meta-item";
+
+    const topo = document.createElement("div");
+    topo.className = "meta-item-topo";
+
+    const nome = document.createElement("span");
+    nome.className = "meta-item-nome";
+    nome.textContent = habito.nome;
+
+    const valor = document.createElement("span");
+    valor.className = "meta-item-valor";
+    valor.textContent = `${feitos}/${alvo}`;
+
+    topo.appendChild(nome);
+    topo.appendChild(valor);
+
+    const barraFundo = document.createElement("div");
+    barraFundo.className = "barra-fundo";
+    const barra = document.createElement("div");
+    barra.className = "barra-progresso";
+    barra.style.width = pct + "%";
+    barraFundo.appendChild(barra);
+
+    item.appendChild(topo);
+    item.appendChild(barraFundo);
+    listaMetasSemana.appendChild(item);
+  });
+}
+
+function taxaConclusao30Dias() {
+  if (habitos.length === 0) return 0;
+  let possiveis = 0;
+  let feitos = 0;
+  const hoje = new Date();
+
+  for (let i = 0; i < 30; i++) {
+    const dia = new Date(hoje);
+    dia.setDate(hoje.getDate() - i);
+    const chave = chaveData(dia);
+    possiveis += habitos.length;
+    feitos += habitos.filter((h) => h.historico[chave]).length;
+  }
+
+  return possiveis === 0 ? 0 : Math.round((feitos / possiveis) * 100);
+}
+
+function desenharCardsInsights() {
+  const streak = streakGlobal();
+  const feitosHoje = habitos.filter(estaFeitoHoje).length;
+  const total = habitos.length;
+  const taxa = taxaConclusao30Dias();
+  const melhorRecorde = habitos.reduce((max, h) => Math.max(max, calcularRecorde(h)), 0);
+
+  cardsInsights.innerHTML = `
+    <article class="card-insight">
+      <p class="card-insight-rotulo">Sequência</p>
+      <p class="card-insight-valor">${streak}</p>
+      <p class="card-insight-apoio">${streak === 1 ? "dia seguido" : "dias seguidos"}</p>
+    </article>
+    <article class="card-insight">
+      <p class="card-insight-rotulo">Hoje</p>
+      <p class="card-insight-valor">${feitosHoje}/${total}</p>
+      <p class="card-insight-apoio">hábitos concluídos</p>
+    </article>
+    <article class="card-insight">
+      <p class="card-insight-rotulo">30 dias</p>
+      <p class="card-insight-valor">${taxa}%</p>
+      <p class="card-insight-apoio">taxa de conclusão</p>
+    </article>
+    <article class="card-insight">
+      <p class="card-insight-rotulo">Recorde</p>
+      <p class="card-insight-valor">${melhorRecorde}</p>
+      <p class="card-insight-apoio">melhor sequência individual</p>
+    </article>`;
+}
+
+function ativarPainel(nome) {
+  painelAtivo = nome;
+
+  document.querySelectorAll(".nav-item").forEach((botao) => {
+    botao.classList.toggle("ativo", botao.dataset.painel === nome);
+  });
+
+  document.querySelectorAll(".painel").forEach((painel) => {
+    const ativo = painel.id === `painel-${nome}`;
+    painel.hidden = !ativo;
+    painel.classList.toggle("ativo", ativo);
+  });
+}
+
 // Gera o desenho (SVG) da chama conforme o estado emocional
 function mascoteSVG(estado) {
   const cores = {
@@ -623,6 +734,8 @@ function desenhar() {
   desenharMascote();
   atualizarResumo();
   desenharGrafico();
+  desenharMetasSemana();
+  desenharCardsInsights();
   desenharCalendario();
 }
 
@@ -642,10 +755,16 @@ notaHoje.addEventListener("input", () => {
   notas[hojeStr()] = notaHoje.value;
   salvarNotas();
 });
+navPaineis.addEventListener("click", (evento) => {
+  const botao = evento.target.closest(".nav-item");
+  if (!botao) return;
+  ativarPainel(botao.dataset.painel);
+});
 
 // ============ INICIALIZAÇÃO ============
 aplicarTema(localStorage.getItem("tema") || "claro");
 mostrarData();
 carregar();
 carregarNotaHoje();
+ativarPainel(painelAtivo);
 desenhar();
