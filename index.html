@@ -18,7 +18,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=3" />
+  <link rel="stylesheet" href="style.css?v=4" />
 </head>
 <body>
   <div class="ambiente">
@@ -179,9 +179,59 @@
       <!-- AJUSTES -->
       <section id="painel-ajustes" class="painel" aria-label="Ajustes" hidden>
         <section class="bloco bloco-primeiro">
+          <h2 class="bloco-titulo">Sincronizar Mac e iPhone</h2>
+          <p class="bloco-apoio">
+            Crie um código neste aparelho e digite o mesmo código no outro.
+            Assim hábitos e notas ficam iguais automaticamente.
+          </p>
+          <p id="sync-status" class="sync-status">Carregando…</p>
+          <p id="sync-aviso-config" class="bloco-apoio" hidden>
+            Ainda falta configurar o Firebase (é grátis). Peça ao assistente o passo a passo
+            ou cole a config em <code>firebase-config.js</code>.
+          </p>
+
+          <div id="sync-desconectado" hidden>
+            <div class="dados-botoes">
+              <button id="botao-sync-criar" class="botao-secundario" type="button">
+                Criar sincronização
+              </button>
+            </div>
+            <div class="sync-entrar">
+              <input
+                id="sync-entrada-codigo"
+                class="campo-opcao"
+                type="text"
+                maxlength="12"
+                placeholder="Código do outro aparelho"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <button id="botao-sync-entrar" class="botao-secundario" type="button">
+                Entrar com código
+              </button>
+            </div>
+          </div>
+
+          <div id="sync-conectado" hidden>
+            <p class="sync-codigo-linha">
+              Código:
+              <strong id="sync-codigo-atual">————</strong>
+            </p>
+            <div class="dados-botoes">
+              <button id="botao-sync-copiar" class="botao-secundario" type="button">
+                Copiar código
+              </button>
+              <button id="botao-sync-desconectar" class="botao-secundario" type="button">
+                Desconectar
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="bloco">
           <h2 class="bloco-titulo">Backup dos dados</h2>
           <p class="bloco-apoio">
-            Tudo fica só neste navegador. Exporte com frequência se este app importa para você.
+            Mesmo com sync, exporte de vez em quando. O backup é uma cópia de segurança extra.
           </p>
           <div class="dados-botoes">
             <button id="botao-exportar" class="botao-secundario" type="button">Exportar</button>
@@ -203,6 +253,11 @@
     </main>
   </div>
 
-  <script src="script.js?v=3"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="script.js?v=4"></script>
+  <script src="sync.js?v=4"></script>
 </body>
 </html>
