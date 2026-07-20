@@ -1,20 +1,15 @@
 # Hábitos
 
-Um app simples e bonito para acompanhar hábitos diários, manter sequências ("não quebre a corrente") e visualizar seu progresso ao longo do tempo. Funciona 100% no navegador, sem back-end: todos os dados ficam salvos localmente no seu dispositivo (`localStorage`).
+Agenda diária de hábitos com visual **Studio calmo** (tipografia Fraunces + Manrope, paleta oliva/petróleo) e estrutura **Agenda executiva** (painéis Hoje, Semana, Insights e Ajustes). Funciona 100% no navegador: os dados ficam no `localStorage`.
 
 ## Funcionalidades
 
+- **Painel Hoje** — checklist do dia, progresso, chama de sequência e nota.
+- **Painel Semana** — gráfico dos últimos 7 dias e metas semanais por hábito.
+- **Painel Insights** — sequência global, taxa de 30 dias, recorde e calendário do mês.
+- **Painel Ajustes** — exportar/importar backup e tema claro/escuro.
 - **Adicionar hábitos** com categoria, meta semanal e horário sugerido.
-- **Marcar como feito** a cada dia e acompanhar o **progresso de hoje** com barra de conclusão.
-- **Sequências (streaks)** por hábito e uma **sequência global** representada por uma mascote em forma de chama que muda de humor conforme sua constância.
-- **Recorde** de dias seguidos para cada hábito.
-- **Filtros por categoria** (Geral, Saúde, Estudo, Trabalho, Lazer).
-- **Gráfico dos últimos 7 dias** com a porcentagem de hábitos concluídos.
-- **Calendário do mês** no estilo "não quebre a corrente", com níveis de intensidade por dia.
-- **Nota diária** para registrar como foi o dia.
-- **Tema claro/escuro** com preferência salva.
-- **Reordenar hábitos** arrastando e soltando.
-- **Backup dos dados**: exportar e importar em JSON.
+- **Filtros por categoria**, edição de nome e reordenação por arrastar e soltar.
 
 ## Como usar
 

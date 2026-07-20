@@ -18,12 +18,23 @@ const calendarioGrade = document.getElementById("calendario-grade");
 const botaoExportar = document.getElementById("botao-exportar");
 const entradaImportar = document.getElementById("entrada-importar");
 const mascote = document.getElementById("mascote");
+const listaMetasSemana = document.getElementById("lista-metas-semana");
+const cardsInsights = document.getElementById("cards-insights");
+const navPaineis = document.querySelector(".nav-paineis");
+const diarioData = document.getElementById("diario-data");
+const diarioTexto = document.getElementById("diario-texto");
+const diarioLegenda = document.getElementById("diario-data-legenda");
+const diarioHojeBotao = document.getElementById("diario-hoje");
+const listaDiario = document.getElementById("lista-diario");
+const diarioVazio = document.getElementById("diario-vazio");
 
 // ---- Estado (a "fonte da verdade" do app) ----
 let habitos = [];
 let notas = {};
 let filtroCategoria = "Todas";
 let idArrastando = null;
+let painelAtivo = "hoje";
+let dataDiarioSelecionada = hojeStr();
 
 // ============ DATAS (funções auxiliares) ============
 function chaveData(data) {
@@ -82,6 +93,76 @@ function salvar() {
 
 function salvarNotas() {
   localStorage.setItem("notas-diarias", JSON.stringify(notas));
+}
+
+function definirNota(chave, texto) {
+  const limpo = texto.trim();
+  if (limpo) {
+    notas[chave] = texto;
+  } else {
+    delete notas[chave];
+  }
+  salvarNotas();
+  if (chave === hojeStr()) notaHoje.value = texto;
+  if (chave === dataDiarioSelecionada) diarioTexto.value = texto;
+  desenharListaDiario();
+}
+
+function formatarDataBR(chave) {
+  const data = parseData(chave);
+  return data.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function formatarDataCurtaBR(chave) {
+  const [ano, mes, dia] = chave.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
+
+function carregarNotaDiario(chave) {
+  dataDiarioSelecionada = chave;
+  diarioData.value = chave;
+  diarioTexto.value = notas[chave] || "";
+  const ehHoje = chave === hojeStr();
+  diarioLegenda.textContent = ehHoje
+    ? `Hoje — ${formatarDataBR(chave)}`
+    : formatarDataBR(chave);
+  desenharListaDiario();
+}
+
+function desenharListaDiario() {
+  const chaves = Object.keys(notas)
+    .filter((chave) => (notas[chave] || "").trim())
+    .sort()
+    .reverse();
+
+  listaDiario.innerHTML = "";
+  diarioVazio.hidden = chaves.length > 0;
+
+  chaves.forEach((chave) => {
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.className =
+      "entrada-diario" + (chave === dataDiarioSelecionada ? " ativa" : "");
+
+    const dataEl = document.createElement("span");
+    dataEl.className = "entrada-diario-data";
+    dataEl.textContent =
+      formatarDataCurtaBR(chave) + (chave === hojeStr() ? " · hoje" : "");
+
+    const preview = document.createElement("span");
+    preview.className = "entrada-diario-preview";
+    preview.textContent = notas[chave].trim();
+
+    botao.appendChild(dataEl);
+    botao.appendChild(preview);
+    botao.addEventListener("click", () => carregarNotaDiario(chave));
+    listaDiario.appendChild(botao);
+  });
 }
 
 function carregar() {
@@ -301,6 +382,7 @@ function importarDados(evento) {
       salvar();
       salvarNotas();
       carregarNotaHoje();
+      carregarNotaDiario(hojeStr());
       desenhar();
     } catch (erro) {
       alert("Arquivo inválido. Escolha um backup exportado por este app.");
@@ -424,6 +506,113 @@ function desenharCalendario() {
 
     calendarioGrade.appendChild(cel);
   }
+}
+
+function desenharMetasSemana() {
+  listaMetasSemana.innerHTML = "";
+
+  if (habitos.length === 0) {
+    const vazio = document.createElement("p");
+    vazio.className = "meta-vazia";
+    vazio.textContent = "Adicione hábitos na aba Hoje para acompanhar as metas semanais.";
+    listaMetasSemana.appendChild(vazio);
+    return;
+  }
+
+  habitos.forEach((habito) => {
+    const feitos = feitosNaSemana(habito);
+    const alvo = habito.metaSemanal || 7;
+    const pct = Math.min(100, (feitos / alvo) * 100);
+
+    const item = document.createElement("div");
+    item.className = "meta-item";
+
+    const topo = document.createElement("div");
+    topo.className = "meta-item-topo";
+
+    const nome = document.createElement("span");
+    nome.className = "meta-item-nome";
+    nome.textContent = habito.nome;
+
+    const valor = document.createElement("span");
+    valor.className = "meta-item-valor";
+    valor.textContent = `${feitos}/${alvo}`;
+
+    topo.appendChild(nome);
+    topo.appendChild(valor);
+
+    const barraFundo = document.createElement("div");
+    barraFundo.className = "barra-fundo";
+    const barra = document.createElement("div");
+    barra.className = "barra-progresso";
+    barra.style.width = pct + "%";
+    barraFundo.appendChild(barra);
+
+    item.appendChild(topo);
+    item.appendChild(barraFundo);
+    listaMetasSemana.appendChild(item);
+  });
+}
+
+function taxaConclusao30Dias() {
+  if (habitos.length === 0) return 0;
+  let possiveis = 0;
+  let feitos = 0;
+  const hoje = new Date();
+
+  for (let i = 0; i < 30; i++) {
+    const dia = new Date(hoje);
+    dia.setDate(hoje.getDate() - i);
+    const chave = chaveData(dia);
+    possiveis += habitos.length;
+    feitos += habitos.filter((h) => h.historico[chave]).length;
+  }
+
+  return possiveis === 0 ? 0 : Math.round((feitos / possiveis) * 100);
+}
+
+function desenharCardsInsights() {
+  const streak = streakGlobal();
+  const feitosHoje = habitos.filter(estaFeitoHoje).length;
+  const total = habitos.length;
+  const taxa = taxaConclusao30Dias();
+  const melhorRecorde = habitos.reduce((max, h) => Math.max(max, calcularRecorde(h)), 0);
+
+  cardsInsights.innerHTML = `
+    <article class="card-insight">
+      <p class="card-insight-rotulo">Sequência</p>
+      <p class="card-insight-valor">${streak}</p>
+      <p class="card-insight-apoio">${streak === 1 ? "dia seguido" : "dias seguidos"}</p>
+    </article>
+    <article class="card-insight">
+      <p class="card-insight-rotulo">Hoje</p>
+      <p class="card-insight-valor">${feitosHoje}/${total}</p>
+      <p class="card-insight-apoio">hábitos concluídos</p>
+    </article>
+    <article class="card-insight">
+      <p class="card-insight-rotulo">30 dias</p>
+      <p class="card-insight-valor">${taxa}%</p>
+      <p class="card-insight-apoio">taxa de conclusão</p>
+    </article>
+    <article class="card-insight">
+      <p class="card-insight-rotulo">Recorde</p>
+      <p class="card-insight-valor">${melhorRecorde}</p>
+      <p class="card-insight-apoio">melhor sequência individual</p>
+    </article>`;
+}
+
+function ativarPainel(nome) {
+  painelAtivo = nome;
+
+  document.querySelectorAll(".nav-item").forEach((botao) => {
+    botao.classList.toggle("ativo", botao.dataset.painel === nome);
+  });
+
+  document.querySelectorAll(".painel").forEach((painel) => {
+    const ativo = painel.id === `painel-${nome}`;
+    painel.hidden = !ativo;
+    painel.classList.toggle("ativo", ativo);
+  });
 }
 
 // Gera o desenho (SVG) da chama conforme o estado emocional
@@ -623,7 +812,10 @@ function desenhar() {
   desenharMascote();
   atualizarResumo();
   desenharGrafico();
+  desenharMetasSemana();
+  desenharCardsInsights();
   desenharCalendario();
+  desenharListaDiario();
 }
 
 function carregarNotaHoje() {
@@ -639,8 +831,24 @@ botaoTema.addEventListener("click", alternarTema);
 botaoExportar.addEventListener("click", exportarDados);
 entradaImportar.addEventListener("change", importarDados);
 notaHoje.addEventListener("input", () => {
-  notas[hojeStr()] = notaHoje.value;
-  salvarNotas();
+  definirNota(hojeStr(), notaHoje.value);
+});
+diarioTexto.addEventListener("input", () => {
+  definirNota(dataDiarioSelecionada, diarioTexto.value);
+});
+diarioData.addEventListener("change", () => {
+  if (diarioData.value) carregarNotaDiario(diarioData.value);
+});
+diarioHojeBotao.addEventListener("click", () => {
+  carregarNotaDiario(hojeStr());
+});
+navPaineis.addEventListener("click", (evento) => {
+  const botao = evento.target.closest(".nav-item");
+  if (!botao) return;
+  ativarPainel(botao.dataset.painel);
+  if (botao.dataset.painel === "diario") {
+    carregarNotaDiario(dataDiarioSelecionada || hojeStr());
+  }
 });
 
 // ============ INICIALIZAÇÃO ============
@@ -648,4 +856,6 @@ aplicarTema(localStorage.getItem("tema") || "claro");
 mostrarData();
 carregar();
 carregarNotaHoje();
+carregarNotaDiario(hojeStr());
+ativarPainel(painelAtivo);
 desenhar();
