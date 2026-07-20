@@ -21,6 +21,12 @@ const mascote = document.getElementById("mascote");
 const listaMetasSemana = document.getElementById("lista-metas-semana");
 const cardsInsights = document.getElementById("cards-insights");
 const navPaineis = document.querySelector(".nav-paineis");
+const diarioData = document.getElementById("diario-data");
+const diarioTexto = document.getElementById("diario-texto");
+const diarioLegenda = document.getElementById("diario-data-legenda");
+const diarioHojeBotao = document.getElementById("diario-hoje");
+const listaDiario = document.getElementById("lista-diario");
+const diarioVazio = document.getElementById("diario-vazio");
 
 // ---- Estado (a "fonte da verdade" do app) ----
 let habitos = [];
@@ -28,6 +34,7 @@ let notas = {};
 let filtroCategoria = "Todas";
 let idArrastando = null;
 let painelAtivo = "hoje";
+let dataDiarioSelecionada = hojeStr();
 
 // ============ DATAS (funções auxiliares) ============
 function chaveData(data) {
@@ -86,6 +93,76 @@ function salvar() {
 
 function salvarNotas() {
   localStorage.setItem("notas-diarias", JSON.stringify(notas));
+}
+
+function definirNota(chave, texto) {
+  const limpo = texto.trim();
+  if (limpo) {
+    notas[chave] = texto;
+  } else {
+    delete notas[chave];
+  }
+  salvarNotas();
+  if (chave === hojeStr()) notaHoje.value = texto;
+  if (chave === dataDiarioSelecionada) diarioTexto.value = texto;
+  desenharListaDiario();
+}
+
+function formatarDataBR(chave) {
+  const data = parseData(chave);
+  return data.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function formatarDataCurtaBR(chave) {
+  const [ano, mes, dia] = chave.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
+
+function carregarNotaDiario(chave) {
+  dataDiarioSelecionada = chave;
+  diarioData.value = chave;
+  diarioTexto.value = notas[chave] || "";
+  const ehHoje = chave === hojeStr();
+  diarioLegenda.textContent = ehHoje
+    ? `Hoje — ${formatarDataBR(chave)}`
+    : formatarDataBR(chave);
+  desenharListaDiario();
+}
+
+function desenharListaDiario() {
+  const chaves = Object.keys(notas)
+    .filter((chave) => (notas[chave] || "").trim())
+    .sort()
+    .reverse();
+
+  listaDiario.innerHTML = "";
+  diarioVazio.hidden = chaves.length > 0;
+
+  chaves.forEach((chave) => {
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.className =
+      "entrada-diario" + (chave === dataDiarioSelecionada ? " ativa" : "");
+
+    const dataEl = document.createElement("span");
+    dataEl.className = "entrada-diario-data";
+    dataEl.textContent =
+      formatarDataCurtaBR(chave) + (chave === hojeStr() ? " · hoje" : "");
+
+    const preview = document.createElement("span");
+    preview.className = "entrada-diario-preview";
+    preview.textContent = notas[chave].trim();
+
+    botao.appendChild(dataEl);
+    botao.appendChild(preview);
+    botao.addEventListener("click", () => carregarNotaDiario(chave));
+    listaDiario.appendChild(botao);
+  });
 }
 
 function carregar() {
@@ -305,6 +382,7 @@ function importarDados(evento) {
       salvar();
       salvarNotas();
       carregarNotaHoje();
+      carregarNotaDiario(hojeStr());
       desenhar();
     } catch (erro) {
       alert("Arquivo inválido. Escolha um backup exportado por este app.");
@@ -737,6 +815,7 @@ function desenhar() {
   desenharMetasSemana();
   desenharCardsInsights();
   desenharCalendario();
+  desenharListaDiario();
 }
 
 function carregarNotaHoje() {
@@ -752,13 +831,24 @@ botaoTema.addEventListener("click", alternarTema);
 botaoExportar.addEventListener("click", exportarDados);
 entradaImportar.addEventListener("change", importarDados);
 notaHoje.addEventListener("input", () => {
-  notas[hojeStr()] = notaHoje.value;
-  salvarNotas();
+  definirNota(hojeStr(), notaHoje.value);
+});
+diarioTexto.addEventListener("input", () => {
+  definirNota(dataDiarioSelecionada, diarioTexto.value);
+});
+diarioData.addEventListener("change", () => {
+  if (diarioData.value) carregarNotaDiario(diarioData.value);
+});
+diarioHojeBotao.addEventListener("click", () => {
+  carregarNotaDiario(hojeStr());
 });
 navPaineis.addEventListener("click", (evento) => {
   const botao = evento.target.closest(".nav-item");
   if (!botao) return;
   ativarPainel(botao.dataset.painel);
+  if (botao.dataset.painel === "diario") {
+    carregarNotaDiario(dataDiarioSelecionada || hojeStr());
+  }
 });
 
 // ============ INICIALIZAÇÃO ============
@@ -766,5 +856,6 @@ aplicarTema(localStorage.getItem("tema") || "claro");
 mostrarData();
 carregar();
 carregarNotaHoje();
+carregarNotaDiario(hojeStr());
 ativarPainel(painelAtivo);
 desenhar();

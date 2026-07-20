@@ -27,6 +27,7 @@
       <nav class="nav-paineis" aria-label="Seções do app">
         <button type="button" class="nav-item ativo" data-painel="hoje">Hoje</button>
         <button type="button" class="nav-item" data-painel="semana">Semana</button>
+        <button type="button" class="nav-item" data-painel="diario">Diário</button>
         <button type="button" class="nav-item" data-painel="insights">Insights</button>
         <button type="button" class="nav-item" data-painel="ajustes">Ajustes</button>
       </nav>
@@ -87,13 +88,51 @@
 
         <section class="bloco">
           <h2 class="bloco-titulo">Nota de hoje</h2>
-          <p class="bloco-apoio">Registre o que ajudou ou atrapalhou. Isso treina consciência, não perfeição.</p>
+          <p class="bloco-apoio">
+            Registre o que ajudou ou atrapalhou. O histórico completo fica na aba
+            <strong>Diário</strong>.
+          </p>
           <textarea
             id="nota-hoje"
             class="nota-campo"
             rows="3"
             placeholder="Como foi o dia?"
           ></textarea>
+        </section>
+      </section>
+
+      <!-- DIÁRIO: notas salvas por data -->
+      <section id="painel-diario" class="painel" aria-label="Diário" hidden>
+        <section class="bloco bloco-primeiro">
+          <h2 class="bloco-titulo">Diário</h2>
+          <p class="bloco-apoio">
+            Cada dia guarda uma entrada. Escolha uma data para ler ou editar como você estava se sentindo.
+          </p>
+
+          <div class="diario-controles">
+            <label class="diario-label" for="diario-data">
+              Data
+              <input type="date" id="diario-data" class="campo-opcao diario-data" />
+            </label>
+            <button type="button" id="diario-hoje" class="botao-secundario">Ir para hoje</button>
+          </div>
+
+          <p id="diario-data-legenda" class="diario-legenda"></p>
+          <textarea
+            id="diario-texto"
+            class="nota-campo"
+            rows="6"
+            placeholder="Escreva sobre este dia…"
+          ></textarea>
+        </section>
+
+        <section class="bloco">
+          <h2 class="bloco-titulo">Entradas salvas</h2>
+          <p class="bloco-apoio">Toque numa data para abrir aquela nota.</p>
+          <div id="lista-diario" class="lista-diario"></div>
+          <p id="diario-vazio" class="mensagem-vazia" hidden>
+            Nenhuma entrada ainda. Escreva na aba Hoje ou aqui — elas aparecem automaticamente.
+          </p>
         </section>
       </section>
 

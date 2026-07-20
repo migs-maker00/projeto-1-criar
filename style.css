@@ -136,8 +136,8 @@ body {
 /* Navegação tipo agenda */
 .nav-paineis {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
   padding: 5px;
   margin-bottom: 24px;
   background: color-mix(in srgb, var(--fundo) 70%, transparent);
@@ -781,6 +781,89 @@ body {
   transform: translateY(-1px);
 }
 
+/* Diário */
+.diario-controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  margin-bottom: 12px;
+}
+
+.diario-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 160px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.diario-data {
+  width: 100%;
+  min-width: 0;
+}
+
+.diario-legenda {
+  font-family: var(--fonte-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--marca);
+}
+
+.lista-diario {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entrada-diario {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: var(--superficie-elevada);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--texto);
+  transition: border-color 0.15s, transform 0.15s, background 0.15s;
+}
+
+.entrada-diario:hover {
+  border-color: var(--destaque);
+  transform: translateY(-1px);
+}
+
+.entrada-diario.ativa {
+  border-color: var(--destaque);
+  background: color-mix(in srgb, var(--marca) 8%, var(--superficie-elevada));
+}
+
+.entrada-diario-data {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--marca);
+  margin-bottom: 4px;
+}
+
+.entrada-diario-preview {
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 @media (max-width: 480px) {
   .ambiente {
     padding: 20px 12px 40px;
@@ -791,8 +874,8 @@ body {
   }
 
   .nav-item {
-    font-size: 0.74rem;
-    padding: 9px 4px;
+    font-size: 0.68rem;
+    padding: 9px 2px;
   }
 
   .cards-insights {
