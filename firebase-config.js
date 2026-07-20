@@ -1,15 +1,14 @@
-// Cole aqui a configuração do seu projeto Firebase (Console → Project settings → Your apps → Web).
-// Enquanto apiKey for "COLE_AQUI", o sync fica desligado.
+// Configuração do projeto Firebase (Hábitos)
 window.FIREBASE_CONFIG = {
-  apiKey: "COLE_AQUI",
-  authDomain: "COLE_AQUI.firebaseapp.com",
-  projectId: "COLE_AQUI",
-  storageBucket: "COLE_AQUI.appspot.com",
-  messagingSenderId: "COLE_AQUI",
-  appId: "COLE_AQUI",
+  apiKey: "AIzaSyBRE9kN3gJs3wh5wpCTfPIL5rCVl9kN6y8",
+  authDomain: "habitos-fe909.firebaseapp.com",
+  projectId: "habitos-fe909",
+  storageBucket: "habitos-fe909.firebasestorage.app",
+  messagingSenderId: "789148094113",
+  appId: "1:789148094113:web:47f17b47f3bee6315eaae0",
 };
 
 window.firebaseConfigurado = function firebaseConfigurado() {
   const cfg = window.FIREBASE_CONFIG || {};
-  return Boolean(cfg.apiKey && cfg.apiKey !== "COLE_AQUI" && cfg.projectId && cfg.projectId !== "COLE_AQUI");
+  return Boolean(cfg.apiKey && cfg.projectId);
 };
