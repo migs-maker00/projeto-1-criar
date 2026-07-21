@@ -1,41 +1,56 @@
 # Hábitos
 
-Agenda diária de hábitos com visual **Studio calmo** (tipografia Fraunces + Manrope, paleta oliva/petróleo) e estrutura **Agenda executiva** (painéis Hoje, Semana, Insights e Ajustes). Funciona 100% no navegador: os dados ficam no `localStorage`.
+Agenda diária de hábitos com visual **Studio calmo** e estrutura **Agenda executiva**. Funciona no navegador; os dados ficam no `localStorage` do aparelho.
+
+**Online:** https://migs-maker00.github.io/projeto-1-criar/
 
 ## Funcionalidades
 
-- **Painel Hoje** — checklist do dia, progresso, chama de sequência e nota.
-- **Painel Semana** — gráfico dos últimos 7 dias e metas semanais por hábito.
-- **Painel Insights** — sequência global, taxa de 30 dias, recorde e calendário do mês.
-- **Painel Ajustes** — exportar/importar backup e tema claro/escuro.
-- **Adicionar hábitos** com categoria, meta semanal e horário sugerido.
-- **Filtros por categoria**, edição de nome e reordenação por arrastar e soltar.
+- **Hoje** — checklist, coach do dia, frases filosóficas, sugestão rápida ao criar hábito
+- **Rotina** — planejador com IA (Google Gemini) + fallback local
+- **Semana** — gráfico dos últimos 7 dias e metas semanais
+- **Diário** — notas por data
+- **Insights** — sequência, taxa de 30 dias, resumo da semana, calendário
+- **Ajustes** — sync Firebase, backup, tema, chave da IA
 
-## Como usar
-
-Como é um site estático, basta servir os arquivos com qualquer servidor local. Por exemplo:
-
-```bash
-python3 -m http.server 5173
-```
-
-Depois abra `http://localhost:5173` no navegador.
-
-## Estrutura do projeto
+## Arquitetura
 
 ```
 .
-├── index.html   # Estrutura da página
-├── style.css    # Estilos e temas (claro/escuro)
-├── script.js    # Lógica do app (estado, cálculos e renderização)
-└── README.md
+├── index.html              # Shell da aplicação
+├── style.css               # Estilos e temas
+├── firebase-config.js      # Config Firebase (sync)
+├── sync.js                 # Sincronização Mac ↔ iPhone
+├── js/
+│   ├── config.js           # Versão do app (cache-bust)
+│   ├── main.js             # Entrada — inicializa e expõe API pro sync
+│   ├── app.js              # UI, estado, renderização, eventos
+│   └── lib/
+│       ├── filosofia.js    # Citações filosóficas do dia
+│       ├── inteligencia.js # Coach, resumo, sugestões, alertas
+│       └── rotina-ia.js    # Planejador de rotina (Gemini + local)
+└── manifest.webmanifest    # PWA
 ```
 
-## Tecnologias
+- **ES Modules** — `main.js` importa `app.js` e as libs
+- **Sem build** — GitHub Pages serve os arquivos direto
+- **sync.js** usa `window.getEstadoHabitos` etc., expostos por `main.js`
 
-- HTML, CSS e JavaScript puro (sem frameworks ou dependências).
-- Persistência local via `localStorage`.
+## Desenvolvimento local
+
+```bash
+cd "/Users/ericafaustino/Projeto 1 - Criar"
+python3 -m http.server 5173
+```
+
+Abra http://localhost:5173
+
+## IA da rotina (Gemini)
+
+1. Crie uma chave grátis em [Google AI Studio](https://aistudio.google.com/apikey)
+2. No app: **Ajustes → IA da rotina** → cole e salve
+3. Use a aba **Rotina** para montar hábitos com base na sua agenda
 
 ## Privacidade
 
-Nenhum dado é enviado para servidores. Tudo é armazenado apenas no seu navegador. Use **Exportar** para fazer backup e **Importar** para restaurar em outro dispositivo.
+Hábitos e notas ficam no seu navegador. A chave Gemini fica só no `localStorage` local. O sync Firebase é opcional.
