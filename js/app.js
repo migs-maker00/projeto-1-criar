@@ -1,3 +1,20 @@
+import { fraseFilosoficaDoDia } from "./lib/filosofia.js";
+import {
+  complementoCoachDiario,
+  confirmarSobrecarga,
+  gerarResumoSemana,
+  mensagemSobrecarga,
+  sugerirHabito,
+  textoSugestao,
+} from "./lib/inteligencia.js";
+import {
+  carregarPerfilRotina,
+  gerarRotinaComIA,
+  obterChaveGemini,
+  salvarChaveGemini,
+  salvarPerfilRotina,
+} from "./lib/rotina-ia.js";
+
 // ---- Referências aos elementos da página (DOM) ----
 const entradaHabito = document.getElementById("entrada-habito");
 const entradaCategoria = document.getElementById("entrada-categoria");
@@ -27,6 +44,28 @@ const diarioLegenda = document.getElementById("diario-data-legenda");
 const diarioHojeBotao = document.getElementById("diario-hoje");
 const listaDiario = document.getElementById("lista-diario");
 const diarioVazio = document.getElementById("diario-vazio");
+const alertaSobrecarga = document.getElementById("alerta-sobrecarga");
+const resumoSemana = document.getElementById("resumo-semana");
+const sugestaoHabito = document.getElementById("sugestao-habito");
+const sugestaoTexto = document.getElementById("sugestao-texto");
+const botaoUsarSugestao = document.getElementById("botao-usar-sugestao");
+const botaoIrRotina = document.getElementById("botao-ir-rotina");
+const rotinaPerfil = document.getElementById("rotina-perfil");
+const rotinaHorarios = document.getElementById("rotina-horarios");
+const rotinaObjetivos = document.getElementById("rotina-objetivos");
+const rotinaAvisoChave = document.getElementById("rotina-aviso-chave");
+const botaoGerarRotina = document.getElementById("botao-gerar-rotina");
+const rotinaStatus = document.getElementById("rotina-status");
+const rotinaResultado = document.getElementById("rotina-resultado");
+const rotinaMensagem = document.getElementById("rotina-mensagem");
+const rotinaLista = document.getElementById("rotina-lista");
+const rotinaSubstituir = document.getElementById("rotina-substituir");
+const botaoAplicarRotina = document.getElementById("botao-aplicar-rotina");
+const botaoRegenerarRotina = document.getElementById("botao-regenerar-rotina");
+const entradaGeminiKey = document.getElementById("entrada-gemini-key");
+const botaoSalvarGemini = document.getElementById("botao-salvar-gemini");
+const botaoRemoverGemini = document.getElementById("botao-remover-gemini");
+const geminiStatus = document.getElementById("gemini-status");
 
 // ---- Estado (a "fonte da verdade" do app) ----
 let habitos = [];
@@ -35,6 +74,8 @@ let filtroCategoria = "Todas";
 let idArrastando = null;
 let painelAtivo = "hoje";
 let dataDiarioSelecionada = hojeStr();
+let sugestaoAtual = null;
+let rotinaGerada = null;
 
 // ============ DATAS (funções auxiliares) ============
 function chaveData(data) {
@@ -46,6 +87,16 @@ function chaveData(data) {
 
 function hojeStr() {
   return chaveData(new Date());
+}
+
+function ontemStr() {
+  const dia = new Date();
+  dia.setDate(dia.getDate() - 1);
+  return chaveData(dia);
+}
+
+function habitosDiarios() {
+  return habitos.filter((h) => (h.metaSemanal || 7) >= 7).length;
 }
 
 // Converte "2026-07-18" em um objeto Date no fuso local
@@ -78,6 +129,10 @@ function mostrarData() {
 function aplicarTema(tema) {
   document.documentElement.setAttribute("data-tema", tema);
   botaoTema.textContent = tema === "escuro" ? "☀" : "☾";
+  const metaTema = document.querySelector('meta[name="theme-color"]');
+  if (metaTema) metaTema.content = tema === "escuro" ? "#1c2622" : "#fbfcfb";
+  const metaStatus = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+  if (metaStatus) metaStatus.content = tema === "escuro" ? "black" : "default";
   localStorage.setItem("tema", tema);
   if (!window.syncEstaAplicandoRemoto || !window.syncEstaAplicandoRemoto()) {
     if (typeof window.agendarSyncNuvem === "function") window.agendarSyncNuvem();
@@ -115,6 +170,7 @@ function definirNota(chave, texto) {
   if (chave === hojeStr()) notaHoje.value = texto;
   if (chave === dataDiarioSelecionada) diarioTexto.value = texto;
   desenharListaDiario();
+  desenharMascote();
 }
 
 function formatarDataBR(chave) {
@@ -271,11 +327,17 @@ function adicionarHabito() {
   const texto = entradaHabito.value.trim();
   if (texto === "") return;
 
+  const metaNova = Number(entradaMeta.value);
+  const diariosApos =
+    habitosDiarios() + (metaNova >= 7 ? 1 : 0);
+  const confirmacao = confirmarSobrecarga(habitos.length + 1, diariosApos);
+  if (confirmacao && !confirm(confirmacao)) return;
+
   habitos.push({
     id: Date.now(),
     nome: texto,
     categoria: entradaCategoria.value,
-    metaSemanal: Number(entradaMeta.value),
+    metaSemanal: metaNova,
     horario: entradaHorario.value,
     historico: {},
   });
@@ -284,6 +346,8 @@ function adicionarHabito() {
   entradaHorario.value = "";
   entradaMeta.value = "7";
   entradaCategoria.value = "Geral";
+  sugestaoAtual = null;
+  if (sugestaoHabito) sugestaoHabito.hidden = true;
   salvar();
   desenhar();
 }
@@ -580,6 +644,322 @@ function taxaConclusao30Dias() {
   return possiveis === 0 ? 0 : Math.round((feitos / possiveis) * 100);
 }
 
+function calcularEstatisticasSemana() {
+  const totalHabitos = habitos.length;
+  if (totalHabitos === 0) {
+    return { totalHabitos: 0 };
+  }
+
+  const dias = [];
+  for (let i = 6; i >= 0; i--) {
+    const dia = new Date();
+    dia.setDate(dia.getDate() - i);
+    const chave = chaveData(dia);
+    const feitos = habitos.filter((h) => h.historico[chave]).length;
+    const pct = Math.round((feitos / totalHabitos) * 100);
+    dias.push({
+      chave,
+      pct,
+      nome: dia.toLocaleDateString("pt-BR", { weekday: "long" }),
+    });
+  }
+
+  const mediaConclusao = Math.round(
+    dias.reduce((soma, d) => soma + d.pct, 0) / dias.length
+  );
+
+  const melhorDia = dias.reduce((a, b) => (b.pct > a.pct ? b : a), dias[0]);
+
+  const categorias = {};
+  habitos.forEach((h) => {
+    const cat = h.categoria || "Geral";
+    if (!categorias[cat]) categorias[cat] = { feitos: 0, possivel: 0 };
+    for (let i = 0; i < 7; i++) {
+      const dia = new Date();
+      dia.setDate(dia.getDate() - i);
+      const chave = chaveData(dia);
+      categorias[cat].possivel++;
+      if (h.historico[chave]) categorias[cat].feitos++;
+    }
+  });
+
+  const listaCats = Object.entries(categorias).map(([nome, dados]) => ({
+    nome,
+    pct: dados.possivel
+      ? Math.round((dados.feitos / dados.possivel) * 100)
+      : 0,
+  }));
+
+  listaCats.sort((a, b) => b.pct - a.pct);
+  const melhorCategoria = listaCats[0] || null;
+  const fracaCategoria =
+    listaCats.length > 1 ? listaCats[listaCats.length - 1] : null;
+
+  let metasCumpridas = 0;
+  const desempenhoHabitos = habitos.map((h) => {
+    const feitos = feitosNaSemana(h);
+    const alvo = h.metaSemanal || 7;
+    if (feitos >= alvo) metasCumpridas++;
+    return { nome: h.nome, pct: Math.round((feitos / alvo) * 100), feitos, alvo };
+  });
+
+  desempenhoHabitos.sort((a, b) => b.pct - a.pct);
+  const habitoMaisForte =
+    desempenhoHabitos[0] && desempenhoHabitos[0].feitos > 0
+      ? desempenhoHabitos[0]
+      : null;
+
+  return {
+    totalHabitos,
+    mediaConclusao,
+    melhorDia,
+    melhorCategoria,
+    fracaCategoria,
+    metasCumpridas,
+    metasTotal: habitos.length,
+    habitoMaisForte,
+  };
+}
+
+function desenharResumoSemana() {
+  if (!resumoSemana) return;
+  const stats = calcularEstatisticasSemana();
+  resumoSemana.textContent = gerarResumoSemana(stats);
+}
+
+function atualizarAlertaSobrecarga() {
+  if (!alertaSobrecarga) return;
+
+  const aviso = mensagemSobrecarga(habitos.length, habitosDiarios());
+  if (!aviso) {
+    alertaSobrecarga.hidden = true;
+    return;
+  }
+
+  alertaSobrecarga.textContent = aviso.texto;
+  alertaSobrecarga.className =
+    "alerta-sobrecarga" + (aviso.nivel === "alto" ? " alerta-alto" : "");
+  alertaSobrecarga.hidden = false;
+}
+
+function atualizarSugestaoHabito() {
+  const texto = entradaHabito.value.trim();
+  if (!texto || texto.length < 3) {
+    sugestaoAtual = null;
+    if (sugestaoHabito) sugestaoHabito.hidden = true;
+    return;
+  }
+
+  sugestaoAtual = sugerirHabito(texto);
+  if (sugestaoTexto) sugestaoTexto.textContent = textoSugestao(sugestaoAtual);
+  if (sugestaoHabito) sugestaoHabito.hidden = false;
+}
+
+function aplicarSugestaoHabito() {
+  if (!sugestaoAtual) return;
+  entradaCategoria.value = sugestaoAtual.categoria;
+  entradaMeta.value = String(sugestaoAtual.metaSemanal);
+  entradaHorario.value = sugestaoAtual.horario || "";
+  if (sugestaoHabito) sugestaoHabito.hidden = true;
+}
+
+function carregarCamposRotina() {
+  const salvo = carregarPerfilRotina();
+  if (rotinaPerfil) rotinaPerfil.value = salvo.perfil || "";
+  if (rotinaHorarios) rotinaHorarios.value = salvo.horarios || "";
+  if (rotinaObjetivos) rotinaObjetivos.value = salvo.objetivos || "";
+  atualizarAvisoChaveGemini();
+}
+
+function salvarCamposRotina() {
+  salvarPerfilRotina({
+    perfil: rotinaPerfil?.value || "",
+    horarios: rotinaHorarios?.value || "",
+    objetivos: rotinaObjetivos?.value || "",
+  });
+}
+
+function atualizarAvisoChaveGemini() {
+  if (!rotinaAvisoChave) return;
+  const temChave = obterChaveGemini();
+  rotinaAvisoChave.hidden = Boolean(temChave);
+}
+
+function atualizarStatusGemini() {
+  if (!geminiStatus) return;
+  const temChave = obterChaveGemini();
+  geminiStatus.textContent = temChave
+    ? "Chave configurada. O planejador de rotina está pronto."
+    : "Nenhuma chave salva.";
+  geminiStatus.className = "gemini-status" + (temChave ? " gemini-ok" : "");
+  atualizarAvisoChaveGemini();
+}
+
+function carregarChaveGemini() {
+  if (!entradaGeminiKey || !obterChaveGemini) return;
+  const chave = obterChaveGemini();
+  entradaGeminiKey.value = chave ? "••••••••••••••••" : "";
+  atualizarStatusGemini();
+}
+
+function salvarChaveGeminiUI() {
+  if (!entradaGeminiKey) return;
+  const valor = entradaGeminiKey.value.trim();
+  if (!valor || valor.startsWith("••")) {
+    geminiStatus.textContent = "Cole uma chave nova para salvar.";
+    return;
+  }
+  salvarChaveGemini(valor);
+  entradaGeminiKey.value = "••••••••••••••••";
+  atualizarStatusGemini();
+}
+
+function removerChaveGeminiUI() {
+  salvarChaveGemini("");
+  if (entradaGeminiKey) entradaGeminiKey.value = "";
+  atualizarStatusGemini();
+}
+
+function renderizarRotinaGerada(resultado) {
+  rotinaGerada = resultado;
+  rotinaMensagem.textContent = resultado.mensagem;
+  rotinaLista.innerHTML = "";
+
+  resultado.habitos.forEach((item, indice) => {
+    const label = document.createElement("label");
+    label.className = "rotina-item";
+
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.className = "rotina-item-check";
+    check.checked = true;
+    check.dataset.indice = String(indice);
+
+    const corpo = document.createElement("div");
+    corpo.className = "rotina-item-corpo";
+
+    const topo = document.createElement("div");
+    topo.className = "rotina-item-topo";
+
+    const nome = document.createElement("span");
+    nome.className = "rotina-item-nome";
+    nome.textContent = item.nome;
+
+    const hora = document.createElement("span");
+    hora.className = "rotina-item-hora";
+    hora.textContent = item.horario || "—";
+
+    topo.appendChild(nome);
+    topo.appendChild(hora);
+
+    const meta = document.createElement("p");
+    meta.className = "rotina-item-meta";
+    meta.textContent = `${item.categoria} · ${item.metaSemanal === 7 ? "todo dia" : item.metaSemanal + "x/semana"}`;
+
+    const motivo = document.createElement("p");
+    motivo.className = "rotina-item-motivo";
+    motivo.textContent = item.motivo;
+
+    corpo.appendChild(topo);
+    corpo.appendChild(meta);
+    if (item.motivo) corpo.appendChild(motivo);
+
+    label.appendChild(check);
+    label.appendChild(corpo);
+    rotinaLista.appendChild(label);
+  });
+
+  rotinaResultado.hidden = false;
+}
+
+async function executarGeracaoRotina() {
+  salvarCamposRotina();
+
+  const perfil = rotinaPerfil?.value.trim() || "";
+  const horarios = rotinaHorarios?.value.trim() || "";
+  const objetivos = rotinaObjetivos?.value.trim() || "";
+
+  if (!perfil && !horarios && !objetivos) {
+    rotinaStatus.textContent = "Preencha pelo menos um dos campos acima.";
+    rotinaStatus.className = "rotina-status rotina-erro";
+    return;
+  }
+
+  if (!obterChaveGemini()) {
+    rotinaStatus.textContent = "Configure a chave do Gemini em Ajustes primeiro.";
+    rotinaStatus.className = "rotina-status rotina-erro";
+    rotinaAvisoChave.hidden = false;
+    return;
+  }
+
+  botaoGerarRotina.disabled = true;
+  botaoGerarRotina.textContent = "Gerando rotina…";
+  rotinaStatus.textContent = "A IA está organizando seus horários livres… (pode levar até 30s)";
+  rotinaStatus.className = "rotina-status rotina-carregando";
+
+  try {
+    const resultado = await gerarRotinaComIA({
+      perfil,
+      horarios,
+      objetivos,
+      habitosExistentes: habitos,
+    });
+    renderizarRotinaGerada(resultado);
+    if (resultado.usouFallback) {
+      rotinaStatus.textContent =
+        "Google bloqueou a IA — usei o planejador local. Revise os hábitos abaixo.";
+      rotinaStatus.className = "rotina-status rotina-aviso-fallback";
+    } else {
+      rotinaStatus.textContent = `${resultado.habitos.length} hábitos sugeridos. Revise e adicione à agenda.`;
+      rotinaStatus.className = "rotina-status rotina-ok";
+    }
+  } catch (erro) {
+    rotinaStatus.textContent = erro.message || "Erro ao gerar rotina.";
+    rotinaStatus.className = "rotina-status rotina-erro";
+  } finally {
+    botaoGerarRotina.disabled = false;
+    botaoGerarRotina.textContent = "Gerar minha rotina";
+  }
+}
+
+function aplicarRotinaGerada() {
+  if (!rotinaGerada) return;
+
+  const selecionados = [];
+  rotinaLista.querySelectorAll(".rotina-item-check:checked").forEach((el) => {
+    const item = rotinaGerada.habitos[Number(el.dataset.indice)];
+    if (item) selecionados.push(item);
+  });
+
+  if (selecionados.length === 0) {
+    rotinaStatus.textContent = "Selecione pelo menos um hábito.";
+    rotinaStatus.className = "rotina-status rotina-erro";
+    return;
+  }
+
+  if (rotinaSubstituir?.checked) {
+    habitos = [];
+  }
+
+  const baseId = Date.now();
+  selecionados.forEach((item, i) => {
+    habitos.push({
+      id: baseId + i,
+      nome: item.nome,
+      categoria: item.categoria,
+      metaSemanal: item.metaSemanal,
+      horario: item.horario || "",
+      historico: {},
+    });
+  });
+
+  salvar();
+  desenhar();
+  ativarPainel("hoje");
+  rotinaStatus.textContent = `${selecionados.length} hábito(s) adicionados à agenda!`;
+  rotinaStatus.className = "rotina-status rotina-ok";
+}
+
 function desenharCardsInsights() {
   const streak = streakGlobal();
   const feitosHoje = habitos.filter(estaFeitoHoje).length;
@@ -622,6 +1002,10 @@ function ativarPainel(nome) {
     painel.hidden = !ativo;
     painel.classList.toggle("ativo", ativo);
   });
+
+  if (nome === "rotina") {
+    carregarCamposRotina();
+  }
 }
 
 // Gera o desenho (SVG) da chama conforme o estado emocional
@@ -670,37 +1054,77 @@ function mascoteSVG(estado) {
     </svg>`;
 }
 
+function gerarCoachDoDia() {
+  const total = habitos.length;
+  const feitos = habitos.filter((h) => estaFeitoHoje(h)).length;
+  const faltam = total - feitos;
+  const streak = streakGlobal();
+  const notaOntem = (notas[ontemStr()] || "").trim();
+  const extraDiario = complementoCoachDiario(notaOntem);
+
+  if (total === 0) {
+    return "Comece com um único hábito pequeno. Domine o que está ao seu alcance — o resto virá.";
+  }
+
+  if (faltam === 0) {
+    if (streak >= 7) {
+      return `Zerou os ${total} hábitos de hoje. ${streak} dias de sequência — sua disciplina fala por si.${extraDiario}`;
+    }
+    return `Perfeito: os ${total} hábitos de hoje estão feitos. Descanse com a consciência limpa.${extraDiario}`;
+  }
+
+  const pendentes = habitos.filter((h) => !estaFeitoHoje(h)).map((h) => h.nome);
+
+  if (feitos === 0) {
+    if (streak > 0) {
+      return `Sua sequência de ${streak} dias ainda pode continuar. Comece por "${pendentes[0]}".${extraDiario}`;
+    }
+    return `O dia está aberto. Um passo de cada vez — que tal "${pendentes[0]}"?${extraDiario}`;
+  }
+
+  if (faltam === 1) {
+    return `Quase lá: só falta "${pendentes[0]}". O impulso é agora.${extraDiario}`;
+  }
+
+  const lista = pendentes.slice(0, 2).join('" e "');
+  const extra = pendentes.length > 2 ? ` (+${pendentes.length - 2})` : "";
+  return `${feitos} de ${total} feitos. Próximos: "${lista}"${extra}.${extraDiario}`;
+}
+
 function desenharMascote() {
   const streak = streakGlobal();
   const feitoHoje = diaConcluido(hojeStr());
 
   let estado;
-  let msg;
 
   if (streak === 0) {
     estado = "triste";
-    msg =
-      habitos.length === 0
-        ? "Adicione um hábito e conclua para acender sua chama."
-        : "Sua chama apagou. Conclua um hábito para reacender!";
   } else if (!feitoHoje) {
     estado = "alerta";
-    msg = "Sua chama está acesa — não deixe apagar hoje!";
   } else {
     estado = "feliz";
-    if (streak >= 30) msg = "Imparável! Você é pura chama.";
-    else if (streak >= 14) msg = "Você está pegando fogo!";
-    else if (streak >= 7) msg = "Uma semana inteira acesa!";
-    else msg = "Chama acesa. Continue assim!";
   }
 
   const rotulo = streak === 1 ? "1 dia" : `${streak} dias`;
+  const coach = gerarCoachDoDia();
+  const citacao = fraseFilosoficaDoDia(hojeStr());
+
+  const blocoCitacao = citacao
+    ? `<blockquote class="mascote-citacao">
+        <p class="mascote-citacao-texto">"${citacao.texto}"</p>
+        <cite class="mascote-citacao-autor">— ${citacao.autor}</cite>
+      </blockquote>`
+    : "";
 
   mascote.innerHTML = `
     ${mascoteSVG(estado)}
     <div class="mascote-info">
       <div class="mascote-streak">${rotulo} de sequência</div>
-      <div class="mascote-msg">${msg}</div>
+      <p class="mascote-coach">
+        <span class="mascote-coach-rotulo">Coach do dia</span>
+        ${coach}
+      </p>
+      ${blocoCitacao}
     </div>`;
 }
 
@@ -823,8 +1247,10 @@ function desenhar() {
   desenharGrafico();
   desenharMetasSemana();
   desenharCardsInsights();
+  desenharResumoSemana();
   desenharCalendario();
   desenharListaDiario();
+  atualizarAlertaSobrecarga();
 }
 
 function carregarNotaHoje() {
@@ -835,6 +1261,20 @@ function carregarNotaHoje() {
 botaoAdicionar.addEventListener("click", adicionarHabito);
 entradaHabito.addEventListener("keydown", (evento) => {
   if (evento.key === "Enter") adicionarHabito();
+});
+entradaHabito.addEventListener("input", atualizarSugestaoHabito);
+botaoUsarSugestao?.addEventListener("click", aplicarSugestaoHabito);
+botaoIrRotina?.addEventListener("click", () => ativarPainel("rotina"));
+botaoGerarRotina?.addEventListener("click", executarGeracaoRotina);
+botaoRegenerarRotina?.addEventListener("click", executarGeracaoRotina);
+botaoAplicarRotina?.addEventListener("click", aplicarRotinaGerada);
+botaoSalvarGemini?.addEventListener("click", salvarChaveGeminiUI);
+botaoRemoverGemini?.addEventListener("click", removerChaveGeminiUI);
+entradaGeminiKey?.addEventListener("focus", () => {
+  if (entradaGeminiKey.value.startsWith("••")) entradaGeminiKey.value = "";
+});
+[rotinaPerfil, rotinaHorarios, rotinaObjetivos].forEach((campo) => {
+  campo?.addEventListener("input", salvarCamposRotina);
 });
 botaoTema.addEventListener("click", alternarTema);
 botaoExportar.addEventListener("click", exportarDados);
@@ -861,39 +1301,41 @@ navPaineis.addEventListener("click", (evento) => {
 });
 
 // ============ INICIALIZAÇÃO ============
-aplicarTema(localStorage.getItem("tema") || "claro");
-mostrarData();
-carregar();
-carregarNotaHoje();
-carregarNotaDiario(hojeStr());
-ativarPainel(painelAtivo);
-desenhar();
+export function initApp() {
+  aplicarTema(localStorage.getItem("tema") || "claro");
+  mostrarData();
+  carregar();
+  carregarNotaHoje();
+  carregarNotaDiario(hojeStr());
+  ativarPainel(painelAtivo);
+  carregarChaveGemini();
+  carregarCamposRotina();
+  desenhar();
+}
 
-window.getEstadoHabitos = function getEstadoHabitos() {
+export function getEstadoExportavel() {
   return {
     habitos,
     notas,
     tema: localStorage.getItem("tema") || "claro",
   };
-};
+}
 
-window.aplicarEstadoRemoto = function aplicarEstadoRemoto(dados) {
+export function aplicarEstadoRemoto(dados) {
   habitos = Array.isArray(dados.habitos) ? dados.habitos : [];
   notas = dados.notas && typeof dados.notas === "object" ? dados.notas : {};
   localStorage.setItem("meus-habitos", JSON.stringify(habitos));
   localStorage.setItem("notas-diarias", JSON.stringify(notas));
-  if (dados.tema) {
-    document.documentElement.setAttribute("data-tema", dados.tema);
-    botaoTema.textContent = dados.tema === "escuro" ? "☀" : "☾";
-    localStorage.setItem("tema", dados.tema);
-  }
+  if (dados.tema) aplicarTema(dados.tema);
   carregarNotaHoje();
   carregarNotaDiario(dataDiarioSelecionada || hojeStr());
   desenhar();
-};
+}
 
-window.aplicarTema = aplicarTema;
-window.desenhar = desenhar;
-window.carregarNotaHoje = carregarNotaHoje;
-window.carregarNotaDiario = carregarNotaDiario;
-window.hojeStr = hojeStr;
+export {
+  aplicarTema,
+  carregarNotaDiario,
+  carregarNotaHoje,
+  desenhar,
+  hojeStr,
+};

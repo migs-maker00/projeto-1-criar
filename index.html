@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Hábitos — Agenda diária</title>
-  <meta name="theme-color" content="#0f4c5c" />
+  <meta name="theme-color" content="#fbfcfb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Hábitos" />
@@ -18,7 +18,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="stylesheet" href="style.css?v=1.1.0" />
 </head>
 <body>
   <div class="ambiente">
@@ -34,6 +34,7 @@
 
       <nav class="nav-paineis" aria-label="Seções do app">
         <button type="button" class="nav-item ativo" data-painel="hoje">Hoje</button>
+        <button type="button" class="nav-item" data-painel="rotina">Rotina</button>
         <button type="button" class="nav-item" data-painel="semana">Semana</button>
         <button type="button" class="nav-item" data-painel="diario">Diário</button>
         <button type="button" class="nav-item" data-painel="insights">Insights</button>
@@ -86,6 +87,16 @@
             </select>
             <input type="time" id="entrada-horario" class="campo-opcao" aria-label="Horário sugerido" />
           </div>
+          <div id="sugestao-habito" class="sugestao-habito" hidden>
+            <p id="sugestao-texto" class="sugestao-texto"></p>
+            <button type="button" id="botao-usar-sugestao" class="botao-secundario botao-sugestao">
+              Usar sugestão
+            </button>
+          </div>
+          <button type="button" id="botao-ir-rotina" class="link-rotina">
+            Montar rotina completa com IA →
+          </button>
+          <p id="alerta-sobrecarga" class="alerta-sobrecarga" hidden></p>
         </section>
 
         <div id="filtros" class="filtros"></div>
@@ -106,6 +117,69 @@
             rows="3"
             placeholder="Como foi o dia?"
           ></textarea>
+        </section>
+      </section>
+
+      <!-- ROTINA: planejador com IA -->
+      <section id="painel-rotina" class="painel" aria-label="Rotina" hidden>
+        <section class="bloco bloco-primeiro">
+          <h2 class="bloco-titulo">Planejador de rotina</h2>
+          <p class="bloco-apoio">
+            Conte sobre você, seus horários ocupados e o que quer melhorar.
+            A IA monta hábitos nos momentos certos — sem conflito com escola, trabalho ou treino.
+          </p>
+
+          <label class="rotina-label" for="rotina-perfil">Quem é você?</label>
+          <textarea
+            id="rotina-perfil"
+            class="nota-campo"
+            rows="3"
+            placeholder="Ex.: Tenho 16 anos, faço jiu-jitsu 2x por semana, tenho dificuldade em acordar cedo e beber água..."
+          ></textarea>
+
+          <label class="rotina-label" for="rotina-horarios">Agenda e horários ocupados</label>
+          <textarea
+            id="rotina-horarios"
+            class="nota-campo"
+            rows="4"
+            placeholder="Ex.: Segunda a sexta escola 07:00–16:00. Terça e quinta jiu-jitsu 20:30–22:30. Domingo livre."
+          ></textarea>
+
+          <label class="rotina-label" for="rotina-objetivos">O que quer melhorar?</label>
+          <textarea
+            id="rotina-objetivos"
+            class="nota-campo"
+            rows="3"
+            placeholder="Ex.: Beber 3L de água por dia, estudar matemática, dormir antes das 23h..."
+          ></textarea>
+
+          <p id="rotina-aviso-chave" class="rotina-aviso" hidden>
+            Configure sua chave do Gemini em <strong>Ajustes → IA da rotina</strong>
+            (grátis em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a>).
+          </p>
+
+          <button type="button" id="botao-gerar-rotina" class="botao-primario">
+            Gerar minha rotina
+          </button>
+          <p id="rotina-status" class="rotina-status" aria-live="polite"></p>
+        </section>
+
+        <section id="rotina-resultado" class="bloco" hidden>
+          <h2 class="bloco-titulo">Rotina sugerida</h2>
+          <p id="rotina-mensagem" class="rotina-mensagem"></p>
+          <div id="rotina-lista" class="rotina-lista"></div>
+          <label class="rotina-substituir">
+            <input type="checkbox" id="rotina-substituir" />
+            Substituir todos os hábitos atuais
+          </label>
+          <div class="dados-botoes rotina-botoes">
+            <button type="button" id="botao-aplicar-rotina" class="botao-primario">
+              Adicionar selecionados
+            </button>
+            <button type="button" id="botao-regenerar-rotina" class="botao-secundario">
+              Gerar de novo
+            </button>
+          </div>
         </section>
       </section>
 
@@ -164,6 +238,12 @@
         <section class="bloco bloco-primeiro">
           <h2 class="bloco-titulo">Resumo</h2>
           <div id="cards-insights" class="cards-insights"></div>
+        </section>
+
+        <section class="bloco">
+          <h2 class="bloco-titulo">Resumo da semana</h2>
+          <p class="bloco-apoio">Uma leitura do seu último ciclo de 7 dias.</p>
+          <p id="resumo-semana" class="resumo-semana"></p>
         </section>
 
         <section class="bloco">
@@ -229,6 +309,28 @@
         </section>
 
         <section class="bloco">
+          <h2 class="bloco-titulo">IA da rotina</h2>
+          <p class="bloco-apoio">
+            Chave do Google Gemini para o planejador de rotina. Crie grátis em
+            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
+            Fica salva só neste aparelho.
+          </p>
+          <input
+            type="password"
+            id="entrada-gemini-key"
+            class="campo-opcao campo-chave"
+            placeholder="Cole sua chave Gemini aqui"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <div class="dados-botoes" style="margin-top: 10px">
+            <button type="button" id="botao-salvar-gemini" class="botao-secundario">Salvar chave</button>
+            <button type="button" id="botao-remover-gemini" class="botao-secundario">Remover</button>
+          </div>
+          <p id="gemini-status" class="gemini-status"></p>
+        </section>
+
+        <section class="bloco">
           <h2 class="bloco-titulo">Backup dos dados</h2>
           <p class="bloco-apoio">
             Mesmo com sync, exporte de vez em quando. O backup é uma cópia de segurança extra.
@@ -257,7 +359,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script src="script.js?v=4"></script>
-  <script src="sync.js?v=4"></script>
+  <script type="module" src="js/main.js?v=1.1.0"></script>
+  <script defer src="sync.js?v=4"></script>
 </body>
 </html>
