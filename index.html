@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Agenda — Seu dia</title>
-  <meta name="theme-color" content="#fbfcfb" />
+  <meta name="theme-color" content="#e8dfd1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Agenda" />
@@ -18,7 +18,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=1.2.0" />
+  <link rel="stylesheet" href="style.css?v=1.4.0" />
 </head>
 <body>
   <div class="ambiente">
@@ -33,31 +33,37 @@
       </header>
 
       <nav class="nav-paineis" aria-label="Seções do app">
-        <button type="button" class="nav-item ativo" data-painel="hoje">Hoje</button>
+        <button type="button" class="nav-item ativo" data-painel="rotina">Rotina</button>
+        <button type="button" class="nav-item" data-painel="hoje">Hoje</button>
         <button type="button" class="nav-item" data-painel="semana">Semana</button>
         <button type="button" class="nav-item" data-painel="diario">Diário</button>
         <button type="button" class="nav-item" data-painel="insights">Insights</button>
         <button type="button" class="nav-item" data-painel="ajustes">Ajustes</button>
       </nav>
 
-      <!-- HOJE: agenda do dia -->
-      <section id="painel-hoje" class="painel ativo" aria-label="Hoje">
-        <div id="agenda-resumo" class="agenda-resumo" aria-live="polite"></div>
+      <!-- ROTINA: criar hábitos e montar rotina -->
+      <section id="painel-rotina" class="painel ativo" aria-label="Rotina">
+        <div id="dica-inicio" class="dica-inicio" hidden>
+          <p class="dica-inicio-texto">
+            <strong>Bem-vindo!</strong> Use os atalhos rápidos ou descreva sua rotina abaixo e toque em
+            <strong>Montar e adicionar</strong> — os hábitos vão direto para a aba Hoje.
+          </p>
+          <button type="button" id="dica-fechar" class="botao-secundario dica-fechar">Entendi</button>
+        </div>
 
-        <section class="resumo">
-          <div class="resumo-topo">
-            <span class="resumo-rotulo">Compromissos de hoje</span>
-            <span class="resumo-valor">
-              <span id="contador-feitos">0</span>/<span id="contador-total">0</span>
-            </span>
-          </div>
-          <div class="barra-fundo">
-            <div id="barra-progresso" class="barra-progresso"></div>
-          </div>
-        </section>
+        <section class="bloco bloco-primeiro adicionar-card">
+          <h2 class="bloco-titulo">Adicionar hábitos</h2>
+          <p class="bloco-apoio">Atalhos rápidos ou crie um hábito personalizado. Eles aparecem na aba <strong>Hoje</strong>.</p>
 
-        <section class="adicionar">
-          <p class="secao-rotulo">Novo compromisso</p>
+          <p class="secao-rotulo">Adicionar rápido</p>
+          <div class="atalhos-rapidos">
+            <button type="button" class="atalho" data-atalho="agua">💧 Água</button>
+            <button type="button" class="atalho" data-atalho="academia">🏋️ Academia</button>
+            <button type="button" class="atalho" data-atalho="estudo">📚 Estudo</button>
+            <button type="button" class="atalho" data-atalho="meditar">🧘 Meditar</button>
+          </div>
+
+          <p class="secao-rotulo">Ou escreva o seu</p>
           <div class="adicionar-linha">
             <input
               type="text"
@@ -92,13 +98,99 @@
               Usar sugestão
             </button>
           </div>
-          <p id="alerta-sobrecarga" class="alerta-sobrecarga" hidden></p>
+          <p id="feedback-adicao" class="feedback-adicao" hidden role="status"></p>
+        </section>
+
+        <section class="bloco">
+          <h2 class="bloco-titulo">Planejador de rotina</h2>
+          <p class="bloco-apoio">
+            Conte sobre você, seus horários ocupados e o que quer melhorar.
+            O app monta uma rotina básica nos momentos livres.
+          </p>
+
+          <label class="rotina-label" for="rotina-perfil">Quem é você?</label>
+          <textarea
+            id="rotina-perfil"
+            class="nota-campo"
+            rows="3"
+            placeholder="Ex.: Tenho 16 anos, faço jiu-jitsu 2x por semana, tenho dificuldade em acordar cedo e beber água..."
+          ></textarea>
+
+          <label class="rotina-label" for="rotina-horarios">Agenda e horários ocupados</label>
+          <textarea
+            id="rotina-horarios"
+            class="nota-campo"
+            rows="4"
+            placeholder="Ex.: Segunda a sexta escola 07:00–16:00. Terça e quinta jiu-jitsu 20:30–22:30. Domingo livre."
+          ></textarea>
+
+          <label class="rotina-label" for="rotina-objetivos">O que quer melhorar?</label>
+          <textarea
+            id="rotina-objetivos"
+            class="nota-campo"
+            rows="3"
+            placeholder="Ex.: Beber 3L de água por dia, estudar matemática, dormir antes das 23h..."
+          ></textarea>
+
+          <div class="rotina-acoes">
+            <button type="button" id="botao-montar-adicionar" class="botao-primario">
+              Montar e adicionar
+            </button>
+            <button type="button" id="botao-gerar-rotina" class="botao-secundario">
+              Só montar (revisar antes)
+            </button>
+          </div>
+          <p id="rotina-status" class="rotina-status" aria-live="polite"></p>
+
+          <div id="rotina-resultado" class="rotina-resultado" hidden>
+            <h3 class="rotina-resultado-titulo">Rotina sugerida</h3>
+            <p id="rotina-mensagem" class="rotina-mensagem"></p>
+            <div id="rotina-lista" class="rotina-lista"></div>
+            <label class="rotina-substituir">
+              <input type="checkbox" id="rotina-substituir" />
+              Substituir todos os hábitos atuais
+            </label>
+            <div class="dados-botoes rotina-botoes">
+              <button type="button" id="botao-aplicar-rotina" class="botao-primario">
+                Adicionar selecionados
+              </button>
+              <button type="button" id="botao-regenerar-rotina" class="botao-secundario">
+                Gerar de novo
+              </button>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- HOJE: checklist do dia -->
+      <section id="painel-hoje" class="painel" aria-label="Hoje" hidden>
+        <div id="agenda-resumo" class="agenda-resumo" aria-live="polite"></div>
+        <blockquote id="filosofia-dia" class="filosofia-dia" aria-label="Citação do dia"></blockquote>
+
+        <section class="resumo">
+          <div class="resumo-topo">
+            <span class="resumo-rotulo">Compromissos de hoje</span>
+            <span class="resumo-valor">
+              <span id="contador-feitos">0</span>/<span id="contador-total">0</span>
+            </span>
+          </div>
+          <div class="barra-fundo">
+            <div id="barra-progresso" class="barra-progresso"></div>
+          </div>
+        </section>
+
+        <section class="grafico-bloco" aria-label="Ritmo da semana">
+          <div class="grafico-cabecalho">
+            <p class="secao-rotulo">Ritmo da semana</p>
+            <span id="grafico-media" class="grafico-media"></span>
+          </div>
+          <div id="grafico-hoje" class="grafico-barras grafico-compacto"></div>
         </section>
 
         <div id="filtros" class="filtros"></div>
         <ul id="lista-habitos" class="lista-habitos"></ul>
         <p id="mensagem-vazia" class="mensagem-vazia">
-          Nenhum compromisso na agenda. Adicione o primeiro acima.
+          Nenhum hábito na agenda. Vá em <strong>Rotina</strong> para criar o primeiro.
         </p>
 
         <section class="bloco">
@@ -260,6 +352,7 @@
             Sua agenda pessoal — compromissos, anotações e visão da semana.
             Use pouco. Use todo dia.
           </p>
+          <p id="info-versao" class="info-versao"></p>
         </section>
       </section>
     </main>
@@ -269,7 +362,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script type="module" src="js/main.js?v=1.2.0"></script>
+  <script type="module" src="js/main.js?v=1.4.0"></script>
   <script defer src="sync.js?v=4"></script>
 </body>
 </html>

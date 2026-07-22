@@ -1,10 +1,30 @@
+import { APP_VERSION } from "./config.js";
+import { fraseFilosoficaDoDia } from "./lib/filosofia.js";
 import {
-  confirmarSobrecarga,
+  criarHabitoAgua,
+  detectarTextoAgua,
+  ehHabitoAgua,
+  ehMultiPassos,
+  estaCompletoNoDia,
+  horariosLembretes,
+  migrarHabitosAgua,
+  nomeAguaLimpo,
+  normalizarHabito,
+  passosTotal,
+  progressoNoDia,
+  textoHorariosLembretes,
+} from "./lib/habitos.js";
+import {
+  complementoCoachDiario,
   gerarResumoSemana,
-  mensagemSobrecarga,
   sugerirHabito,
   textoSugestao,
 } from "./lib/inteligencia.js";
+import {
+  carregarPerfilRotina,
+  gerarRotina,
+  salvarPerfilRotina,
+} from "./lib/rotina-local.js";
 
 // ---- Referências aos elementos da página (DOM) ----
 const entradaHabito = document.getElementById("entrada-habito");
@@ -19,6 +39,8 @@ const contadorTotal = document.getElementById("contador-total");
 const barraProgresso = document.getElementById("barra-progresso");
 const dataHoje = document.getElementById("data-hoje");
 const graficoBarras = document.getElementById("grafico-barras");
+const graficoHoje = document.getElementById("grafico-hoje");
+const graficoMedia = document.getElementById("grafico-media");
 const botaoTema = document.getElementById("botao-tema");
 const filtros = document.getElementById("filtros");
 const notaHoje = document.getElementById("nota-hoje");
@@ -26,6 +48,7 @@ const calendarioGrade = document.getElementById("calendario-grade");
 const botaoExportar = document.getElementById("botao-exportar");
 const entradaImportar = document.getElementById("entrada-importar");
 const agendaResumo = document.getElementById("agenda-resumo");
+const filosofiaDia = document.getElementById("filosofia-dia");
 const listaMetasSemana = document.getElementById("lista-metas-semana");
 const cardsInsights = document.getElementById("cards-insights");
 const navPaineis = document.querySelector(".nav-paineis");
@@ -35,20 +58,37 @@ const diarioLegenda = document.getElementById("diario-data-legenda");
 const diarioHojeBotao = document.getElementById("diario-hoje");
 const listaDiario = document.getElementById("lista-diario");
 const diarioVazio = document.getElementById("diario-vazio");
-const alertaSobrecarga = document.getElementById("alerta-sobrecarga");
 const resumoSemana = document.getElementById("resumo-semana");
 const sugestaoHabito = document.getElementById("sugestao-habito");
 const sugestaoTexto = document.getElementById("sugestao-texto");
 const botaoUsarSugestao = document.getElementById("botao-usar-sugestao");
+const feedbackAdicao = document.getElementById("feedback-adicao");
+const tituloPainel = document.querySelector(".titulo-dia");
+const rotinaPerfil = document.getElementById("rotina-perfil");
+const rotinaHorarios = document.getElementById("rotina-horarios");
+const rotinaObjetivos = document.getElementById("rotina-objetivos");
+const botaoGerarRotina = document.getElementById("botao-gerar-rotina");
+const rotinaStatus = document.getElementById("rotina-status");
+const rotinaResultado = document.getElementById("rotina-resultado");
+const rotinaMensagem = document.getElementById("rotina-mensagem");
+const rotinaLista = document.getElementById("rotina-lista");
+const rotinaSubstituir = document.getElementById("rotina-substituir");
+const botaoAplicarRotina = document.getElementById("botao-aplicar-rotina");
+const botaoRegenerarRotina = document.getElementById("botao-regenerar-rotina");
+const botaoMontarAdicionar = document.getElementById("botao-montar-adicionar");
+const dicaInicio = document.getElementById("dica-inicio");
+const botaoDicaFechar = document.getElementById("dica-fechar");
+const infoVersao = document.getElementById("info-versao");
 
 // ---- Estado (a "fonte da verdade" do app) ----
 let habitos = [];
 let notas = {};
 let filtroCategoria = "Todas";
 let idArrastando = null;
-let painelAtivo = "hoje";
+let painelAtivo = "rotina";
 let dataDiarioSelecionada = hojeStr();
 let sugestaoAtual = null;
+let rotinaGerada = null;
 
 // ============ DATAS (funções auxiliares) ============
 function chaveData(data) {
@@ -101,9 +141,9 @@ function mostrarData() {
 // ============ TEMA (claro/escuro) ============
 function aplicarTema(tema) {
   document.documentElement.setAttribute("data-tema", tema);
-  botaoTema.textContent = tema === "escuro" ? "☀" : "☾";
+  if (botaoTema) botaoTema.textContent = tema === "escuro" ? "☀" : "☾";
   const metaTema = document.querySelector('meta[name="theme-color"]');
-  if (metaTema) metaTema.content = tema === "escuro" ? "#1c2622" : "#fbfcfb";
+  if (metaTema) metaTema.content = tema === "escuro" ? "#0f0e0d" : "#e8dfd1";
   const metaStatus = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
   if (metaStatus) metaStatus.content = tema === "escuro" ? "black" : "default";
   localStorage.setItem("tema", tema);
@@ -144,6 +184,7 @@ function definirNota(chave, texto) {
   if (chave === dataDiarioSelecionada) diarioTexto.value = texto;
   desenharListaDiario();
   desenharResumoAgenda();
+  desenharFilosofia();
 }
 
 function formatarDataBR(chave) {
@@ -207,15 +248,16 @@ function carregar() {
   const salvos = localStorage.getItem("meus-habitos");
   if (salvos) {
     const dados = JSON.parse(salvos);
-    // Preenche campos que talvez não existam em dados antigos (migração)
-    habitos = dados.map((h) => ({
-      id: h.id,
-      nome: h.nome,
-      categoria: h.categoria || "Geral",
-      metaSemanal: h.metaSemanal || 7,
-      horario: h.horario || "",
-      historico: h.historico || (h.feito ? { [hojeStr()]: true } : {}),
-    }));
+    habitos = migrarHabitosAgua(
+      dados.map((h) =>
+        normalizarHabito({
+          ...h,
+          historico: h.historico || (h.feito ? { [hojeStr()]: true } : {}),
+        })
+      ),
+      hojeStr()
+    );
+    salvar();
   }
 
   const notasSalvas = localStorage.getItem("notas-diarias");
@@ -224,17 +266,17 @@ function carregar() {
 
 // ============ CÁLCULOS ============
 function estaFeitoHoje(habito) {
-  return habito.historico[hojeStr()] === true;
+  return estaCompletoNoDia(habito, hojeStr());
 }
 
 // Sequência atual: dias seguidos cumpridos, terminando hoje ou ontem
 function calcularStreak(habito) {
   let streak = 0;
   const dia = new Date();
-  if (!habito.historico[chaveData(dia)]) {
+  if (!estaCompletoNoDia(habito, chaveData(dia))) {
     dia.setDate(dia.getDate() - 1);
   }
-  while (habito.historico[chaveData(dia)]) {
+  while (estaCompletoNoDia(habito, chaveData(dia))) {
     streak++;
     dia.setDate(dia.getDate() - 1);
   }
@@ -244,7 +286,7 @@ function calcularStreak(habito) {
 // Recorde: a maior sequência de dias seguidos já registrada
 function calcularRecorde(habito) {
   const dias = Object.keys(habito.historico)
-    .filter((d) => habito.historico[d])
+    .filter((d) => estaCompletoNoDia(habito, d))
     .sort();
 
   let melhor = 0;
@@ -265,7 +307,7 @@ function calcularRecorde(habito) {
 
 // Um dia "conta" para a chama se pelo menos um hábito foi concluído nele
 function diaConcluido(chave) {
-  return habitos.some((h) => h.historico[chave]);
+  return habitos.some((h) => estaCompletoNoDia(h, chave));
 }
 
 // Sequência global: dias seguidos com pelo menos um hábito concluído
@@ -290,51 +332,146 @@ function feitosNaSemana(habito) {
   for (let i = 0; i < 7; i++) {
     const dia = new Date(inicio);
     dia.setDate(inicio.getDate() + i);
-    if (habito.historico[chaveData(dia)]) total++;
+    if (estaCompletoNoDia(habito, chaveData(dia))) total++;
   }
   return total;
 }
 
 // ============ AÇÕES ============
-function adicionarHabito() {
-  const texto = entradaHabito.value.trim();
-  if (texto === "") return;
-
-  const metaNova = Number(entradaMeta.value);
-  const diariosApos =
-    habitosDiarios() + (metaNova >= 7 ? 1 : 0);
-  const confirmacao = confirmarSobrecarga(habitos.length + 1, diariosApos);
-  if (confirmacao && !confirm(confirmacao)) return;
-
-  habitos.push({
-    id: Date.now(),
+function montarHabitoDoFormulario(texto) {
+  const sugestao = sugerirHabito(texto);
+  const habito = {
+    id: novoIdHabito(),
     nome: texto,
-    categoria: entradaCategoria.value,
-    metaSemanal: metaNova,
-    horario: entradaHorario.value,
+    categoria: entradaCategoria.value || sugestao.categoria,
+    metaSemanal: Number(entradaMeta.value) || sugestao.metaSemanal,
+    horario: entradaHorario.value || sugestao.horario || "",
     historico: {},
-  });
+  };
 
+  if (detectarTextoAgua(texto) || sugestao.lembretes > 1) {
+    habito.nome = nomeAguaLimpo();
+    habito.categoria = "Saúde";
+    habito.metaSemanal = 7;
+    habito.lembretes = sugestao.lembretes || 6;
+    habito.horariosLembretes = horariosLembretes({ lembretes: habito.lembretes });
+    if (!habito.horario) habito.horario = habito.horariosLembretes[0] || "06:30";
+  }
+
+  return habito;
+}
+
+function novoIdHabito() {
+  return Date.now() + Math.floor(Math.random() * 1000);
+}
+
+function mostrarFeedback(texto, tipo = "ok") {
+  if (!feedbackAdicao) return;
+  feedbackAdicao.textContent = texto;
+  feedbackAdicao.className = "feedback-adicao feedback-" + tipo;
+  feedbackAdicao.hidden = false;
+  clearTimeout(mostrarFeedback._timer);
+  mostrarFeedback._timer = setTimeout(() => {
+    feedbackAdicao.hidden = true;
+  }, 3200);
+}
+
+function limparFormularioHabito() {
   entradaHabito.value = "";
   entradaHorario.value = "";
   entradaMeta.value = "7";
   entradaCategoria.value = "Geral";
   sugestaoAtual = null;
   if (sugestaoHabito) sugestaoHabito.hidden = true;
-  salvar();
-  desenhar();
 }
 
-function alternarFeito(id) {
+function adicionarHabito() {
+  const texto = entradaHabito.value.trim();
+  if (texto === "") return;
+
+  if (detectarTextoAgua(texto) && habitos.some(ehHabitoAgua)) {
+    mostrarFeedback("Água já está na agenda — marque os lembretes na aba Hoje.", "aviso");
+    return;
+  }
+
+  habitos.push(montarHabitoDoFormulario(texto));
+  limparFormularioHabito();
+  salvar();
+  desenhar();
+  mostrarFeedback("Hábito adicionado! Veja na aba Hoje.");
+}
+
+const ATALHOS_RAPIDOS = {
+  agua: () => criarHabitoAgua(novoIdHabito()),
+  academia: () => ({
+    id: novoIdHabito(),
+    nome: "Academia",
+    categoria: "Saúde",
+    metaSemanal: 5,
+    horario: "18:00",
+    historico: {},
+  }),
+  estudo: () => ({
+    id: novoIdHabito(),
+    nome: "Estudar 30 min",
+    categoria: "Estudo",
+    metaSemanal: 7,
+    horario: "19:00",
+    historico: {},
+  }),
+  meditar: () => ({
+    id: novoIdHabito(),
+    nome: "Meditar 10 min",
+    categoria: "Saúde",
+    metaSemanal: 7,
+    horario: "06:30",
+    historico: {},
+  }),
+};
+
+const ROTULOS_ATALHO = {
+  agua: "Beber água",
+  academia: "Academia",
+  estudo: "Estudar 30 min",
+  meditar: "Meditar 10 min",
+};
+
+function adicionarAtalho(tipo) {
+  if (tipo === "agua" && habitos.some(ehHabitoAgua)) {
+    mostrarFeedback("Água já está na agenda — marque os lembretes na aba Hoje.", "aviso");
+    return;
+  }
+
+  const criar = ATALHOS_RAPIDOS[tipo];
+  if (!criar) return;
+
+  habitos.push(criar());
+  limparFormularioHabito();
+  salvar();
+  desenhar();
+  mostrarFeedback(`${ROTULOS_ATALHO[tipo] || "Hábito"} adicionado! Veja na aba Hoje.`);
+}
+
+function avancarHabito(id) {
   const hoje = hojeStr();
   habitos = habitos.map((habito) => {
     if (habito.id !== id) return habito;
     const historico = { ...habito.historico };
-    if (historico[hoje]) {
+    const total = passosTotal(habito);
+
+    if (total > 1) {
+      const atual = progressoNoDia(habito, hoje);
+      if (atual >= total) {
+        delete historico[hoje];
+      } else {
+        historico[hoje] = atual + 1;
+      }
+    } else if (historico[hoje] === true) {
       delete historico[hoje];
     } else {
       historico[hoje] = true;
     }
+
     return { ...habito, historico };
   });
   salvar();
@@ -469,41 +606,70 @@ function desenharFiltros() {
   });
 }
 
-function desenharGrafico() {
-  graficoBarras.innerHTML = "";
+function calcularDadosGrafico7Dias() {
   const total = habitos.length;
+  const dias = [];
 
   for (let i = 6; i >= 0; i--) {
     const dia = new Date();
     dia.setDate(dia.getDate() - i);
     const chave = chaveData(dia);
-    const feitosNoDia = habitos.filter((h) => h.historico[chave]).length;
+    const feitosNoDia = habitos.filter((h) => estaCompletoNoDia(h, chave)).length;
     const porcentagem = total === 0 ? 0 : (feitosNoDia / total) * 100;
 
+    dias.push({
+      porcentagem,
+      rotulo: dia.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", ""),
+      ehHoje: chave === hojeStr(),
+    });
+  }
+
+  return dias;
+}
+
+function renderizarGraficoBarras(container, { compacto = false } = {}) {
+  if (!container) return;
+
+  const dias = calcularDadosGrafico7Dias();
+  container.innerHTML = "";
+  container.classList.toggle("grafico-compacto", compacto);
+
+  dias.forEach((dia) => {
     const coluna = document.createElement("div");
-    coluna.className = "grafico-coluna";
+    coluna.className = "grafico-coluna" + (dia.ehHoje ? " hoje" : "");
 
     const percentual = document.createElement("span");
     percentual.className = "grafico-percentual";
-    percentual.textContent = Math.round(porcentagem) + "%";
+    percentual.textContent = Math.round(dia.porcentagem) + "%";
 
     const trilha = document.createElement("div");
     trilha.className = "grafico-trilha";
     const preenchimento = document.createElement("div");
     preenchimento.className = "grafico-preenchimento";
-    preenchimento.style.height = porcentagem + "%";
+    preenchimento.style.height = dia.porcentagem + "%";
     trilha.appendChild(preenchimento);
 
     const rotulo = document.createElement("span");
     rotulo.className = "grafico-rotulo";
-    rotulo.textContent = dia
-      .toLocaleDateString("pt-BR", { weekday: "short" })
-      .replace(".", "");
+    rotulo.textContent = dia.rotulo;
 
     coluna.appendChild(percentual);
     coluna.appendChild(trilha);
     coluna.appendChild(rotulo);
-    graficoBarras.appendChild(coluna);
+    container.appendChild(coluna);
+  });
+}
+
+function desenharGrafico() {
+  renderizarGraficoBarras(graficoBarras);
+  renderizarGraficoBarras(graficoHoje, { compacto: true });
+
+  if (graficoMedia) {
+    const dias = calcularDadosGrafico7Dias();
+    const media = Math.round(
+      dias.reduce((soma, dia) => soma + dia.porcentagem, 0) / dias.length
+    );
+    graficoMedia.textContent = habitos.length === 0 ? "—" : `média ${media}%`;
   }
 }
 
@@ -545,7 +711,7 @@ function desenharCalendario() {
     if (data > hoje) {
       cel.classList.add("futuro");
     } else {
-      const feitosNoDia = habitos.filter((h) => h.historico[chave]).length;
+      const feitosNoDia = habitos.filter((h) => estaCompletoNoDia(h, chave)).length;
       const pct = total === 0 ? 0 : (feitosNoDia / total) * 100;
       cel.classList.add("nivel-" + nivelPorPorcentagem(pct));
     }
@@ -611,7 +777,7 @@ function taxaConclusao30Dias() {
     dia.setDate(hoje.getDate() - i);
     const chave = chaveData(dia);
     possiveis += habitos.length;
-    feitos += habitos.filter((h) => h.historico[chave]).length;
+    feitos += habitos.filter((h) => estaCompletoNoDia(h, chave)).length;
   }
 
   return possiveis === 0 ? 0 : Math.round((feitos / possiveis) * 100);
@@ -628,7 +794,7 @@ function calcularEstatisticasSemana() {
     const dia = new Date();
     dia.setDate(dia.getDate() - i);
     const chave = chaveData(dia);
-    const feitos = habitos.filter((h) => h.historico[chave]).length;
+    const feitos = habitos.filter((h) => estaCompletoNoDia(h, chave)).length;
     const pct = Math.round((feitos / totalHabitos) * 100);
     dias.push({
       chave,
@@ -652,7 +818,7 @@ function calcularEstatisticasSemana() {
       dia.setDate(dia.getDate() - i);
       const chave = chaveData(dia);
       categorias[cat].possivel++;
-      if (h.historico[chave]) categorias[cat].feitos++;
+      if (estaCompletoNoDia(h, chave)) categorias[cat].feitos++;
     }
   });
 
@@ -700,21 +866,6 @@ function desenharResumoSemana() {
   resumoSemana.textContent = gerarResumoSemana(stats);
 }
 
-function atualizarAlertaSobrecarga() {
-  if (!alertaSobrecarga) return;
-
-  const aviso = mensagemSobrecarga(habitos.length, habitosDiarios());
-  if (!aviso) {
-    alertaSobrecarga.hidden = true;
-    return;
-  }
-
-  alertaSobrecarga.textContent = aviso.texto;
-  alertaSobrecarga.className =
-    "alerta-sobrecarga" + (aviso.nivel === "alto" ? " alerta-alto" : "");
-  alertaSobrecarga.hidden = false;
-}
-
 function atualizarSugestaoHabito() {
   const texto = entradaHabito.value.trim();
   if (!texto || texto.length < 3) {
@@ -734,6 +885,238 @@ function aplicarSugestaoHabito() {
   entradaMeta.value = String(sugestaoAtual.metaSemanal);
   entradaHorario.value = sugestaoAtual.horario || "";
   if (sugestaoHabito) sugestaoHabito.hidden = true;
+
+  if (sugestaoAtual.lembretes > 1 && detectarTextoAgua(entradaHabito.value)) {
+    adicionarHabito();
+  }
+}
+
+function carregarCamposRotina() {
+  const salvo = carregarPerfilRotina();
+  if (rotinaPerfil) rotinaPerfil.value = salvo.perfil || "";
+  if (rotinaHorarios) rotinaHorarios.value = salvo.horarios || "";
+  if (rotinaObjetivos) rotinaObjetivos.value = salvo.objetivos || "";
+}
+
+function salvarCamposRotina() {
+  salvarPerfilRotina({
+    perfil: rotinaPerfil?.value || "",
+    horarios: rotinaHorarios?.value || "",
+    objetivos: rotinaObjetivos?.value || "",
+  });
+}
+
+function habitoJaExiste(nome) {
+  const alvo = nome.toLowerCase();
+  return habitos.some((h) => h.nome.toLowerCase() === alvo);
+}
+
+function renderizarRotinaGerada(resultado) {
+  rotinaGerada = resultado;
+  rotinaMensagem.textContent = resultado.mensagem;
+  rotinaLista.innerHTML = "";
+
+  if (!resultado.habitos.length) {
+    rotinaResultado.hidden = true;
+    return;
+  }
+
+  resultado.habitos.forEach((item, indice) => {
+    const jaExiste = habitoJaExiste(item.nome);
+    const label = document.createElement("label");
+    label.className = "rotina-item" + (jaExiste ? " rotina-item-existente" : "");
+
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.className = "rotina-item-check";
+    check.checked = !jaExiste;
+    check.dataset.indice = String(indice);
+
+    const corpo = document.createElement("div");
+    corpo.className = "rotina-item-corpo";
+
+    const topo = document.createElement("div");
+    topo.className = "rotina-item-topo";
+
+    const nome = document.createElement("span");
+    nome.className = "rotina-item-nome";
+    nome.textContent = item.nome;
+
+    const hora = document.createElement("span");
+    hora.className = "rotina-item-hora";
+    hora.textContent = item.horario || "—";
+
+    topo.appendChild(nome);
+    topo.appendChild(hora);
+
+    const meta = document.createElement("p");
+    meta.className = "rotina-item-meta";
+    meta.textContent =
+      item.lembretes > 1
+        ? `${item.categoria} · ${item.lembretes} lembretes/dia`
+        : `${item.categoria} · ${item.metaSemanal === 7 ? "todo dia" : item.metaSemanal + "x/semana"}`;
+
+    const motivo = document.createElement("p");
+    motivo.className = "rotina-item-motivo";
+    motivo.textContent = item.motivo;
+
+    corpo.appendChild(topo);
+    corpo.appendChild(meta);
+    if (jaExiste) {
+      const aviso = document.createElement("p");
+      aviso.className = "rotina-item-aviso";
+      aviso.textContent = "Já está na sua agenda";
+      corpo.appendChild(aviso);
+    }
+    if (item.motivo) corpo.appendChild(motivo);
+
+    label.appendChild(check);
+    label.appendChild(corpo);
+    rotinaLista.appendChild(label);
+  });
+
+  rotinaResultado.hidden = false;
+  rotinaResultado.classList.add("rotina-resultado-revelado");
+  rotinaResultado.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+async function executarGeracaoRotina() {
+  salvarCamposRotina();
+
+  const perfil = rotinaPerfil?.value.trim() || "";
+  const horarios = rotinaHorarios?.value.trim() || "";
+  const objetivos = rotinaObjetivos?.value.trim() || "";
+
+  if (!botaoGerarRotina || !rotinaStatus) return;
+
+  botaoGerarRotina.disabled = true;
+  botaoGerarRotina.textContent = "Montando rotina…";
+  rotinaStatus.textContent = "Organizando seus horários livres…";
+  rotinaStatus.className = "rotina-status rotina-carregando";
+  rotinaResultado?.classList.remove("rotina-resultado-revelado");
+
+  try {
+    const resultado = await gerarRotina({
+      perfil,
+      horarios,
+      objetivos,
+      habitosExistentes: habitos,
+    });
+
+    if (!resultado.habitos.length) {
+      rotinaResultado.hidden = true;
+      rotinaStatus.textContent = resultado.mensagem;
+      rotinaStatus.className = "rotina-status rotina-erro";
+      return;
+    }
+
+    renderizarRotinaGerada(resultado);
+    const novos = resultado.habitos.filter((h) => !habitoJaExiste(h.nome)).length;
+    rotinaStatus.textContent =
+      novos > 0
+        ? `Pronto! ${resultado.habitos.length} hábitos sugeridos (${novos} novos). Toque em "Adicionar selecionados" abaixo.`
+        : `Pronto! ${resultado.habitos.length} sugeridos — todos já estão na agenda. Marque "Substituir" para trocar.`;
+    rotinaStatus.className = "rotina-status rotina-ok";
+  } catch (erro) {
+    rotinaStatus.textContent = erro.message || "Erro ao gerar rotina.";
+    rotinaStatus.className = "rotina-status rotina-erro";
+  } finally {
+    botaoGerarRotina.disabled = false;
+    botaoGerarRotina.textContent = "Montar rotina completa";
+  }
+}
+
+function aplicarRotinaGerada() {
+  if (!rotinaGerada) return;
+
+  const selecionados = [];
+  rotinaLista.querySelectorAll(".rotina-item-check:checked").forEach((el) => {
+    const item = rotinaGerada.habitos[Number(el.dataset.indice)];
+    if (item) selecionados.push(item);
+  });
+
+  if (selecionados.length === 0) {
+    rotinaStatus.textContent = "Selecione pelo menos um hábito.";
+    rotinaStatus.className = "rotina-status rotina-erro";
+    return;
+  }
+
+  if (rotinaSubstituir?.checked) {
+    habitos = [];
+  }
+
+  const baseId = novoIdHabito();
+  let adicionados = 0;
+  let ignorados = 0;
+
+  selecionados.forEach((item, i) => {
+    if (habitoJaExiste(item.nome)) {
+      ignorados++;
+      return;
+    }
+
+    const habito = {
+      id: baseId + i,
+      nome: item.nome,
+      categoria: item.categoria,
+      metaSemanal: item.metaSemanal,
+      horario: item.horario || "",
+      historico: {},
+    };
+    if (item.lembretes > 1) habito.lembretes = item.lembretes;
+    if (item.horariosLembretes?.length) habito.horariosLembretes = item.horariosLembretes;
+    habitos.push(habito);
+    adicionados++;
+  });
+
+  if (adicionados === 0) {
+    rotinaStatus.textContent =
+      ignorados > 0
+        ? "Esses hábitos já estão na agenda."
+        : "Nenhum hábito novo para adicionar.";
+    rotinaStatus.className = "rotina-status rotina-erro";
+    return;
+  }
+
+  habitos = migrarHabitosAgua(habitos, hojeStr());
+  salvar();
+  desenhar();
+  ativarPainel("hoje");
+  rotinaStatus.textContent = `${adicionados} hábito(s) adicionados! Veja na aba Hoje.`;
+  rotinaStatus.className = "rotina-status rotina-ok";
+  mostrarFeedback(`${adicionados} hábito(s) da rotina adicionados!`);
+  fecharDicaInicio();
+}
+
+async function montarEAdicionarRotina() {
+  await executarGeracaoRotina();
+  if (!rotinaGerada?.habitos?.length) return;
+
+  rotinaLista.querySelectorAll(".rotina-item-check").forEach((el) => {
+    const item = rotinaGerada.habitos[Number(el.dataset.indice)];
+    el.checked = Boolean(item && !habitoJaExiste(item.nome));
+  });
+
+  aplicarRotinaGerada();
+}
+
+function fecharDicaInicio() {
+  if (!dicaInicio) return;
+  dicaInicio.hidden = true;
+  localStorage.setItem("dica-inicio-vista", "1");
+}
+
+function mostrarDicaInicio() {
+  if (!dicaInicio) return;
+  if (localStorage.getItem("dica-inicio-vista")) return;
+  if (habitos.length > 0) return;
+  dicaInicio.hidden = false;
+}
+
+function atualizarInfoVersao() {
+  if (!infoVersao) return;
+  const online = location.hostname.includes("github.io");
+  infoVersao.textContent = `Versão ${APP_VERSION}${online ? " · online" : " · local"}`;
 }
 
 function desenharCardsInsights() {
@@ -778,6 +1161,20 @@ function ativarPainel(nome) {
     painel.hidden = !ativo;
     painel.classList.toggle("ativo", ativo);
   });
+
+  const titulos = {
+    rotina: "Sua rotina",
+    hoje: "Seu dia",
+    semana: "Sua semana",
+    diario: "Diário",
+    insights: "Insights",
+    ajustes: "Ajustes",
+  };
+  if (tituloPainel) tituloPainel.textContent = titulos[nome] || "Agenda";
+
+  if (nome === "rotina") {
+    carregarCamposRotina();
+  }
 }
 
 function ordenarPorHorario(lista) {
@@ -824,22 +1221,49 @@ function desenharResumoAgenda() {
   }
 
   agendaResumo.innerHTML = `<p class="agenda-resumo-texto">${texto}</p>`;
+  desenharFilosofia();
+}
+
+function desenharFilosofia() {
+  if (!filosofiaDia) return;
+  const citacao = fraseFilosoficaDoDia(hojeStr());
+  const notaOntem = (notas[ontemStr()] || "").trim();
+  const extra = complementoCoachDiario(notaOntem);
+
+  filosofiaDia.innerHTML = `
+    <p class="filosofia-texto">"${citacao.texto}"</p>
+    <cite class="filosofia-autor">— ${citacao.autor}</cite>
+    ${extra ? `<p class="filosofia-reflexao">${extra.trim()}</p>` : ""}`;
 }
 
 function criarItem(habito) {
+  const hoje = hojeStr();
   const feito = estaFeitoHoje(habito);
   const streak = calcularStreak(habito);
   const recorde = calcularRecorde(habito);
+  const multi = ehMultiPassos(habito);
+  const progresso = progressoNoDia(habito, hoje);
+  const totalPassos = passosTotal(habito);
 
   const item = document.createElement("li");
   item.className = "item-habito" + (feito ? " feito" : "");
   item.draggable = true;
 
-  const checkbox = document.createElement("input");
-  checkbox.type = "checkbox";
-  checkbox.className = "checkbox-habito";
-  checkbox.checked = feito;
-  checkbox.addEventListener("change", () => alternarFeito(habito.id));
+  let controle;
+  if (multi) {
+    controle = document.createElement("button");
+    controle.type = "button";
+    controle.className = "botao-passos" + (feito ? " completo" : "");
+    controle.textContent = `${progresso}/${totalPassos}`;
+    controle.title = "Toque para registrar o próximo lembrete";
+    controle.addEventListener("click", () => avancarHabito(habito.id));
+  } else {
+    controle = document.createElement("input");
+    controle.type = "checkbox";
+    controle.className = "checkbox-habito";
+    controle.checked = feito;
+    controle.addEventListener("change", () => avancarHabito(habito.id));
+  }
 
   // Bloco central: nome + linha de informações
   const conteudo = document.createElement("div");
@@ -867,6 +1291,36 @@ function criarItem(habito) {
   tag.className = "tag";
   tag.textContent = habito.categoria || "Geral";
   meta.appendChild(tag);
+
+  if (multi) {
+    const passos = document.createElement("div");
+    passos.className = "passos-pontos";
+    passos.setAttribute("aria-hidden", "true");
+    for (let i = 1; i <= totalPassos; i++) {
+      const ponto = document.createElement("span");
+      ponto.className = "passo-ponto" + (i <= progresso ? " ativo" : "");
+      passos.appendChild(ponto);
+    }
+    meta.appendChild(passos);
+
+    const lembrete = document.createElement("span");
+    lembrete.className = "meta-info";
+    lembrete.textContent =
+      progresso === 0
+        ? `${totalPassos} lembretes no dia`
+        : feito
+          ? "todos os lembretes feitos"
+          : `lembrete ${progresso} de ${totalPassos}`;
+    meta.appendChild(lembrete);
+
+    const horariosTxt = textoHorariosLembretes(habito);
+    if (horariosTxt) {
+      const horariosEl = document.createElement("span");
+      horariosEl.className = "meta-horarios-lembretes";
+      horariosEl.textContent = horariosTxt;
+      meta.appendChild(horariosEl);
+    }
+  }
 
   if (habito.metaSemanal < 7) {
     const feitosSemana = feitosNaSemana(habito);
@@ -923,7 +1377,7 @@ function criarItem(habito) {
     reordenar(idArrastando, habito.id);
   });
 
-  item.appendChild(checkbox);
+  item.appendChild(controle);
   item.appendChild(conteudo);
   item.appendChild(marcaStreak);
   item.appendChild(botaoEditar);
@@ -953,7 +1407,6 @@ function desenhar() {
   desenharResumoSemana();
   desenharCalendario();
   desenharListaDiario();
-  atualizarAlertaSobrecarga();
 }
 
 function carregarNotaHoje() {
@@ -961,44 +1414,88 @@ function carregarNotaHoje() {
 }
 
 // ============ LIGAÇÕES DE EVENTOS ============
-botaoAdicionar.addEventListener("click", adicionarHabito);
-entradaHabito.addEventListener("keydown", (evento) => {
-  if (evento.key === "Enter") adicionarHabito();
-});
-entradaHabito.addEventListener("input", atualizarSugestaoHabito);
-botaoUsarSugestao?.addEventListener("click", aplicarSugestaoHabito);
-botaoTema.addEventListener("click", alternarTema);
-botaoExportar.addEventListener("click", exportarDados);
-entradaImportar.addEventListener("change", importarDados);
-notaHoje.addEventListener("input", () => {
-  definirNota(hojeStr(), notaHoje.value);
-});
-diarioTexto.addEventListener("input", () => {
-  definirNota(dataDiarioSelecionada, diarioTexto.value);
-});
-diarioData.addEventListener("change", () => {
-  if (diarioData.value) carregarNotaDiario(diarioData.value);
-});
-diarioHojeBotao.addEventListener("click", () => {
-  carregarNotaDiario(hojeStr());
-});
-navPaineis.addEventListener("click", (evento) => {
-  const botao = evento.target.closest(".nav-item");
-  if (!botao) return;
-  ativarPainel(botao.dataset.painel);
-  if (botao.dataset.painel === "diario") {
-    carregarNotaDiario(dataDiarioSelecionada || hojeStr());
-  }
-});
+function ligarEventosRotina() {
+  const painelRotina = document.getElementById("painel-rotina");
+  if (!painelRotina) return;
+
+  painelRotina.addEventListener("click", (evento) => {
+    const alvo = evento.target;
+
+    if (alvo.closest("#botao-gerar-rotina")) {
+      evento.preventDefault();
+      executarGeracaoRotina();
+      return;
+    }
+    if (alvo.closest("#botao-montar-adicionar")) {
+      evento.preventDefault();
+      montarEAdicionarRotina();
+      return;
+    }
+    if (alvo.closest("#botao-regenerar-rotina")) {
+      executarGeracaoRotina();
+      return;
+    }
+    if (alvo.closest("#botao-aplicar-rotina")) {
+      aplicarRotinaGerada();
+      return;
+    }
+
+    const atalho = alvo.closest(".atalho[data-atalho]");
+    if (atalho) adicionarAtalho(atalho.dataset.atalho);
+  });
+
+  [rotinaPerfil, rotinaHorarios, rotinaObjetivos].forEach((campo) => {
+    campo?.addEventListener("input", salvarCamposRotina);
+  });
+}
+
+function ligarTodosEventos() {
+  ligarEventosRotina();
+
+  botaoAdicionar?.addEventListener("click", adicionarHabito);
+  entradaHabito?.addEventListener("keydown", (evento) => {
+    if (evento.key === "Enter") adicionarHabito();
+  });
+  entradaHabito?.addEventListener("input", atualizarSugestaoHabito);
+  botaoUsarSugestao?.addEventListener("click", aplicarSugestaoHabito);
+  botaoTema?.addEventListener("click", alternarTema);
+  botaoExportar?.addEventListener("click", exportarDados);
+  entradaImportar?.addEventListener("change", importarDados);
+  notaHoje?.addEventListener("input", () => {
+    definirNota(hojeStr(), notaHoje.value);
+  });
+  diarioTexto?.addEventListener("input", () => {
+    definirNota(dataDiarioSelecionada, diarioTexto.value);
+  });
+  diarioData?.addEventListener("change", () => {
+    if (diarioData.value) carregarNotaDiario(diarioData.value);
+  });
+  diarioHojeBotao?.addEventListener("click", () => {
+    carregarNotaDiario(hojeStr());
+  });
+  navPaineis?.addEventListener("click", (evento) => {
+    const botao = evento.target.closest(".nav-item");
+    if (!botao) return;
+    ativarPainel(botao.dataset.painel);
+    if (botao.dataset.painel === "diario") {
+      carregarNotaDiario(dataDiarioSelecionada || hojeStr());
+    }
+  });
+  botaoDicaFechar?.addEventListener("click", fecharDicaInicio);
+}
 
 // ============ INICIALIZAÇÃO ============
 export function initApp() {
   aplicarTema(localStorage.getItem("tema") || "claro");
   mostrarData();
   carregar();
+  carregarCamposRotina();
   carregarNotaHoje();
   carregarNotaDiario(hojeStr());
+  ligarTodosEventos();
   ativarPainel(painelAtivo);
+  atualizarInfoVersao();
+  mostrarDicaInicio();
   desenhar();
 }
 
@@ -1011,7 +1508,10 @@ export function getEstadoExportavel() {
 }
 
 export function aplicarEstadoRemoto(dados) {
-  habitos = Array.isArray(dados.habitos) ? dados.habitos : [];
+  habitos = migrarHabitosAgua(
+    Array.isArray(dados.habitos) ? dados.habitos.map(normalizarHabito) : [],
+    hojeStr()
+  );
   notas = dados.notas && typeof dados.notas === "object" ? dados.notas : {};
   localStorage.setItem("meus-habitos", JSON.stringify(habitos));
   localStorage.setItem("notas-diarias", JSON.stringify(notas));

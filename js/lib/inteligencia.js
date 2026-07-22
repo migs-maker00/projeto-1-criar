@@ -47,12 +47,14 @@ function sugerirHabito(nome) {
   let categoria = "Geral";
   let metaSemanal = 7;
   let horario = "";
+  let lembretes = 0;
   let dica = "";
 
   if (/agua|litro|hidrata/.test(texto)) {
     categoria = "Saúde";
     metaSemanal = 7;
-    dica = "Dica: crie lembretes separados (manhã, tarde, noite) com horários diferentes.";
+    lembretes = 6;
+    dica = "Um hábito só, com 6 lembretes — cada toque avança 1/6, 2/6…";
   } else {
     for (const regra of REGRAS_CATEGORIA) {
       if (regra.palavras.some((p) => texto.includes(normalizarTexto(p)))) {
@@ -107,7 +109,7 @@ function sugerirHabito(nome) {
     }
   }
 
-  return { categoria, metaSemanal, horario, dica };
+  return { categoria, metaSemanal, horario, lembretes, dica };
 }
 
 function rotuloMeta(meta) {
@@ -118,7 +120,9 @@ function rotuloMeta(meta) {
 
 function textoSugestao(sugestao) {
   const partes = [`Categoria: ${sugestao.categoria}`, `Meta: ${rotuloMeta(sugestao.metaSemanal)}`];
-  if (sugestao.horario) {
+  if (sugestao.lembretes > 1) {
+    partes.push(`${sugestao.lembretes} lembretes no mesmo hábito`);
+  } else if (sugestao.horario) {
     partes.push(`Horário: ${sugestao.horario}`);
   } else if (!sugestao.dica) {
     partes.push("Horário: você escolhe");
@@ -196,43 +200,9 @@ function complementoCoachDiario(notaOntem) {
   return "";
 }
 
-function mensagemSobrecarga(totalHabitos, habitosDiarios) {
-  if (totalHabitos >= 8) {
-    return {
-      nivel: "alto",
-      texto: `${totalHabitos} hábitos é muito para manter foco. Os estoicos dizem: menos, porém com excelência. Que tal manter só os 3 mais importantes?`,
-    };
-  }
-  if (totalHabitos >= 6 || habitosDiarios >= 5) {
-    return {
-      nivel: "medio",
-      texto: `Você já tem ${totalHabitos} hábitos${habitosDiarios >= 5 ? ` (${habitosDiarios} diários)` : ""}. Consistência vence quantidade — adicione só se for essencial.`,
-    };
-  }
-  return null;
-}
-
-function confirmarSobrecarga(totalAposAdicionar, habitosDiariosApos) {
-  if (totalAposAdicionar >= 8) {
-    return (
-      `Você terá ${totalAposAdicionar} hábitos. Isso pode diluir sua energia.\n\n` +
-      "Mesmo assim quer adicionar?"
-    );
-  }
-  if (totalAposAdicionar >= 6 && habitosDiariosApos >= 5) {
-    return (
-      `${totalAposAdicionar} hábitos, sendo ${habitosDiariosApos} diários, é uma agenda pesada.\n\n` +
-      "Quer adicionar mesmo assim?"
-    );
-  }
-  return null;
-}
-
 export {
   sugerirHabito,
   textoSugestao,
   gerarResumoSemana,
   complementoCoachDiario,
-  mensagemSobrecarga,
-  confirmarSobrecarga,
 };
