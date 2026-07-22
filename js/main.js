@@ -1,18 +1,27 @@
 /**
  * Ponto de entrada do app — expõe API para sync.js e inicializa a UI.
- * Import dinâmico com versão para evitar cache antigo no iPhone/PWA.
  */
-import { APP_VERSION } from "./config.js";
+import { APP_VERSION } from "./config.js?v=1.4.2";
 
 function mostrarErroCarregamento(erro) {
+  const detalhe = erro?.message || String(erro);
   document.body.innerHTML = `
-    <div style="font-family:system-ui,sans-serif;max-width:28rem;margin:2rem auto;padding:1.5rem;line-height:1.5">
+    <div style="font-family:system-ui,sans-serif;max-width:28rem;margin:2rem auto;padding:1.5rem;line-height:1.5;text-align:center">
       <h1 style="font-size:1.1rem;margin:0 0 .75rem">Não foi possível carregar o app</h1>
       <p style="margin:0 0 1rem;color:#444">
-        Abra pelo <strong>localhost</strong> ou pelo link do GitHub — não abra o arquivo HTML direto.
+        Seu navegador pode estar com uma versão antiga em cache.
       </p>
-      <p style="margin:0;font-size:.85rem;color:#666">${erro?.message || erro}</p>
+      <button type="button" id="botao-recarregar-erro" style="padding:12px 20px;border:none;border-radius:10px;background:#1b365d;color:#faf7f1;font-weight:600;cursor:pointer;font-size:1rem">
+        Recarregar agora
+      </button>
+      <p style="margin:12px 0 0;font-size:.8rem;color:#666">${detalhe}</p>
     </div>`;
+  document.getElementById("botao-recarregar-erro")?.addEventListener("click", () => {
+    const u = new URL(location.href);
+    u.searchParams.set("v", APP_VERSION);
+    u.searchParams.set("t", Date.now());
+    location.replace(u.toString());
+  });
 }
 
 try {
