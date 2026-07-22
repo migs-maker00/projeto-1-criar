@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Agenda — Seu dia</title>
-  <meta name="theme-color" content="#e8dfd1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Agenda" />
@@ -18,7 +20,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=1.4.1" />
+  <link rel="stylesheet" href="style.css?v=1.4.2" />
 </head>
 <body>
   <div class="ambiente">
@@ -358,11 +360,26 @@
     </main>
   </div>
 
+  <script>
+    (function () {
+      var V = "1.4.2";
+      var salva = localStorage.getItem("app-versao");
+      if (salva && salva !== V) {
+        localStorage.setItem("app-versao", V);
+        var u = new URL(location.href);
+        u.searchParams.set("v", V);
+        u.searchParams.set("t", Date.now());
+        location.replace(u.toString());
+      } else {
+        localStorage.setItem("app-versao", V);
+      }
+    })();
+  </script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script type="module" src="js/main.js?v=1.4.1"></script>
+  <script type="module" src="js/main.js?v=1.4.2"></script>
   <script defer src="sync.js?v=4"></script>
 </body>
 </html>

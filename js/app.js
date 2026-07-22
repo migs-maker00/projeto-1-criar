@@ -1,5 +1,5 @@
-import { APP_VERSION } from "./config.js";
-import { fraseFilosoficaDoDia } from "./lib/filosofia.js";
+import { APP_VERSION } from "./config.js?v=1.4.2";
+import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.4.2";
 import {
   criarHabitoAgua,
   detectarTextoAgua,
@@ -13,18 +13,18 @@ import {
   passosTotal,
   progressoNoDia,
   textoHorariosLembretes,
-} from "./lib/habitos.js";
+} from "./lib/habitos.js?v=1.4.2";
 import {
   complementoCoachDiario,
   gerarResumoSemana,
   sugerirHabito,
   textoSugestao,
-} from "./lib/inteligencia.js";
+} from "./lib/inteligencia.js?v=1.4.2";
 import {
   carregarPerfilRotina,
   gerarRotina,
   salvarPerfilRotina,
-} from "./lib/rotina-local.js";
+} from "./lib/rotina-local.js?v=1.4.2";
 
 // ---- Referências aos elementos da página (DOM) ----
 const entradaHabito = document.getElementById("entrada-habito");
