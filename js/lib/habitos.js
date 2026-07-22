@@ -1,6 +1,8 @@
 // Modelo de hábitos — simples ou com vários lembretes no mesmo dia (ex.: água 6/6)
 
-import { HORARIOS_AGUA_PADRAO } from "../config.js";
+export const HORARIOS_AGUA_PADRAO = [
+  "06:30", "09:30", "12:00", "15:30", "18:00", "21:00",
+];
 
 export function passosTotal(habito) {
   const n = Number(habito.lembretes);
