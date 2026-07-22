@@ -52,7 +52,7 @@ function sugerirHabito(nome) {
   if (/agua|litro|hidrata/.test(texto)) {
     categoria = "Saúde";
     metaSemanal = 7;
-    dica = "Água funciona melhor com vários lembretes — use a aba Rotina para isso.";
+    dica = "Dica: crie lembretes separados (manhã, tarde, noite) com horários diferentes.";
   } else {
     for (const regra of REGRAS_CATEGORIA) {
       if (regra.palavras.some((p) => texto.includes(normalizarTexto(p)))) {
