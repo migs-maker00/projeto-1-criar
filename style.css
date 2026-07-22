@@ -167,7 +167,7 @@ body {
 /* Navegação tipo agenda */
 .nav-paineis {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 3px;
   padding: 5px;
   margin-bottom: 24px;
@@ -218,90 +218,44 @@ body {
   }
 }
 
-/* Mascote — coach + filosofia */
-.mascote {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
+/* Resumo da agenda do dia */
+.agenda-resumo {
   border: 1px solid var(--borda);
   border-radius: var(--raio);
-  padding: 16px 18px;
-  margin-bottom: 20px;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--marca) 8%, var(--superficie-elevada)), var(--superficie-elevada));
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  background: color-mix(in srgb, var(--marca) 6%, var(--superficie-elevada));
 }
 
-.mascote-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.mascote-svg {
-  width: 68px;
-  height: 68px;
-  flex-shrink: 0;
-  transform-origin: 50% 90%;
-  margin-top: 2px;
-}
-
-.mascote-svg.chama-viva {
-  animation: tremular 1.8s ease-in-out infinite;
-}
-
-@keyframes tremular {
-  0%, 100% { transform: scale(1, 1) rotate(0deg); }
-  25% { transform: scale(1.03, 0.97) rotate(-1.5deg); }
-  50% { transform: scale(0.97, 1.03) rotate(1.5deg); }
-  75% { transform: scale(1.02, 0.99) rotate(0deg); }
-}
-
-.mascote-streak {
-  font-family: var(--fonte-display);
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.mascote-coach {
-  margin-top: 8px;
-  font-size: 0.9rem;
+.agenda-resumo-texto {
+  margin: 0;
+  font-size: 0.95rem;
   line-height: 1.45;
   color: var(--texto);
 }
 
-.mascote-coach-rotulo {
-  display: block;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+.agenda-resumo-texto strong {
+  font-variant-numeric: tabular-nums;
   color: var(--marca);
-  margin-bottom: 4px;
 }
 
-.mascote-citacao {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid color-mix(in srgb, var(--borda) 70%, transparent);
+.item-linha {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.mascote-citacao-texto {
-  font-family: var(--fonte-display);
-  font-size: 0.95rem;
-  font-style: italic;
-  line-height: 1.5;
-  color: var(--texto);
-  letter-spacing: -0.01em;
-}
-
-.mascote-citacao-autor {
-  display: block;
-  margin-top: 8px;
-  font-size: 0.78rem;
-  font-style: normal;
-  font-weight: 600;
-  color: var(--texto-suave);
+.item-horario {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.82rem;
+  font-weight: 700;
   letter-spacing: 0.02em;
+  color: var(--marca);
+  background: color-mix(in srgb, var(--marca) 12%, transparent);
+  padding: 2px 8px;
+  border-radius: 6px;
 }
 
 /* Adicionar */
@@ -348,9 +302,7 @@ body {
 }
 
 .botao-primario,
-#botao-adicionar,
-#botao-gerar-rotina,
-#botao-aplicar-rotina {
+#botao-adicionar {
   background: var(--destaque);
   color: var(--destaque-texto);
   border: none;
@@ -368,38 +320,15 @@ body {
 }
 
 .botao-primario:hover,
-#botao-adicionar:hover,
-#botao-gerar-rotina:hover,
-#botao-aplicar-rotina:hover {
+#botao-adicionar:hover {
   opacity: 0.92;
   transform: translateY(-1px);
 }
 
-.botao-primario:disabled,
-#botao-gerar-rotina:disabled {
+.botao-primario:disabled {
   opacity: 0.55;
   cursor: wait;
   transform: none;
-}
-
-.link-rotina {
-  display: block;
-  width: 100%;
-  margin-top: 12px;
-  padding: 0;
-  border: none;
-  background: none;
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--marca);
-  text-align: left;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-
-.link-rotina:hover {
-  opacity: 0.75;
 }
 
 .adicionar-opcoes {
@@ -452,172 +381,7 @@ body {
   font-size: 0.8rem;
 }
 
-/* Planejador de rotina (IA) */
-.rotina-label {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--texto-suave);
-  margin: 16px 0 8px;
-}
-
-.rotina-label:first-of-type {
-  margin-top: 0;
-}
-
-.rotina-aviso {
-  margin: 14px 0;
-  padding: 12px 14px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  line-height: 1.45;
-  background: color-mix(in srgb, #c45c3e 10%, var(--superficie-elevada));
-  border: 1px solid color-mix(in srgb, #c45c3e 25%, var(--borda));
-}
-
-.rotina-aviso a {
-  color: var(--marca);
-}
-
-.rotina-status {
-  margin-top: 12px;
-  font-size: 0.85rem;
-  color: var(--texto-suave);
-  line-height: 1.45;
-}
-
-.rotina-status.rotina-ok {
-  color: var(--sucesso);
-  font-weight: 600;
-}
-
-.rotina-status.rotina-erro {
-  color: #b45309;
-  font-weight: 600;
-}
-
-.rotina-status.rotina-carregando {
-  color: var(--marca);
-}
-
-.rotina-status.rotina-aviso-fallback {
-  color: #b45309;
-  font-weight: 600;
-}
-
-.rotina-mensagem {
-  font-family: var(--fonte-display);
-  font-size: 1rem;
-  line-height: 1.55;
-  color: var(--texto);
-  margin-bottom: 16px;
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--marca) 6%, var(--superficie-elevada));
-  border: 1px solid var(--borda);
-}
-
-.rotina-lista {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.rotina-item {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  padding: 12px 14px;
-  border: 1px solid var(--borda);
-  border-radius: 14px;
-  background: var(--superficie-elevada);
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-
-.rotina-item:has(.rotina-item-check:checked) {
-  border-color: color-mix(in srgb, var(--marca) 40%, var(--borda));
-}
-
-.rotina-item-check {
-  margin-top: 4px;
-  accent-color: var(--destaque);
-  flex-shrink: 0;
-}
-
-.rotina-item-corpo {
-  flex: 1;
-  min-width: 0;
-}
-
-.rotina-item-topo {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: baseline;
-}
-
-.rotina-item-nome {
-  font-weight: 600;
-  font-size: 0.92rem;
-}
-
-.rotina-item-hora {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--marca);
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
-}
-
-.rotina-item-meta {
-  margin-top: 4px;
-  font-size: 0.78rem;
-  color: var(--texto-suave);
-}
-
-.rotina-item-motivo {
-  margin-top: 6px;
-  font-size: 0.82rem;
-  color: var(--texto-suave);
-  line-height: 1.4;
-  font-style: italic;
-}
-
-.rotina-substituir {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-  color: var(--texto-suave);
-  margin-bottom: 14px;
-  cursor: pointer;
-}
-
-.rotina-botoes {
-  flex-direction: column;
-}
-
-.rotina-botoes .botao-primario,
-.rotina-botoes .botao-secundario {
-  width: 100%;
-}
-
-.campo-chave {
-  width: 100%;
-  margin-top: 4px;
-}
-
-.gemini-status {
-  margin-top: 10px;
-  font-size: 0.85rem;
-  color: var(--texto-suave);
-}
-
-.gemini-status.gemini-ok {
+/* Alerta de sobrecarga */
   color: var(--sucesso);
   font-weight: 600;
 }

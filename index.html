@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Hábitos — Agenda diária</title>
+  <title>Agenda — Seu dia</title>
   <meta name="theme-color" content="#fbfcfb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Hábitos" />
+  <meta name="apple-mobile-web-app-title" content="Agenda" />
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
@@ -18,15 +18,15 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=1.1.0" />
+  <link rel="stylesheet" href="style.css?v=1.2.0" />
 </head>
 <body>
   <div class="ambiente">
     <main class="app">
       <header class="cabecalho">
         <div class="cabecalho-marca">
-          <p class="marca">Hábitos</p>
-          <h1 class="titulo-dia">Agenda de hoje</h1>
+          <p class="marca">Agenda</p>
+          <h1 class="titulo-dia">Seu dia</h1>
           <p id="data-hoje" class="data-hoje"></p>
         </div>
         <button id="botao-tema" class="botao-tema" aria-label="Alternar tema" type="button">☾</button>
@@ -34,20 +34,19 @@
 
       <nav class="nav-paineis" aria-label="Seções do app">
         <button type="button" class="nav-item ativo" data-painel="hoje">Hoje</button>
-        <button type="button" class="nav-item" data-painel="rotina">Rotina</button>
         <button type="button" class="nav-item" data-painel="semana">Semana</button>
         <button type="button" class="nav-item" data-painel="diario">Diário</button>
         <button type="button" class="nav-item" data-painel="insights">Insights</button>
         <button type="button" class="nav-item" data-painel="ajustes">Ajustes</button>
       </nav>
 
-      <!-- HOJE: rotina do dia -->
+      <!-- HOJE: agenda do dia -->
       <section id="painel-hoje" class="painel ativo" aria-label="Hoje">
-        <div id="mascote" class="mascote"></div>
+        <div id="agenda-resumo" class="agenda-resumo" aria-live="polite"></div>
 
         <section class="resumo">
           <div class="resumo-topo">
-            <span class="resumo-rotulo">Progresso de hoje</span>
+            <span class="resumo-rotulo">Compromissos de hoje</span>
             <span class="resumo-valor">
               <span id="contador-feitos">0</span>/<span id="contador-total">0</span>
             </span>
@@ -63,7 +62,7 @@
             <input
               type="text"
               id="entrada-habito"
-              placeholder="Ex.: caminhar 20 minutos"
+              placeholder="Ex.: reunião 14h, academia, estudar..."
               maxlength="60"
             />
             <button id="botao-adicionar" type="button">Adicionar</button>
@@ -85,7 +84,7 @@
               <option value="5">5x/semana</option>
               <option value="6">6x/semana</option>
             </select>
-            <input type="time" id="entrada-horario" class="campo-opcao" aria-label="Horário sugerido" />
+            <input type="time" id="entrada-horario" class="campo-opcao" aria-label="Horário" />
           </div>
           <div id="sugestao-habito" class="sugestao-habito" hidden>
             <p id="sugestao-texto" class="sugestao-texto"></p>
@@ -93,93 +92,26 @@
               Usar sugestão
             </button>
           </div>
-          <button type="button" id="botao-ir-rotina" class="link-rotina">
-            Montar rotina completa com IA →
-          </button>
           <p id="alerta-sobrecarga" class="alerta-sobrecarga" hidden></p>
         </section>
 
         <div id="filtros" class="filtros"></div>
         <ul id="lista-habitos" class="lista-habitos"></ul>
         <p id="mensagem-vazia" class="mensagem-vazia">
-          Nenhum hábito na agenda. Adicione o primeiro acima — comece com só 1 ou 2.
+          Nenhum compromisso na agenda. Adicione o primeiro acima.
         </p>
 
         <section class="bloco">
-          <h2 class="bloco-titulo">Nota de hoje</h2>
+          <h2 class="bloco-titulo">Anotações do dia</h2>
           <p class="bloco-apoio">
-            Registre o que ajudou ou atrapalhou. O histórico completo fica na aba
-            <strong>Diário</strong>.
+            O que marcou este dia? O histórico fica na aba <strong>Diário</strong>.
           </p>
           <textarea
             id="nota-hoje"
             class="nota-campo"
             rows="3"
-            placeholder="Como foi o dia?"
+            placeholder="Anotações, lembretes, como foi o dia…"
           ></textarea>
-        </section>
-      </section>
-
-      <!-- ROTINA: planejador com IA -->
-      <section id="painel-rotina" class="painel" aria-label="Rotina" hidden>
-        <section class="bloco bloco-primeiro">
-          <h2 class="bloco-titulo">Planejador de rotina</h2>
-          <p class="bloco-apoio">
-            Conte sobre você, seus horários ocupados e o que quer melhorar.
-            A IA monta hábitos nos momentos certos — sem conflito com escola, trabalho ou treino.
-          </p>
-
-          <label class="rotina-label" for="rotina-perfil">Quem é você?</label>
-          <textarea
-            id="rotina-perfil"
-            class="nota-campo"
-            rows="3"
-            placeholder="Ex.: Tenho 16 anos, faço jiu-jitsu 2x por semana, tenho dificuldade em acordar cedo e beber água..."
-          ></textarea>
-
-          <label class="rotina-label" for="rotina-horarios">Agenda e horários ocupados</label>
-          <textarea
-            id="rotina-horarios"
-            class="nota-campo"
-            rows="4"
-            placeholder="Ex.: Segunda a sexta escola 07:00–16:00. Terça e quinta jiu-jitsu 20:30–22:30. Domingo livre."
-          ></textarea>
-
-          <label class="rotina-label" for="rotina-objetivos">O que quer melhorar?</label>
-          <textarea
-            id="rotina-objetivos"
-            class="nota-campo"
-            rows="3"
-            placeholder="Ex.: Beber 3L de água por dia, estudar matemática, dormir antes das 23h..."
-          ></textarea>
-
-          <p id="rotina-aviso-chave" class="rotina-aviso" hidden>
-            Configure sua chave do Gemini em <strong>Ajustes → IA da rotina</strong>
-            (grátis em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a>).
-          </p>
-
-          <button type="button" id="botao-gerar-rotina" class="botao-primario">
-            Gerar minha rotina
-          </button>
-          <p id="rotina-status" class="rotina-status" aria-live="polite"></p>
-        </section>
-
-        <section id="rotina-resultado" class="bloco" hidden>
-          <h2 class="bloco-titulo">Rotina sugerida</h2>
-          <p id="rotina-mensagem" class="rotina-mensagem"></p>
-          <div id="rotina-lista" class="rotina-lista"></div>
-          <label class="rotina-substituir">
-            <input type="checkbox" id="rotina-substituir" />
-            Substituir todos os hábitos atuais
-          </label>
-          <div class="dados-botoes rotina-botoes">
-            <button type="button" id="botao-aplicar-rotina" class="botao-primario">
-              Adicionar selecionados
-            </button>
-            <button type="button" id="botao-regenerar-rotina" class="botao-secundario">
-              Gerar de novo
-            </button>
-          </div>
         </section>
       </section>
 
@@ -309,28 +241,6 @@
         </section>
 
         <section class="bloco">
-          <h2 class="bloco-titulo">IA da rotina</h2>
-          <p class="bloco-apoio">
-            Chave do Google Gemini para o planejador de rotina. Crie grátis em
-            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
-            Fica salva só neste aparelho.
-          </p>
-          <input
-            type="password"
-            id="entrada-gemini-key"
-            class="campo-opcao campo-chave"
-            placeholder="Cole sua chave Gemini aqui"
-            autocomplete="off"
-            spellcheck="false"
-          />
-          <div class="dados-botoes" style="margin-top: 10px">
-            <button type="button" id="botao-salvar-gemini" class="botao-secundario">Salvar chave</button>
-            <button type="button" id="botao-remover-gemini" class="botao-secundario">Remover</button>
-          </div>
-          <p id="gemini-status" class="gemini-status"></p>
-        </section>
-
-        <section class="bloco">
           <h2 class="bloco-titulo">Backup dos dados</h2>
           <p class="bloco-apoio">
             Mesmo com sync, exporte de vez em quando. O backup é uma cópia de segurança extra.
@@ -347,8 +257,8 @@
         <section class="bloco">
           <h2 class="bloco-titulo">Sobre</h2>
           <p class="bloco-apoio">
-            Hábitos combina um studio calmo (foco e presença) com uma agenda executiva
-            (clareza do dia, da semana e do mês). Use pouco. Use todo dia.
+            Sua agenda pessoal — compromissos, anotações e visão da semana.
+            Use pouco. Use todo dia.
           </p>
         </section>
       </section>
@@ -359,7 +269,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script type="module" src="js/main.js?v=1.1.0"></script>
+  <script type="module" src="js/main.js?v=1.2.0"></script>
   <script defer src="sync.js?v=4"></script>
 </body>
 </html>

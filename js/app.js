@@ -1,19 +1,10 @@
-import { fraseFilosoficaDoDia } from "./lib/filosofia.js";
 import {
-  complementoCoachDiario,
   confirmarSobrecarga,
   gerarResumoSemana,
   mensagemSobrecarga,
   sugerirHabito,
   textoSugestao,
 } from "./lib/inteligencia.js";
-import {
-  carregarPerfilRotina,
-  gerarRotinaComIA,
-  obterChaveGemini,
-  salvarChaveGemini,
-  salvarPerfilRotina,
-} from "./lib/rotina-ia.js";
 
 // ---- Referências aos elementos da página (DOM) ----
 const entradaHabito = document.getElementById("entrada-habito");
@@ -34,7 +25,7 @@ const notaHoje = document.getElementById("nota-hoje");
 const calendarioGrade = document.getElementById("calendario-grade");
 const botaoExportar = document.getElementById("botao-exportar");
 const entradaImportar = document.getElementById("entrada-importar");
-const mascote = document.getElementById("mascote");
+const agendaResumo = document.getElementById("agenda-resumo");
 const listaMetasSemana = document.getElementById("lista-metas-semana");
 const cardsInsights = document.getElementById("cards-insights");
 const navPaineis = document.querySelector(".nav-paineis");
@@ -49,23 +40,6 @@ const resumoSemana = document.getElementById("resumo-semana");
 const sugestaoHabito = document.getElementById("sugestao-habito");
 const sugestaoTexto = document.getElementById("sugestao-texto");
 const botaoUsarSugestao = document.getElementById("botao-usar-sugestao");
-const botaoIrRotina = document.getElementById("botao-ir-rotina");
-const rotinaPerfil = document.getElementById("rotina-perfil");
-const rotinaHorarios = document.getElementById("rotina-horarios");
-const rotinaObjetivos = document.getElementById("rotina-objetivos");
-const rotinaAvisoChave = document.getElementById("rotina-aviso-chave");
-const botaoGerarRotina = document.getElementById("botao-gerar-rotina");
-const rotinaStatus = document.getElementById("rotina-status");
-const rotinaResultado = document.getElementById("rotina-resultado");
-const rotinaMensagem = document.getElementById("rotina-mensagem");
-const rotinaLista = document.getElementById("rotina-lista");
-const rotinaSubstituir = document.getElementById("rotina-substituir");
-const botaoAplicarRotina = document.getElementById("botao-aplicar-rotina");
-const botaoRegenerarRotina = document.getElementById("botao-regenerar-rotina");
-const entradaGeminiKey = document.getElementById("entrada-gemini-key");
-const botaoSalvarGemini = document.getElementById("botao-salvar-gemini");
-const botaoRemoverGemini = document.getElementById("botao-remover-gemini");
-const geminiStatus = document.getElementById("gemini-status");
 
 // ---- Estado (a "fonte da verdade" do app) ----
 let habitos = [];
@@ -75,7 +49,6 @@ let idArrastando = null;
 let painelAtivo = "hoje";
 let dataDiarioSelecionada = hojeStr();
 let sugestaoAtual = null;
-let rotinaGerada = null;
 
 // ============ DATAS (funções auxiliares) ============
 function chaveData(data) {
@@ -170,7 +143,7 @@ function definirNota(chave, texto) {
   if (chave === hojeStr()) notaHoje.value = texto;
   if (chave === dataDiarioSelecionada) diarioTexto.value = texto;
   desenharListaDiario();
-  desenharMascote();
+  desenharResumoAgenda();
 }
 
 function formatarDataBR(chave) {
@@ -763,203 +736,6 @@ function aplicarSugestaoHabito() {
   if (sugestaoHabito) sugestaoHabito.hidden = true;
 }
 
-function carregarCamposRotina() {
-  const salvo = carregarPerfilRotina();
-  if (rotinaPerfil) rotinaPerfil.value = salvo.perfil || "";
-  if (rotinaHorarios) rotinaHorarios.value = salvo.horarios || "";
-  if (rotinaObjetivos) rotinaObjetivos.value = salvo.objetivos || "";
-  atualizarAvisoChaveGemini();
-}
-
-function salvarCamposRotina() {
-  salvarPerfilRotina({
-    perfil: rotinaPerfil?.value || "",
-    horarios: rotinaHorarios?.value || "",
-    objetivos: rotinaObjetivos?.value || "",
-  });
-}
-
-function atualizarAvisoChaveGemini() {
-  if (!rotinaAvisoChave) return;
-  const temChave = obterChaveGemini();
-  rotinaAvisoChave.hidden = Boolean(temChave);
-}
-
-function atualizarStatusGemini() {
-  if (!geminiStatus) return;
-  const temChave = obterChaveGemini();
-  geminiStatus.textContent = temChave
-    ? "Chave configurada. O planejador de rotina está pronto."
-    : "Nenhuma chave salva.";
-  geminiStatus.className = "gemini-status" + (temChave ? " gemini-ok" : "");
-  atualizarAvisoChaveGemini();
-}
-
-function carregarChaveGemini() {
-  if (!entradaGeminiKey || !obterChaveGemini) return;
-  const chave = obterChaveGemini();
-  entradaGeminiKey.value = chave ? "••••••••••••••••" : "";
-  atualizarStatusGemini();
-}
-
-function salvarChaveGeminiUI() {
-  if (!entradaGeminiKey) return;
-  const valor = entradaGeminiKey.value.trim();
-  if (!valor || valor.startsWith("••")) {
-    geminiStatus.textContent = "Cole uma chave nova para salvar.";
-    return;
-  }
-  salvarChaveGemini(valor);
-  entradaGeminiKey.value = "••••••••••••••••";
-  atualizarStatusGemini();
-}
-
-function removerChaveGeminiUI() {
-  salvarChaveGemini("");
-  if (entradaGeminiKey) entradaGeminiKey.value = "";
-  atualizarStatusGemini();
-}
-
-function renderizarRotinaGerada(resultado) {
-  rotinaGerada = resultado;
-  rotinaMensagem.textContent = resultado.mensagem;
-  rotinaLista.innerHTML = "";
-
-  resultado.habitos.forEach((item, indice) => {
-    const label = document.createElement("label");
-    label.className = "rotina-item";
-
-    const check = document.createElement("input");
-    check.type = "checkbox";
-    check.className = "rotina-item-check";
-    check.checked = true;
-    check.dataset.indice = String(indice);
-
-    const corpo = document.createElement("div");
-    corpo.className = "rotina-item-corpo";
-
-    const topo = document.createElement("div");
-    topo.className = "rotina-item-topo";
-
-    const nome = document.createElement("span");
-    nome.className = "rotina-item-nome";
-    nome.textContent = item.nome;
-
-    const hora = document.createElement("span");
-    hora.className = "rotina-item-hora";
-    hora.textContent = item.horario || "—";
-
-    topo.appendChild(nome);
-    topo.appendChild(hora);
-
-    const meta = document.createElement("p");
-    meta.className = "rotina-item-meta";
-    meta.textContent = `${item.categoria} · ${item.metaSemanal === 7 ? "todo dia" : item.metaSemanal + "x/semana"}`;
-
-    const motivo = document.createElement("p");
-    motivo.className = "rotina-item-motivo";
-    motivo.textContent = item.motivo;
-
-    corpo.appendChild(topo);
-    corpo.appendChild(meta);
-    if (item.motivo) corpo.appendChild(motivo);
-
-    label.appendChild(check);
-    label.appendChild(corpo);
-    rotinaLista.appendChild(label);
-  });
-
-  rotinaResultado.hidden = false;
-}
-
-async function executarGeracaoRotina() {
-  salvarCamposRotina();
-
-  const perfil = rotinaPerfil?.value.trim() || "";
-  const horarios = rotinaHorarios?.value.trim() || "";
-  const objetivos = rotinaObjetivos?.value.trim() || "";
-
-  if (!perfil && !horarios && !objetivos) {
-    rotinaStatus.textContent = "Preencha pelo menos um dos campos acima.";
-    rotinaStatus.className = "rotina-status rotina-erro";
-    return;
-  }
-
-  if (!obterChaveGemini()) {
-    rotinaStatus.textContent = "Configure a chave do Gemini em Ajustes primeiro.";
-    rotinaStatus.className = "rotina-status rotina-erro";
-    rotinaAvisoChave.hidden = false;
-    return;
-  }
-
-  botaoGerarRotina.disabled = true;
-  botaoGerarRotina.textContent = "Gerando rotina…";
-  rotinaStatus.textContent = "A IA está organizando seus horários livres… (pode levar até 30s)";
-  rotinaStatus.className = "rotina-status rotina-carregando";
-
-  try {
-    const resultado = await gerarRotinaComIA({
-      perfil,
-      horarios,
-      objetivos,
-      habitosExistentes: habitos,
-    });
-    renderizarRotinaGerada(resultado);
-    if (resultado.usouFallback) {
-      rotinaStatus.textContent =
-        "Google bloqueou a IA — usei o planejador local. Revise os hábitos abaixo.";
-      rotinaStatus.className = "rotina-status rotina-aviso-fallback";
-    } else {
-      rotinaStatus.textContent = `${resultado.habitos.length} hábitos sugeridos. Revise e adicione à agenda.`;
-      rotinaStatus.className = "rotina-status rotina-ok";
-    }
-  } catch (erro) {
-    rotinaStatus.textContent = erro.message || "Erro ao gerar rotina.";
-    rotinaStatus.className = "rotina-status rotina-erro";
-  } finally {
-    botaoGerarRotina.disabled = false;
-    botaoGerarRotina.textContent = "Gerar minha rotina";
-  }
-}
-
-function aplicarRotinaGerada() {
-  if (!rotinaGerada) return;
-
-  const selecionados = [];
-  rotinaLista.querySelectorAll(".rotina-item-check:checked").forEach((el) => {
-    const item = rotinaGerada.habitos[Number(el.dataset.indice)];
-    if (item) selecionados.push(item);
-  });
-
-  if (selecionados.length === 0) {
-    rotinaStatus.textContent = "Selecione pelo menos um hábito.";
-    rotinaStatus.className = "rotina-status rotina-erro";
-    return;
-  }
-
-  if (rotinaSubstituir?.checked) {
-    habitos = [];
-  }
-
-  const baseId = Date.now();
-  selecionados.forEach((item, i) => {
-    habitos.push({
-      id: baseId + i,
-      nome: item.nome,
-      categoria: item.categoria,
-      metaSemanal: item.metaSemanal,
-      horario: item.horario || "",
-      historico: {},
-    });
-  });
-
-  salvar();
-  desenhar();
-  ativarPainel("hoje");
-  rotinaStatus.textContent = `${selecionados.length} hábito(s) adicionados à agenda!`;
-  rotinaStatus.className = "rotina-status rotina-ok";
-}
-
 function desenharCardsInsights() {
   const streak = streakGlobal();
   const feitosHoje = habitos.filter(estaFeitoHoje).length;
@@ -976,7 +752,7 @@ function desenharCardsInsights() {
     <article class="card-insight">
       <p class="card-insight-rotulo">Hoje</p>
       <p class="card-insight-valor">${feitosHoje}/${total}</p>
-      <p class="card-insight-apoio">hábitos concluídos</p>
+      <p class="card-insight-apoio">compromissos concluídos</p>
     </article>
     <article class="card-insight">
       <p class="card-insight-rotulo">30 dias</p>
@@ -1002,130 +778,52 @@ function ativarPainel(nome) {
     painel.hidden = !ativo;
     painel.classList.toggle("ativo", ativo);
   });
-
-  if (nome === "rotina") {
-    carregarCamposRotina();
-  }
 }
 
-// Gera o desenho (SVG) da chama conforme o estado emocional
-function mascoteSVG(estado) {
-  const cores = {
-    feliz: { externa: "#f97316", interna: "#fbbf24" },
-    alerta: { externa: "#fb923c", interna: "#fdba74" },
-    triste: { externa: "#9ca3af", interna: "#d1d5db" },
-  }[estado];
-
-  let rosto;
-  if (estado === "feliz") {
-    rosto = `
-      <circle cx="42" cy="62" r="3.2" fill="#1f2937"/>
-      <circle cx="58" cy="62" r="3.2" fill="#1f2937"/>
-      <path d="M42 70 Q50 78 58 70" stroke="#1f2937" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
-  } else if (estado === "alerta") {
-    rosto = `
-      <circle cx="42" cy="62" r="3.2" fill="#1f2937"/>
-      <circle cx="58" cy="62" r="3.2" fill="#1f2937"/>
-      <path d="M43 73 Q50 69 57 73" stroke="#1f2937" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
-  } else {
-    rosto = `
-      <path d="M39 60 Q42 57 45 60" stroke="#374151" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-      <path d="M55 60 Q58 57 61 60" stroke="#374151" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-      <path d="M43 75 Q50 69 57 75" stroke="#374151" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-      <path d="M60 65 q3 5 0 8 q-3 -3 0 -8 Z" fill="#60a5fa"/>`;
-  }
-
-  // Quando está triste, sobem fios de fumaça em vez do brilho da chama
-  const fumaca =
-    estado === "triste"
-      ? `<path d="M44 14 q-6 -6 0 -12" stroke="#cbd5e1" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.8"/>
-         <path d="M56 12 q6 -6 0 -12" stroke="#cbd5e1" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6"/>`
-      : "";
-
-  const animacao = estado === "triste" ? "" : "chama-viva";
-
-  return `
-    <svg viewBox="0 0 100 100" class="mascote-svg ${animacao}" aria-hidden="true">
-      ${fumaca}
-      <ellipse cx="50" cy="93" rx="20" ry="4" fill="rgba(0,0,0,0.12)"/>
-      <path d="M50 8 C 62 30, 82 42, 74 64 A 26 26 0 1 1 26 64 C 18 42, 38 30, 50 8 Z" fill="${cores.externa}"/>
-      <path d="M50 28 C 58 42, 70 50, 64 66 A 15 15 0 1 1 36 66 C 32 52, 44 44, 50 28 Z" fill="${cores.interna}"/>
-      ${rosto}
-    </svg>`;
+function ordenarPorHorario(lista) {
+  return [...lista].sort((a, b) => {
+    if (a.horario && b.horario) return a.horario.localeCompare(b.horario);
+    if (a.horario) return -1;
+    if (b.horario) return 1;
+    return 0;
+  });
 }
 
-function gerarCoachDoDia() {
+function proximoCompromisso() {
+  const agora = new Date();
+  const minutosAgora = agora.getHours() * 60 + agora.getMinutes();
+  const pendentes = ordenarPorHorario(
+    habitos.filter((h) => !estaFeitoHoje(h) && h.horario)
+  );
+
+  for (const item of pendentes) {
+    const [hh, mm] = item.horario.split(":").map(Number);
+    if (hh * 60 + mm >= minutosAgora) return item;
+  }
+
+  return pendentes[0] || null;
+}
+
+function desenharResumoAgenda() {
+  if (!agendaResumo) return;
+
   const total = habitos.length;
   const feitos = habitos.filter((h) => estaFeitoHoje(h)).length;
-  const faltam = total - feitos;
-  const streak = streakGlobal();
-  const notaOntem = (notas[ontemStr()] || "").trim();
-  const extraDiario = complementoCoachDiario(notaOntem);
+  const pendente = total - feitos;
+  const proximo = proximoCompromisso();
 
+  let texto = "";
   if (total === 0) {
-    return "Comece com um único hábito pequeno. Domine o que está ao seu alcance — o resto virá.";
-  }
-
-  if (faltam === 0) {
-    if (streak >= 7) {
-      return `Zerou os ${total} hábitos de hoje. ${streak} dias de sequência — sua disciplina fala por si.${extraDiario}`;
-    }
-    return `Perfeito: os ${total} hábitos de hoje estão feitos. Descanse com a consciência limpa.${extraDiario}`;
-  }
-
-  const pendentes = habitos.filter((h) => !estaFeitoHoje(h)).map((h) => h.nome);
-
-  if (feitos === 0) {
-    if (streak > 0) {
-      return `Sua sequência de ${streak} dias ainda pode continuar. Comece por "${pendentes[0]}".${extraDiario}`;
-    }
-    return `O dia está aberto. Um passo de cada vez — que tal "${pendentes[0]}"?${extraDiario}`;
-  }
-
-  if (faltam === 1) {
-    return `Quase lá: só falta "${pendentes[0]}". O impulso é agora.${extraDiario}`;
-  }
-
-  const lista = pendentes.slice(0, 2).join('" e "');
-  const extra = pendentes.length > 2 ? ` (+${pendentes.length - 2})` : "";
-  return `${feitos} de ${total} feitos. Próximos: "${lista}"${extra}.${extraDiario}`;
-}
-
-function desenharMascote() {
-  const streak = streakGlobal();
-  const feitoHoje = diaConcluido(hojeStr());
-
-  let estado;
-
-  if (streak === 0) {
-    estado = "triste";
-  } else if (!feitoHoje) {
-    estado = "alerta";
+    texto = "Sua agenda está livre. Adicione um compromisso abaixo.";
+  } else if (pendente === 0) {
+    texto = "Tudo concluído por hoje.";
+  } else if (proximo) {
+    texto = `Próximo: <strong>${proximo.horario}</strong> — ${proximo.nome}`;
   } else {
-    estado = "feliz";
+    texto = `${pendente} compromisso${pendente > 1 ? "s" : ""} ainda hoje.`;
   }
 
-  const rotulo = streak === 1 ? "1 dia" : `${streak} dias`;
-  const coach = gerarCoachDoDia();
-  const citacao = fraseFilosoficaDoDia(hojeStr());
-
-  const blocoCitacao = citacao
-    ? `<blockquote class="mascote-citacao">
-        <p class="mascote-citacao-texto">"${citacao.texto}"</p>
-        <cite class="mascote-citacao-autor">— ${citacao.autor}</cite>
-      </blockquote>`
-    : "";
-
-  mascote.innerHTML = `
-    ${mascoteSVG(estado)}
-    <div class="mascote-info">
-      <div class="mascote-streak">${rotulo} de sequência</div>
-      <p class="mascote-coach">
-        <span class="mascote-coach-rotulo">Coach do dia</span>
-        ${coach}
-      </p>
-      ${blocoCitacao}
-    </div>`;
+  agendaResumo.innerHTML = `<p class="agenda-resumo-texto">${texto}</p>`;
 }
 
 function criarItem(habito) {
@@ -1147,9 +845,20 @@ function criarItem(habito) {
   const conteudo = document.createElement("div");
   conteudo.className = "item-conteudo";
 
+  const linha = document.createElement("div");
+  linha.className = "item-linha";
+
+  if (habito.horario) {
+    const hora = document.createElement("span");
+    hora.className = "item-horario";
+    hora.textContent = habito.horario;
+    linha.appendChild(hora);
+  }
+
   const nome = document.createElement("span");
   nome.className = "nome-habito";
   nome.textContent = habito.nome;
+  linha.appendChild(nome);
 
   const meta = document.createElement("div");
   meta.className = "item-meta";
@@ -1158,13 +867,6 @@ function criarItem(habito) {
   tag.className = "tag";
   tag.textContent = habito.categoria || "Geral";
   meta.appendChild(tag);
-
-  if (habito.horario) {
-    const hora = document.createElement("span");
-    hora.className = "meta-info";
-    hora.textContent = "⏰ " + habito.horario;
-    meta.appendChild(hora);
-  }
 
   if (habito.metaSemanal < 7) {
     const feitosSemana = feitosNaSemana(habito);
@@ -1182,7 +884,7 @@ function criarItem(habito) {
     meta.appendChild(rec);
   }
 
-  conteudo.appendChild(nome);
+  conteudo.appendChild(linha);
   conteudo.appendChild(meta);
 
   const marcaStreak = document.createElement("span");
@@ -1232,17 +934,18 @@ function criarItem(habito) {
 function desenhar() {
   desenharFiltros();
 
-  const visiveis =
+  const visiveis = ordenarPorHorario(
     filtroCategoria === "Todas"
       ? habitos
-      : habitos.filter((h) => (h.categoria || "Geral") === filtroCategoria);
+      : habitos.filter((h) => (h.categoria || "Geral") === filtroCategoria)
+  );
 
   listaHabitos.innerHTML = "";
   mensagemVazia.style.display = habitos.length === 0 ? "block" : "none";
 
   visiveis.forEach((habito) => listaHabitos.appendChild(criarItem(habito)));
 
-  desenharMascote();
+  desenharResumoAgenda();
   atualizarResumo();
   desenharGrafico();
   desenharMetasSemana();
@@ -1264,18 +967,6 @@ entradaHabito.addEventListener("keydown", (evento) => {
 });
 entradaHabito.addEventListener("input", atualizarSugestaoHabito);
 botaoUsarSugestao?.addEventListener("click", aplicarSugestaoHabito);
-botaoIrRotina?.addEventListener("click", () => ativarPainel("rotina"));
-botaoGerarRotina?.addEventListener("click", executarGeracaoRotina);
-botaoRegenerarRotina?.addEventListener("click", executarGeracaoRotina);
-botaoAplicarRotina?.addEventListener("click", aplicarRotinaGerada);
-botaoSalvarGemini?.addEventListener("click", salvarChaveGeminiUI);
-botaoRemoverGemini?.addEventListener("click", removerChaveGeminiUI);
-entradaGeminiKey?.addEventListener("focus", () => {
-  if (entradaGeminiKey.value.startsWith("••")) entradaGeminiKey.value = "";
-});
-[rotinaPerfil, rotinaHorarios, rotinaObjetivos].forEach((campo) => {
-  campo?.addEventListener("input", salvarCamposRotina);
-});
 botaoTema.addEventListener("click", alternarTema);
 botaoExportar.addEventListener("click", exportarDados);
 entradaImportar.addEventListener("change", importarDados);
@@ -1308,8 +999,6 @@ export function initApp() {
   carregarNotaHoje();
   carregarNotaDiario(hojeStr());
   ativarPainel(painelAtivo);
-  carregarChaveGemini();
-  carregarCamposRotina();
   desenhar();
 }
 
