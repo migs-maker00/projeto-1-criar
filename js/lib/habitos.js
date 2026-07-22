@@ -1,5 +1,7 @@
 // Modelo de hábitos — simples ou com vários lembretes no mesmo dia (ex.: água 6/6)
 
+import { HORARIOS_AGUA_PADRAO } from "../config.js";
+
 export function passosTotal(habito) {
   const n = Number(habito.lembretes);
   return Number.isFinite(n) && n > 1 ? Math.round(n) : 1;
@@ -49,6 +51,22 @@ export function nomeAguaLimpo() {
   return "Beber água";
 }
 
+export function horariosLembretes(habito) {
+  if (Array.isArray(habito.horariosLembretes) && habito.horariosLembretes.length) {
+    return habito.horariosLembretes.filter((h) => /^\d{2}:\d{2}$/.test(h));
+  }
+  if (ehHabitoAgua(habito) || ehMultiPassos(habito)) {
+    return HORARIOS_AGUA_PADRAO.slice(0, passosTotal(habito));
+  }
+  return [];
+}
+
+export function textoHorariosLembretes(habito) {
+  const lista = horariosLembretes(habito);
+  if (!lista.length) return "";
+  return lista.join(" · ");
+}
+
 export function normalizarHabito(h) {
   const lembretes = Number(h.lembretes);
   const habito = {
@@ -61,6 +79,11 @@ export function normalizarHabito(h) {
   };
   if (Number.isFinite(lembretes) && lembretes > 1) {
     habito.lembretes = Math.round(lembretes);
+  }
+  if (Array.isArray(h.horariosLembretes) && h.horariosLembretes.length) {
+    habito.horariosLembretes = h.horariosLembretes
+      .filter((hora) => typeof hora === "string" && /^\d{2}:\d{2}$/.test(hora))
+      .slice(0, 12);
   }
   return habito;
 }
@@ -88,6 +111,9 @@ export function migrarHabitosAgua(lista, chaveHoje) {
     if (!unico.lembretes) unico.lembretes = 6;
     unico.nome = nomeAguaLimpo();
     unico.categoria = "Saúde";
+    if (!unico.horariosLembretes?.length) {
+      unico.horariosLembretes = HORARIOS_AGUA_PADRAO.slice(0, passosTotal(unico));
+    }
     return [...outros, unico];
   }
 
@@ -96,8 +122,9 @@ export function migrarHabitosAgua(lista, chaveHoje) {
     nome: nomeAguaLimpo(),
     categoria: "Saúde",
     metaSemanal: 7,
-    horario: agua.find((h) => h.horario)?.horario || "07:00",
+    horario: agua.find((h) => h.horario)?.horario || HORARIOS_AGUA_PADRAO[0],
     lembretes: 6,
+    horariosLembretes: HORARIOS_AGUA_PADRAO,
     historico: {},
   };
 
@@ -127,14 +154,16 @@ export function migrarHabitosAgua(lista, chaveHoje) {
   return [...outros, consolidado];
 }
 
-export function criarHabitoAgua(id) {
+export function criarHabitoAgua(id, horarios = HORARIOS_AGUA_PADRAO) {
+  const slots = horarios.length ? horarios : HORARIOS_AGUA_PADRAO;
   return {
     id,
     nome: nomeAguaLimpo(),
     categoria: "Saúde",
     metaSemanal: 7,
-    horario: "07:00",
-    lembretes: 6,
+    horario: slots[0],
+    lembretes: slots.length,
+    horariosLembretes: slots,
     historico: {},
   };
 }

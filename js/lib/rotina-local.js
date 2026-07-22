@@ -41,6 +41,13 @@ function validarHabito(item) {
 
   const habito = { nome, categoria, metaSemanal, horario, motivo };
   if (lembretes) habito.lembretes = lembretes;
+
+  if (Array.isArray(item.horariosLembretes) && item.horariosLembretes.length) {
+    habito.horariosLembretes = item.horariosLembretes
+      .filter((h) => typeof h === "string" && /^\d{2}:\d{2}$/.test(h))
+      .slice(0, 12);
+  }
+
   return habito;
 }
 
@@ -107,14 +114,30 @@ function gerarRotinaLocal(dados) {
       blocos,
       6
     );
-    const total = slots.length || 6;
+    const horarios = slots.length ? slots : ["06:30", "09:30", "12:00", "15:30", "18:00", "21:00"];
     add({
       nome: "Beber água",
       categoria: "Saúde",
       metaSemanal: 7,
-      horario: slots[0] || "07:00",
-      lembretes: total,
-      motivo: `${total} lembretes no dia — cada toque avança 1/${total}`,
+      horario: horarios[0],
+      lembretes: horarios.length,
+      horariosLembretes: horarios,
+      motivo: `${horarios.length} lembretes: ${horarios.join(", ")}`,
+    });
+  }
+
+  if (/academia|musculacao|musculação|treino|jiu|judo|luta|crossfit/.test(texto)) {
+    const slot =
+      escolherHorariosLivres(["18:00", "17:30", "19:00", "07:00", "20:30"], blocos, 1)[0] ||
+      "18:00";
+    const nomeTreino = /jiu|judo|luta/.test(texto) ? "Treino de luta" : "Academia";
+    const meta = /2x|duas vezes|2 vezes/.test(texto) ? 2 : /4x|quatro/.test(texto) ? 4 : 3;
+    add({
+      nome: nomeTreino,
+      categoria: "Saúde",
+      metaSemanal: meta,
+      horario: slot,
+      motivo: "Fora dos horários ocupados que você descreveu",
     });
   }
 

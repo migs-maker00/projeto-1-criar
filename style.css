@@ -228,6 +228,49 @@ body {
   display: none;
 }
 
+.dica-inicio {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--marca) 30%, var(--borda));
+  background: color-mix(in srgb, var(--azul-claro) 22%, var(--superficie-elevada));
+}
+
+.dica-inicio-texto {
+  margin: 0 0 12px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--texto);
+}
+
+.dica-fechar {
+  width: auto;
+  min-height: 38px;
+  padding: 8px 14px;
+}
+
+.rotina-acoes {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.info-versao {
+  margin: 12px 0 0;
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+  font-weight: 600;
+}
+
+.meta-horarios-lembretes {
+  display: block;
+  width: 100%;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--texto-suave);
+  letter-spacing: 0.01em;
+}
+
 .painel.ativo {
   animation: painel-entra 0.28s ease both;
 }

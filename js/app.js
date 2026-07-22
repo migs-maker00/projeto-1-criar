@@ -1,3 +1,4 @@
+import { APP_VERSION } from "./config.js";
 import { fraseFilosoficaDoDia } from "./lib/filosofia.js";
 import {
   criarHabitoAgua,
@@ -5,11 +6,13 @@ import {
   ehHabitoAgua,
   ehMultiPassos,
   estaCompletoNoDia,
+  horariosLembretes,
   migrarHabitosAgua,
   nomeAguaLimpo,
   normalizarHabito,
   passosTotal,
   progressoNoDia,
+  textoHorariosLembretes,
 } from "./lib/habitos.js";
 import {
   complementoCoachDiario,
@@ -72,6 +75,10 @@ const rotinaLista = document.getElementById("rotina-lista");
 const rotinaSubstituir = document.getElementById("rotina-substituir");
 const botaoAplicarRotina = document.getElementById("botao-aplicar-rotina");
 const botaoRegenerarRotina = document.getElementById("botao-regenerar-rotina");
+const botaoMontarAdicionar = document.getElementById("botao-montar-adicionar");
+const dicaInicio = document.getElementById("dica-inicio");
+const botaoDicaFechar = document.getElementById("dica-fechar");
+const infoVersao = document.getElementById("info-versao");
 
 // ---- Estado (a "fonte da verdade" do app) ----
 let habitos = [];
@@ -134,7 +141,7 @@ function mostrarData() {
 // ============ TEMA (claro/escuro) ============
 function aplicarTema(tema) {
   document.documentElement.setAttribute("data-tema", tema);
-  botaoTema.textContent = tema === "escuro" ? "☀" : "☾";
+  if (botaoTema) botaoTema.textContent = tema === "escuro" ? "☀" : "☾";
   const metaTema = document.querySelector('meta[name="theme-color"]');
   if (metaTema) metaTema.content = tema === "escuro" ? "#0f0e0d" : "#e8dfd1";
   const metaStatus = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
@@ -347,7 +354,8 @@ function montarHabitoDoFormulario(texto) {
     habito.categoria = "Saúde";
     habito.metaSemanal = 7;
     habito.lembretes = sugestao.lembretes || 6;
-    if (!habito.horario) habito.horario = "07:00";
+    habito.horariosLembretes = horariosLembretes({ lembretes: habito.lembretes });
+    if (!habito.horario) habito.horario = habito.horariosLembretes[0] || "06:30";
   }
 
   return habito;
@@ -1056,6 +1064,7 @@ function aplicarRotinaGerada() {
       historico: {},
     };
     if (item.lembretes > 1) habito.lembretes = item.lembretes;
+    if (item.horariosLembretes?.length) habito.horariosLembretes = item.horariosLembretes;
     habitos.push(habito);
     adicionados++;
   });
@@ -1076,6 +1085,38 @@ function aplicarRotinaGerada() {
   rotinaStatus.textContent = `${adicionados} hábito(s) adicionados! Veja na aba Hoje.`;
   rotinaStatus.className = "rotina-status rotina-ok";
   mostrarFeedback(`${adicionados} hábito(s) da rotina adicionados!`);
+  fecharDicaInicio();
+}
+
+async function montarEAdicionarRotina() {
+  await executarGeracaoRotina();
+  if (!rotinaGerada?.habitos?.length) return;
+
+  rotinaLista.querySelectorAll(".rotina-item-check").forEach((el) => {
+    const item = rotinaGerada.habitos[Number(el.dataset.indice)];
+    el.checked = Boolean(item && !habitoJaExiste(item.nome));
+  });
+
+  aplicarRotinaGerada();
+}
+
+function fecharDicaInicio() {
+  if (!dicaInicio) return;
+  dicaInicio.hidden = true;
+  localStorage.setItem("dica-inicio-vista", "1");
+}
+
+function mostrarDicaInicio() {
+  if (!dicaInicio) return;
+  if (localStorage.getItem("dica-inicio-vista")) return;
+  if (habitos.length > 0) return;
+  dicaInicio.hidden = false;
+}
+
+function atualizarInfoVersao() {
+  if (!infoVersao) return;
+  const online = location.hostname.includes("github.io");
+  infoVersao.textContent = `Versão ${APP_VERSION}${online ? " · online" : " · local"}`;
 }
 
 function desenharCardsInsights() {
@@ -1271,6 +1312,14 @@ function criarItem(habito) {
           ? "todos os lembretes feitos"
           : `lembrete ${progresso} de ${totalPassos}`;
     meta.appendChild(lembrete);
+
+    const horariosTxt = textoHorariosLembretes(habito);
+    if (horariosTxt) {
+      const horariosEl = document.createElement("span");
+      horariosEl.className = "meta-horarios-lembretes";
+      horariosEl.textContent = horariosTxt;
+      meta.appendChild(horariosEl);
+    }
   }
 
   if (habito.metaSemanal < 7) {
@@ -1365,36 +1414,6 @@ function carregarNotaHoje() {
 }
 
 // ============ LIGAÇÕES DE EVENTOS ============
-botaoAdicionar.addEventListener("click", adicionarHabito);
-entradaHabito.addEventListener("keydown", (evento) => {
-  if (evento.key === "Enter") adicionarHabito();
-});
-entradaHabito.addEventListener("input", atualizarSugestaoHabito);
-botaoUsarSugestao?.addEventListener("click", aplicarSugestaoHabito);
-botaoTema.addEventListener("click", alternarTema);
-botaoExportar.addEventListener("click", exportarDados);
-entradaImportar.addEventListener("change", importarDados);
-notaHoje.addEventListener("input", () => {
-  definirNota(hojeStr(), notaHoje.value);
-});
-diarioTexto.addEventListener("input", () => {
-  definirNota(dataDiarioSelecionada, diarioTexto.value);
-});
-diarioData.addEventListener("change", () => {
-  if (diarioData.value) carregarNotaDiario(diarioData.value);
-});
-diarioHojeBotao.addEventListener("click", () => {
-  carregarNotaDiario(hojeStr());
-});
-navPaineis.addEventListener("click", (evento) => {
-  const botao = evento.target.closest(".nav-item");
-  if (!botao) return;
-  ativarPainel(botao.dataset.painel);
-  if (botao.dataset.painel === "diario") {
-    carregarNotaDiario(dataDiarioSelecionada || hojeStr());
-  }
-});
-
 function ligarEventosRotina() {
   const painelRotina = document.getElementById("painel-rotina");
   if (!painelRotina) return;
@@ -1405,6 +1424,11 @@ function ligarEventosRotina() {
     if (alvo.closest("#botao-gerar-rotina")) {
       evento.preventDefault();
       executarGeracaoRotina();
+      return;
+    }
+    if (alvo.closest("#botao-montar-adicionar")) {
+      evento.preventDefault();
+      montarEAdicionarRotina();
       return;
     }
     if (alvo.closest("#botao-regenerar-rotina")) {
@@ -1425,6 +1449,41 @@ function ligarEventosRotina() {
   });
 }
 
+function ligarTodosEventos() {
+  ligarEventosRotina();
+
+  botaoAdicionar?.addEventListener("click", adicionarHabito);
+  entradaHabito?.addEventListener("keydown", (evento) => {
+    if (evento.key === "Enter") adicionarHabito();
+  });
+  entradaHabito?.addEventListener("input", atualizarSugestaoHabito);
+  botaoUsarSugestao?.addEventListener("click", aplicarSugestaoHabito);
+  botaoTema?.addEventListener("click", alternarTema);
+  botaoExportar?.addEventListener("click", exportarDados);
+  entradaImportar?.addEventListener("change", importarDados);
+  notaHoje?.addEventListener("input", () => {
+    definirNota(hojeStr(), notaHoje.value);
+  });
+  diarioTexto?.addEventListener("input", () => {
+    definirNota(dataDiarioSelecionada, diarioTexto.value);
+  });
+  diarioData?.addEventListener("change", () => {
+    if (diarioData.value) carregarNotaDiario(diarioData.value);
+  });
+  diarioHojeBotao?.addEventListener("click", () => {
+    carregarNotaDiario(hojeStr());
+  });
+  navPaineis?.addEventListener("click", (evento) => {
+    const botao = evento.target.closest(".nav-item");
+    if (!botao) return;
+    ativarPainel(botao.dataset.painel);
+    if (botao.dataset.painel === "diario") {
+      carregarNotaDiario(dataDiarioSelecionada || hojeStr());
+    }
+  });
+  botaoDicaFechar?.addEventListener("click", fecharDicaInicio);
+}
+
 // ============ INICIALIZAÇÃO ============
 export function initApp() {
   aplicarTema(localStorage.getItem("tema") || "claro");
@@ -1433,8 +1492,10 @@ export function initApp() {
   carregarCamposRotina();
   carregarNotaHoje();
   carregarNotaDiario(hojeStr());
+  ligarTodosEventos();
   ativarPainel(painelAtivo);
-  ligarEventosRotina();
+  atualizarInfoVersao();
+  mostrarDicaInicio();
   desenhar();
 }
 
