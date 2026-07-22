@@ -1,25 +1,18 @@
 /**
  * Ponto de entrada do app — expõe API para sync.js e inicializa a UI.
+ * Import dinâmico com versão para evitar cache antigo no iPhone/PWA.
  */
 import { APP_VERSION } from "./config.js";
-import {
-  initApp,
-  aplicarEstadoRemoto,
-  aplicarTema,
-  desenhar,
-  carregarNotaHoje,
-  carregarNotaDiario,
-  getEstadoExportavel,
-  hojeStr,
-} from "./app.js";
 
-initApp();
+const app = await import(`./app.js?v=${APP_VERSION}`);
+
+app.initApp();
 
 window.APP_VERSION = APP_VERSION;
-window.getEstadoHabitos = getEstadoExportavel;
-window.aplicarEstadoRemoto = aplicarEstadoRemoto;
-window.aplicarTema = aplicarTema;
-window.desenhar = desenhar;
-window.carregarNotaHoje = carregarNotaHoje;
-window.carregarNotaDiario = carregarNotaDiario;
-window.hojeStr = hojeStr;
+window.getEstadoHabitos = app.getEstadoExportavel;
+window.aplicarEstadoRemoto = app.aplicarEstadoRemoto;
+window.aplicarTema = app.aplicarTema;
+window.desenhar = app.desenhar;
+window.carregarNotaHoje = app.carregarNotaHoje;
+window.carregarNotaDiario = app.carregarNotaDiario;
+window.hojeStr = app.hojeStr;

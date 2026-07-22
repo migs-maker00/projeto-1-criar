@@ -4,8 +4,8 @@
   "description": "Sua agenda pessoal do dia",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#e8eee9",
-  "theme_color": "#0f4c5c",
+  "background_color": "#e8dfd1",
+  "theme_color": "#1b365d",
   "icons": [
     {
       "src": "icon-192.png",
