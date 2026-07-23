@@ -153,16 +153,19 @@ function gerarRotinaLocal(dados) {
     });
   }
 
-  if (/ler|leitura|livro/.test(texto)) {
+  if (/video|vídeo|audio|áudio|podcast|aprend|vocabul/.test(texto)) {
     const slot =
-      escolherHorariosLivres(["16:30", "20:00", "21:30", "06:45"], blocos, 1)[0] ||
-      "20:00";
+      escolherHorariosLivres(["19:00", "19:30", "20:00", "16:30"], blocos, 1)[0] ||
+      "19:00";
     add({
-      nome: "Ler 20 minutos",
+      nome: "Aprender com vídeo/áudio (15 min)",
       categoria: "Estudo",
-      metaSemanal: 7,
+      metaSemanal: 5,
       horario: slot,
-      motivo: "Janela tranquila fora dos compromissos fixos",
+      importancia: 1,
+      microPassos: ["Escolher vídeo ou áudio", "Focar 10 minutos", "Explicar 1 coisa em voz alta"],
+      planoB: "Assistir 2 min de vídeo ou ouvir 1 trecho.",
+      motivo: "Aprender sem leitura — ouvir e falar fixa mais",
     });
   }
 
@@ -199,7 +202,7 @@ function gerarRotinaLocal(dados) {
       metaSemanal: 5,
       horario: slot,
       importancia: 1,
-      microPassos: ["Abrir o material", "Focar 25 minutos", "Revisar anotações"],
+      microPassos: ["Escolher vídeo ou áudio", "Focar 25 minutos", "Explicar em voz alta"],
       motivo: "Bloco de foco fora do horário de aula",
     });
   }

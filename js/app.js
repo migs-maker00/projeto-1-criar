@@ -1,5 +1,5 @@
-import { APP_VERSION } from "./config.js?v=1.8.2";
-import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.8.2";
+import { APP_VERSION } from "./config.js?v=1.8.3";
+import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.8.3";
 import {
   criarHabitoAgua,
   detectarTextoAgua,
@@ -24,13 +24,13 @@ import {
   textoHorariosLembretes,
   textoPlanoB,
   todosMicroFeitos,
-} from "./lib/habitos.js?v=1.8.2";
+} from "./lib/habitos.js?v=1.8.3";
 import {
   carregarPerfil,
   marcarPerfilInicializado,
   perfilInicializado,
   salvarPerfil,
-} from "./lib/perfil.js?v=1.8.2";
+} from "./lib/perfil.js?v=1.8.3";
 import {
   correspondePreset,
   habitosRotinaCompleta,
@@ -39,26 +39,31 @@ import {
   PRIORIDADES_PRESET,
   rotinaJaMontada,
   textosPlanejadorRotina,
-} from "./lib/rotina-preset.js?v=1.8.2";
+} from "./lib/rotina-preset.js?v=1.8.3";
 import {
-  detectarHabitoEstudo,
+  MICRO_APRENDER,
+  migrarHabitosAprendizado,
+  PLANO_B_APRENDER,
+  textoSugereAprender,
+} from "./lib/aprender.js?v=1.8.3";
+import {
   ehHorarioDificil,
   mensagemTarde,
   sugestaoTarde,
-} from "./lib/tarde.js?v=1.8.2";
+} from "./lib/tarde.js?v=1.8.3";
 import {
   complementoCoachDiario,
   gerarResumoSemana,
   sugerirHabito,
   textoSugestao,
-} from "./lib/inteligencia.js?v=1.8.2";
+} from "./lib/inteligencia.js?v=1.8.3";
 import {
   iniciarVerificacaoLembretes,
   lembretesAtivos,
   pedirPermissaoLembretes,
   verificarLembretes,
-} from "./lib/lembretes.js?v=1.8.2";
-import { sincronizarAgendaSW } from "./lib/agenda-notif.js?v=1.8.2";
+} from "./lib/lembretes.js?v=1.8.3";
+import { sincronizarAgendaSW } from "./lib/agenda-notif.js?v=1.8.3";
 import {
   cancelarTimer,
   cronometroAtivo,
@@ -73,12 +78,12 @@ import {
   segundosRestantesTimer,
   textoCountdown,
   timerAtivo,
-} from "./lib/foco.js?v=1.8.2";
+} from "./lib/foco.js?v=1.8.3";
 import {
   carregarPerfilRotina,
   gerarRotina,
   salvarPerfilRotina,
-} from "./lib/rotina-local.js?v=1.8.2";
+} from "./lib/rotina-local.js?v=1.8.3";
 import {
   adicionarInbox,
   alternarPrioridade,
@@ -110,7 +115,7 @@ import {
   salvarPrioridades,
   salvarTemaSemana,
   sugestaoAgora,
-} from "./lib/tdah.js?v=1.8.2";
+} from "./lib/tdah.js?v=1.8.3";
 
 // ---- Referências aos elementos da página (DOM) ----
 const entradaHabito = document.getElementById("entrada-habito");
@@ -387,6 +392,7 @@ function carregar() {
       ),
       hojeStr()
     );
+    habitos = migrarHabitosAprendizado(habitos).map(normalizarHabito);
     salvar();
   }
 
@@ -503,10 +509,10 @@ function montarHabitoDoFormulario(texto) {
     if (!habito.contextoLembrete) habito.contextoLembrete = "Beber um copo de água agora.";
   }
 
-  if (/estud|prova|ler|leitura/.test(texto.toLowerCase()) && !micro.length) {
-    habito.microPassos = ["Abrir o material", "Focar 10 minutos", "Marcar o que ficou"];
-    habito.planoB = habito.planoB || "Só abrir o material e ler 1 página.";
-    habito.preparar = habito.preparar || ["Mesa limpa", "Celular longe"];
+  if (textoSugereAprender(texto) && !micro.length) {
+    habito.microPassos = [...MICRO_APRENDER];
+    habito.planoB = habito.planoB || PLANO_B_APRENDER;
+    habito.preparar = habito.preparar || ["Fone ou alto-falante", "Celular longe"];
     habito.diasAtivos = [1, 2, 3, 4, 5];
   }
 
@@ -571,16 +577,29 @@ const ATALHOS_RAPIDOS = {
   }),
   estudo: () => ({
     id: novoIdHabito(),
-    nome: "Estudar 15 min",
+    nome: "Aprender 15 min",
     categoria: "Estudo",
     metaSemanal: 5,
     horario: "19:00",
     importancia: 1,
     diasAtivos: [1, 2, 3, 4, 5],
-    microPassos: ["Abrir o material", "Focar 10 minutos", "Anotar dúvidas"],
-    planoB: "Só abrir o material e ler 1 página.",
-    preparar: ["Mesa limpa", "Água por perto", "Celular longe"],
-    contextoLembrete: "Chegou da escola — só 10 min já conta.",
+    microPassos: [...MICRO_APRENDER],
+    planoB: PLANO_B_APRENDER,
+    preparar: ["Fone ou alto-falante", "Água por perto", "Celular longe"],
+    contextoLembrete: "Vídeo, áudio ou falar em voz alta — sem precisar ler.",
+    historico: {},
+  }),
+  vocabulario: () => ({
+    id: novoIdHabito(),
+    nome: "Vocabulário 5 min",
+    categoria: "Estudo",
+    metaSemanal: 5,
+    horario: "19:20",
+    importancia: 2,
+    diasAtivos: [1, 2, 3, 4, 5],
+    microPassos: ["Ouvir 3 palavras novas", "Repetir em voz alta", "Usar 1 numa frase"],
+    planoB: "Ouvir só 1 palavra e repetir 3 vezes.",
+    contextoLembrete: "Falar fixa mais que ler.",
     historico: {},
   }),
   meditar: () => ({
@@ -596,7 +615,8 @@ const ATALHOS_RAPIDOS = {
 const ROTULOS_ATALHO = {
   agua: "Beber água",
   academia: "Academia",
-  estudo: "Estudar 15 min",
+  estudo: "Aprender 15 min",
+  vocabulario: "Vocabulário 5 min",
   meditar: "Meditar 10 min",
 };
 
@@ -1596,7 +1616,7 @@ function obterSugestaoAgora() {
   if (ehHorarioDificil()) {
     const tarde = sugestaoTarde(habitos, {
       estaPendente: pendente,
-      detectarEstudo: detectarHabitoEstudo,
+      detectarEstudo: detectarHabitoAprender,
     });
     if (tarde) return tarde;
   }
@@ -1901,6 +1921,7 @@ function aplicarRotinaCompleta(silencioso = false) {
   }
 
   salvarPerfilRotina(textosPlanejadorRotina());
+  habitos = migrarHabitosAprendizado(habitos).map(normalizarHabito);
   marcarRotinaMontada();
   marcarPerfilInicializado();
   salvarPerfil(carregarPerfil());

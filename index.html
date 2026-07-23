@@ -20,7 +20,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=1.8.2" />
+  <link rel="stylesheet" href="style.css?v=1.8.3" />
 </head>
 <body>
   <div class="ambiente">
@@ -52,7 +52,8 @@
           <div class="atalhos-rapidos">
             <button type="button" class="atalho" data-atalho="agua">💧 Água</button>
             <button type="button" class="atalho" data-atalho="academia">🏋️ Academia</button>
-            <button type="button" class="atalho" data-atalho="estudo">📚 Estudo</button>
+            <button type="button" class="atalho" data-atalho="estudo">🎧 Aprender</button>
+            <button type="button" class="atalho" data-atalho="vocabulario">🗣️ Vocabulário</button>
             <button type="button" class="atalho" data-atalho="meditar">🧘 Meditar</button>
           </div>
 
@@ -427,7 +428,7 @@
 
   <script>
     (function () {
-      var V = "1.8.2";
+      var V = "1.8.3";
       var salva = localStorage.getItem("app-versao");
       if (salva && salva !== V) {
         localStorage.setItem("app-versao", V);
@@ -444,7 +445,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script type="module" src="js/main.js?v=1.8.2"></script>
+  <script type="module" src="js/main.js?v=1.8.3"></script>
   <script defer src="sync.js?v=4"></script>
 </body>
 </html>

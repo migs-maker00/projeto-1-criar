@@ -12,7 +12,8 @@ const REGRAS_CATEGORIA = [
   {
     categoria: "Estudo",
     palavras: [
-      "ler", "livro", "estud", "curso", "inglês", "ingles", "aprender", "revisar",
+      "ler", "livro", "estud", "aprend", "vocabul", "vídeo", "video", "áudio", "audio", "podcast",
+      "curso", "inglês", "ingles", "aprender", "revisar",
       "aula", "prova", "redação", "redacao", "matéria", "materia", "faculdade",
       "universidade", "código", "codigo", "programar",
     ],
@@ -98,8 +99,8 @@ function sugerirHabito(nome) {
       horario = "20:00";
     } else if (/medita|silencio/.test(texto)) {
       horario = "06:15";
-    } else if (/ler|leitura|livro/.test(texto)) {
-      horario = "20:00";
+    } else if (/video|vídeo|audio|áudio|podcast|vocabul/.test(texto)) {
+      horario = "19:00";
     } else if (/caminh|correr|academia|exerc/.test(texto)) {
       horario = "07:00";
     } else if (categoria === "Estudo") {

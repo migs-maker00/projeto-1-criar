@@ -83,7 +83,7 @@ export function montarAgendaNotificacoes(
     agenda.push({
       tag: `${chave}-tarde-escola`,
       title: "Chegou da escola?",
-      body: "Só 2 min de estudo ou abrir o material já conta. O jogo pode esperar.",
+      body: "Só 2 min de vídeo/áudio ou falar 1 coisa em voz alta. O jogo pode esperar.",
       timestamp: hhmmParaTimestamp("17:15", hoje),
       url: baseUrl,
       importante: true,
