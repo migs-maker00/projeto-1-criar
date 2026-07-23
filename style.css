@@ -1494,6 +1494,165 @@ body {
   overflow: hidden;
 }
 
+/* Modo TDAH — Agora, inbox, prioridades */
+.bloco-agora {
+  border: 2px solid color-mix(in srgb, var(--marca) 40%, var(--borda));
+  background: color-mix(in srgb, var(--azul-claro) 28%, var(--superficie-elevada));
+}
+
+.agora-conteudo {
+  display: grid;
+  gap: 8px;
+}
+
+.agora-motivo {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--marca);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.agora-botao {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  border-radius: 12px;
+  background: var(--marca);
+  color: var(--destaque-texto, #faf7f1);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+}
+
+.agora-botao:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.agora-hora {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+}
+
+.agora-nome {
+  flex: 1;
+}
+
+.agora-dica,
+.agora-vazio {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+}
+
+.bloco-inbox {
+  margin-bottom: 16px;
+}
+
+.inbox-linha {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.inbox-entrada {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  background: var(--superficie-elevada);
+  color: var(--texto);
+}
+
+.inbox-entrada:focus {
+  outline: none;
+  border-color: var(--marca);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--marca) 18%, transparent);
+}
+
+.lista-inbox {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.inbox-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px dashed color-mix(in srgb, var(--marca) 25%, var(--borda));
+  background: color-mix(in srgb, var(--fundo) 50%, var(--superficie-elevada));
+}
+
+.inbox-texto {
+  flex: 1;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--texto);
+}
+
+.inbox-remover {
+  border: none;
+  background: transparent;
+  color: var(--texto-suave);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.inbox-vazio {
+  margin-top: 0;
+  font-size: 0.88rem;
+}
+
+.rotulo-foco {
+  margin: 8px 0 10px;
+}
+
+.item-foco {
+  border-color: color-mix(in srgb, var(--marca) 45%, var(--borda));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--marca) 20%, transparent);
+}
+
+.botao-foco {
+  border: none;
+  background: transparent;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  color: color-mix(in srgb, var(--texto-suave) 80%, transparent);
+  padding: 4px;
+}
+
+.botao-foco.ativo {
+  color: var(--marca);
+}
+
+.item-destaque {
+  animation: item-pulso 0.6s ease 2;
+}
+
+@keyframes item-pulso {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.01); box-shadow: 0 0 0 3px color-mix(in srgb, var(--marca) 25%, transparent); }
+}
+
 @media (max-width: 480px) {
   html,
   body,

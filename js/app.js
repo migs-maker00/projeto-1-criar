@@ -1,5 +1,5 @@
-import { APP_VERSION } from "./config.js?v=1.4.2";
-import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.4.2";
+import { APP_VERSION } from "./config.js?v=1.5.0";
+import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.5.0";
 import {
   criarHabitoAgua,
   detectarTextoAgua,
@@ -13,18 +13,30 @@ import {
   passosTotal,
   progressoNoDia,
   textoHorariosLembretes,
-} from "./lib/habitos.js?v=1.4.2";
+} from "./lib/habitos.js?v=1.5.0";
 import {
   complementoCoachDiario,
   gerarResumoSemana,
   sugerirHabito,
   textoSugestao,
-} from "./lib/inteligencia.js?v=1.4.2";
+} from "./lib/inteligencia.js?v=1.5.0";
 import {
   carregarPerfilRotina,
   gerarRotina,
   salvarPerfilRotina,
-} from "./lib/rotina-local.js?v=1.4.2";
+} from "./lib/rotina-local.js?v=1.5.0";
+import {
+  adicionarInbox,
+  alternarPrioridade,
+  carregarInbox,
+  carregarPrioridades,
+  ehPrioridadeHoje,
+  MAX_PRIORIDADES,
+  ordenarComPrioridades,
+  prioridadesDoDia,
+  removerInbox,
+  sugestaoAgora,
+} from "./lib/tdah.js?v=1.5.0";
 
 // ---- Referências aos elementos da página (DOM) ----
 const entradaHabito = document.getElementById("entrada-habito");
@@ -79,6 +91,12 @@ const botaoMontarAdicionar = document.getElementById("botao-montar-adicionar");
 const dicaInicio = document.getElementById("dica-inicio");
 const botaoDicaFechar = document.getElementById("dica-fechar");
 const infoVersao = document.getElementById("info-versao");
+const agoraConteudo = document.getElementById("agora-conteudo");
+const entradaInbox = document.getElementById("entrada-inbox");
+const botaoInbox = document.getElementById("botao-inbox");
+const listaInbox = document.getElementById("lista-inbox");
+const inboxVazio = document.getElementById("inbox-vazio");
+const rotuloFoco = document.getElementById("rotulo-foco");
 
 // ---- Estado (a "fonte da verdade" do app) ----
 let habitos = [];
@@ -537,7 +555,13 @@ function iniciarEdicao(habito, item, nomeSpan) {
 
 // ============ EXPORTAR / IMPORTAR ============
 function exportarDados() {
-  const dados = { versao: 1, habitos, notas };
+  const dados = {
+    versao: 2,
+    habitos,
+    notas,
+    inbox: carregarInbox(),
+    prioridades: carregarPrioridades(),
+  };
   const blob = new Blob([JSON.stringify(dados, null, 2)], {
     type: "application/json",
   });
@@ -562,6 +586,12 @@ function importarDados(evento) {
 
       habitos = dados.habitos;
       notas = dados.notas || {};
+      if (Array.isArray(dados.inbox)) {
+        localStorage.setItem("inbox-captura", JSON.stringify(dados.inbox));
+      }
+      if (dados.prioridades && typeof dados.prioridades === "object") {
+        localStorage.setItem("prioridades-dia", JSON.stringify(dados.prioridades));
+      }
       salvar();
       salvarNotas();
       carregarNotaHoje();
@@ -1187,18 +1217,103 @@ function ordenarPorHorario(lista) {
 }
 
 function proximoCompromisso() {
-  const agora = new Date();
-  const minutosAgora = agora.getHours() * 60 + agora.getMinutes();
-  const pendentes = ordenarPorHorario(
-    habitos.filter((h) => !estaFeitoHoje(h) && h.horario)
-  );
+  const chave = hojeStr();
+  const sugestao = sugestaoAgora(habitos, chave, {
+    estaPendente: (h) => !estaFeitoHoje(h),
+    ordenarPorHorario,
+    prioridades: prioridadesDoDia(chave),
+  });
+  return sugestao?.habito || null;
+}
 
-  for (const item of pendentes) {
-    const [hh, mm] = item.horario.split(":").map(Number);
-    if (hh * 60 + mm >= minutosAgora) return item;
+function irParaHabito(id) {
+  const item = document.querySelector(`.item-habito[data-habito-id="${id}"]`);
+  if (!item) return;
+  item.scrollIntoView({ behavior: "smooth", block: "center" });
+  item.classList.add("item-destaque");
+  setTimeout(() => item.classList.remove("item-destaque"), 1800);
+}
+
+function alternarFocoHabito(habitoId) {
+  const resultado = alternarPrioridade(hojeStr(), habitoId);
+  if (!resultado.ok) {
+    mostrarFeedback(resultado.mensagem, "aviso");
+    return;
+  }
+  desenhar();
+  mostrarFeedback(resultado.mensagem);
+}
+
+function capturarInbox() {
+  const texto = entradaInbox?.value || "";
+  const item = adicionarInbox(texto);
+  if (!item) return;
+  if (entradaInbox) entradaInbox.value = "";
+  desenharInbox();
+  mostrarFeedback("Anotado na inbox — organize quando puder.");
+}
+
+function desenharAgora() {
+  if (!agoraConteudo) return;
+
+  const chave = hojeStr();
+  const sugestao = sugestaoAgora(habitos, chave, {
+    estaPendente: (h) => !estaFeitoHoje(h),
+    ordenarPorHorario,
+    prioridades: prioridadesDoDia(chave),
+  });
+
+  if (!sugestao) {
+    agoraConteudo.innerHTML = `
+      <p class="agora-texto agora-vazio">Nada pendente agora. Descanse ou revise a inbox.</p>`;
+    return;
   }
 
-  return pendentes[0] || null;
+  const { habito, motivo } = sugestao;
+  const horario = habito.horario ? `<span class="agora-hora">${habito.horario}</span>` : "";
+
+  agoraConteudo.innerHTML = `
+    <p class="agora-motivo">${motivo}</p>
+    <button type="button" class="agora-botao" data-ir-habito="${habito.id}">
+      ${horario}
+      <span class="agora-nome">${habito.nome}</span>
+    </button>
+    <p class="agora-dica">Um passo só. Sem precisar fazer tudo.</p>`;
+
+  agoraConteudo.querySelector(".agora-botao")?.addEventListener("click", () => {
+    irParaHabito(habito.id);
+  });
+}
+
+function desenharInbox() {
+  if (!listaInbox) return;
+
+  const itens = carregarInbox();
+  listaInbox.innerHTML = "";
+  if (inboxVazio) inboxVazio.hidden = itens.length > 0;
+
+  itens.forEach((item) => {
+    const li = document.createElement("li");
+    li.className = "inbox-item";
+
+    const texto = document.createElement("span");
+    texto.className = "inbox-texto";
+    texto.textContent = item.texto;
+
+    const remover = document.createElement("button");
+    remover.type = "button";
+    remover.className = "inbox-remover";
+    remover.textContent = "×";
+    remover.title = "Remover da inbox";
+    remover.addEventListener("click", () => {
+      removerInbox(item.id);
+      desenharInbox();
+    });
+
+    li.appendChild(texto);
+    li.appendChild(remover);
+    listaInbox.appendChild(li);
+  });
 }
 
 function desenharResumoAgenda() {
@@ -1222,6 +1337,8 @@ function desenharResumoAgenda() {
 
   agendaResumo.innerHTML = `<p class="agenda-resumo-texto">${texto}</p>`;
   desenharFilosofia();
+  desenharAgora();
+  desenharInbox();
 }
 
 function desenharFilosofia() {
@@ -1246,8 +1363,10 @@ function criarItem(habito) {
   const totalPassos = passosTotal(habito);
 
   const item = document.createElement("li");
-  item.className = "item-habito" + (feito ? " feito" : "");
+  const emFoco = ehPrioridadeHoje(hoje, habito.id);
+  item.className = "item-habito" + (feito ? " feito" : "") + (emFoco ? " item-foco" : "");
   item.draggable = true;
+  item.dataset.habitoId = String(habito.id);
 
   let controle;
   if (multi) {
@@ -1357,6 +1476,13 @@ function criarItem(habito) {
   botaoRemover.title = "Remover hábito";
   botaoRemover.addEventListener("click", () => removerHabito(habito.id));
 
+  const botaoFoco = document.createElement("button");
+  botaoFoco.type = "button";
+  botaoFoco.className = "botao-foco" + (emFoco ? " ativo" : "");
+  botaoFoco.textContent = emFoco ? "★" : "☆";
+  botaoFoco.title = `Prioridade de hoje (máx. ${MAX_PRIORIDADES})`;
+  botaoFoco.addEventListener("click", () => alternarFocoHabito(habito.id));
+
   // Arrastar para reordenar (Drag and Drop API)
   item.addEventListener("dragstart", () => {
     idArrastando = habito.id;
@@ -1380,6 +1506,7 @@ function criarItem(habito) {
   item.appendChild(controle);
   item.appendChild(conteudo);
   item.appendChild(marcaStreak);
+  item.appendChild(botaoFoco);
   item.appendChild(botaoEditar);
   item.appendChild(botaoRemover);
   return item;
@@ -1388,11 +1515,15 @@ function criarItem(habito) {
 function desenhar() {
   desenharFiltros();
 
-  const visiveis = ordenarPorHorario(
+  const chave = hojeStr();
+  const base =
     filtroCategoria === "Todas"
       ? habitos
-      : habitos.filter((h) => (h.categoria || "Geral") === filtroCategoria)
-  );
+      : habitos.filter((h) => (h.categoria || "Geral") === filtroCategoria);
+
+  const visiveis = ordenarComPrioridades(ordenarPorHorario(base), chave);
+
+  if (rotuloFoco) rotuloFoco.hidden = habitos.length === 0;
 
   listaHabitos.innerHTML = "";
   mensagemVazia.style.display = habitos.length === 0 ? "block" : "none";
@@ -1482,6 +1613,10 @@ function ligarTodosEventos() {
     }
   });
   botaoDicaFechar?.addEventListener("click", fecharDicaInicio);
+  botaoInbox?.addEventListener("click", capturarInbox);
+  entradaInbox?.addEventListener("keydown", (evento) => {
+    if (evento.key === "Enter") capturarInbox();
+  });
 }
 
 // ============ INICIALIZAÇÃO ============
