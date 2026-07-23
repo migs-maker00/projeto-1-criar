@@ -20,7 +20,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=1.9.0" />
+  <link rel="stylesheet" href="style.css?v=2.0.0" />
 </head>
 <body>
   <div class="ambiente">
@@ -36,12 +36,18 @@
 
       <nav class="nav-paineis" aria-label="Seções do app">
         <button type="button" class="nav-item ativo" data-painel="hoje">Hoje</button>
+        <button type="button" class="nav-item" data-painel="estudo">Estudo</button>
         <button type="button" class="nav-item" data-painel="rotina">Rotina</button>
         <button type="button" class="nav-item" data-painel="semana">Semana</button>
         <button type="button" class="nav-item" data-painel="diario">Diário</button>
         <button type="button" class="nav-item" data-painel="insights">Insights</button>
         <button type="button" class="nav-item" data-painel="ajustes">Ajustes</button>
       </nav>
+
+      <!-- ESTUDO: vídeo, áudio, prática e falar -->
+      <section id="painel-estudo" class="painel" aria-label="Estudo" hidden>
+        <div id="estudo-painel-root" class="estudo-painel-root"></div>
+      </section>
 
       <!-- ROTINA: adicionar hábitos (simples) -->
       <section id="painel-rotina" class="painel" aria-label="Rotina" hidden>
@@ -172,8 +178,8 @@
           <div id="agora-conteudo" class="agora-conteudo"></div>
         </section>
 
-        <section id="bloco-pratica-livro" class="bloco bloco-pratica-livro" aria-label="Prática do livro">
-          <div id="pratica-livro-conteudo"></div>
+        <section id="bloco-estudo-resumo" class="bloco bloco-estudo-resumo" aria-label="Resumo de estudo">
+          <div id="estudo-resumo-conteudo"></div>
         </section>
 
         <section class="bloco bloco-inbox" aria-label="Caixa de entrada">
@@ -433,7 +439,7 @@
 
   <script>
     (function () {
-      var V = "1.9.0";
+      var V = "2.0.0";
       var salva = localStorage.getItem("app-versao");
       if (salva && salva !== V) {
         localStorage.setItem("app-versao", V);
@@ -450,7 +456,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script type="module" src="js/main.js?v=1.9.0"></script>
+  <script type="module" src="js/main.js?v=2.0.0"></script>
   <script defer src="sync.js?v=4"></script>
 </body>
 </html>

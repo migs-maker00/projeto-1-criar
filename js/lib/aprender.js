@@ -1,7 +1,7 @@
 // Aprender sem leitura — vídeo, áudio, falar e vocabulário
 
 export const MICRO_APRENDER = [
-  "Escolher vídeo ou áudio",
+  "Abrir aba Estudo → Assistir",
   "Focar 10 minutos",
   "Explicar 1 coisa em voz alta",
 ];
