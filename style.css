@@ -2349,6 +2349,20 @@ body {
   font-weight: 700;
 }
 
+.estudo-voz-linha {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.estudo-voz-dica {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--texto-suave);
+  line-height: 1.35;
+}
+
 .estudo-fala-feedback {
   margin: 12px 0 4px;
   padding: 10px 12px;

@@ -190,15 +190,7 @@ export function adicionarPalavra(dados, en, pt, frase = "") {
   return { ...dados, vocabulario: [...dados.vocabulario, palavra] };
 }
 
-export function falarTexto(texto, lang = "en-US") {
-  if (!("speechSynthesis" in window) || !texto) return false;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(texto);
-  u.lang = lang;
-  u.rate = 0.9;
-  window.speechSynthesis.speak(u);
-  return true;
-}
+export { falarTexto } from "./voz-sintese.js";
 
 export function resumoSessao(dados, metaPratica = 3) {
   const s = dados.sessao || {};
