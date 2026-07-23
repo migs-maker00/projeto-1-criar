@@ -1,5 +1,5 @@
-import { APP_VERSION } from "./config.js?v=1.6.0";
-import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.6.0";
+import { APP_VERSION } from "./config.js?v=1.7.0";
+import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.7.0";
 import {
   criarHabitoAgua,
   detectarTextoAgua,
@@ -20,39 +20,54 @@ import {
   rotuloImportancia,
   textoHorariosLembretes,
   todosMicroFeitos,
-} from "./lib/habitos.js?v=1.6.0";
+} from "./lib/habitos.js?v=1.7.0";
 import {
   complementoCoachDiario,
   gerarResumoSemana,
   sugerirHabito,
   textoSugestao,
-} from "./lib/inteligencia.js?v=1.6.0";
+} from "./lib/inteligencia.js?v=1.7.0";
 import {
   iniciarVerificacaoLembretes,
   lembretesAtivos,
   pedirPermissaoLembretes,
   verificarLembretes,
-} from "./lib/lembretes.js?v=1.6.0";
+} from "./lib/lembretes.js?v=1.7.0";
+import {
+  cancelarTimer,
+  formatarTimer,
+  horaFormatada,
+  iniciarTimer,
+  minutosAte,
+  proximoHorarioPendente,
+  segundosRestantesTimer,
+  textoCountdown,
+  timerAtivo,
+} from "./lib/foco.js?v=1.7.0";
 import {
   carregarPerfilRotina,
   gerarRotina,
   salvarPerfilRotina,
-} from "./lib/rotina-local.js?v=1.6.0";
+} from "./lib/rotina-local.js?v=1.7.0";
 import {
   adicionarInbox,
   alternarPrioridade,
+  arquivarInboxCompleta,
   carregarInbox,
   carregarPrioridades,
   carregarRevisaoNoturna,
+  definirModoCabecaLeve,
   definirRevisaoCampo,
   ehPrioridadeHoje,
+  filtrarModoLeve,
   MAX_PRIORIDADES,
+  modoCabecaLeve,
   ordenarComPrioridades,
   prioridadesDoDia,
   removerInbox,
   revisaoDoDia,
   sugestaoAgora,
-} from "./lib/tdah.js?v=1.6.0";
+} from "./lib/tdah.js?v=1.7.0";
 
 // ---- Referências aos elementos da página (DOM) ----
 const entradaHabito = document.getElementById("entrada-habito");
@@ -121,6 +136,10 @@ const revisaoFicou = document.getElementById("revisao-ficou");
 const revisaoAmanha = document.getElementById("revisao-amanha");
 const botaoLembretes = document.getElementById("botao-lembretes");
 const lembretesStatus = document.getElementById("lembretes-status");
+const relogioAtual = document.getElementById("relogio-atual");
+const countdownProximo = document.getElementById("countdown-proximo");
+const botaoArquivarInbox = document.getElementById("botao-arquivar-inbox");
+const toggleCabecaLeve = document.getElementById("toggle-cabeca-leve");
 
 // ---- Estado (a "fonte da verdade" do app) ----
 let habitos = [];
@@ -128,6 +147,7 @@ let notas = {};
 let filtroCategoria = "Todas";
 let idArrastando = null;
 let painelAtivo = "rotina";
+let intervaloRelogio = null;
 let dataDiarioSelecionada = hojeStr();
 let sugestaoAtual = null;
 let rotinaGerada = null;
@@ -1376,6 +1396,74 @@ function capturarInbox() {
   mostrarFeedback("Anotado na inbox — organize quando puder.");
 }
 
+function arquivarInbox() {
+  const resultado = arquivarInboxCompleta();
+  if (!resultado.ok) {
+    mostrarFeedback(resultado.mensagem, "aviso");
+    return;
+  }
+  desenharInbox();
+  mostrarFeedback(resultado.mensagem);
+}
+
+function atualizarTimerUI(segundos) {
+  const el = document.getElementById("agora-timer-valor");
+  if (el) el.textContent = formatarTimer(segundos);
+}
+
+function onTimer2minFim(meta) {
+  if (lembretesAtivos() && Notification.permission === "granted") {
+    try {
+      new Notification("2 minutos!", {
+        body: meta?.nome ? `Como foi com "${meta.nome}"? Marque um passo ou continue.` : "Um passo já conta.",
+        tag: "timer-2min",
+        icon: "icon-192.png",
+      });
+    } catch {
+      /* silencioso */
+    }
+  }
+  mostrarFeedback("2 minutos! Marque um passo ou continue — já vale.");
+  desenharAgora();
+  if (meta?.habitoId) irParaHabito(meta.habitoId);
+}
+
+function comecar2minutos(habito) {
+  const passos = listaMicroPassos(habito);
+  const primeiroPasso = passos[0];
+  iniciarTimer(
+    120,
+    { habitoId: habito.id, nome: habito.nome },
+    { onTick: atualizarTimerUI, onFim: onTimer2minFim }
+  );
+  desenharAgora();
+  const dica = primeiroPasso
+    ? `Só: "${primeiroPasso}" — 2 minutos.`
+    : "Só 2 minutos. Sem precisar terminar.";
+  mostrarFeedback(dica);
+}
+
+function desenharRelogio() {
+  if (relogioAtual) relogioAtual.textContent = horaFormatada();
+
+  if (!countdownProximo) return;
+
+  const prox = proximoHorarioPendente(habitos, {
+    estaPendente: (h) => !estaFeitoHoje(h),
+    horariosDoHabito: (h) => horariosLembretes(h),
+  });
+
+  if (!prox) {
+    countdownProximo.textContent = "";
+    return;
+  }
+
+  const min = minutosAte(prox.horario);
+  const texto = textoCountdown(min);
+  countdownProximo.textContent =
+    texto === "passou" ? "" : `Próximo: ${prox.habito.nome} ${texto}`;
+}
+
 function desenharAgora() {
   if (!agoraConteudo) return;
 
@@ -1394,17 +1482,44 @@ function desenharAgora() {
 
   const { habito, motivo } = sugestao;
   const horario = habito.horario ? `<span class="agora-hora">${habito.horario}</span>` : "";
+  const passos = listaMicroPassos(habito);
+  const dicaPasso = passos[0]
+    ? `<p class="agora-micro">Primeiro passo: <strong>${passos[0]}</strong></p>`
+    : "";
+
+  const timerHtml = timerAtivo()
+    ? `<div class="agora-timer" id="agora-timer">
+        <span class="agora-timer-label">Foco</span>
+        <span class="agora-timer-valor" id="agora-timer-valor">${formatarTimer(segundosRestantesTimer())}</span>
+        <button type="button" class="agora-timer-cancelar" id="agora-cancelar-timer">Parar</button>
+      </div>`
+    : "";
 
   agoraConteudo.innerHTML = `
+    ${timerHtml}
     <p class="agora-motivo">${motivo}</p>
     <button type="button" class="agora-botao" data-ir-habito="${habito.id}">
       ${horario}
       <span class="agora-nome">${habito.nome}</span>
     </button>
+    ${dicaPasso}
+    <div class="agora-acoes">
+      <button type="button" class="botao-secundario agora-2min" data-2min="${habito.id}">
+        Começar 2 min
+      </button>
+    </div>
     <p class="agora-dica">Um passo só. Sem precisar fazer tudo.</p>`;
 
   agoraConteudo.querySelector(".agora-botao")?.addEventListener("click", () => {
     irParaHabito(habito.id);
+  });
+  agoraConteudo.querySelector(".agora-2min")?.addEventListener("click", () => {
+    comecar2minutos(habito);
+  });
+  agoraConteudo.querySelector("#agora-cancelar-timer")?.addEventListener("click", () => {
+    cancelarTimer();
+    desenharAgora();
+    mostrarFeedback("Timer parado.");
   });
 }
 
@@ -1414,6 +1529,7 @@ function desenharInbox() {
   const itens = carregarInbox();
   listaInbox.innerHTML = "";
   if (inboxVazio) inboxVazio.hidden = itens.length > 0;
+  if (botaoArquivarInbox) botaoArquivarInbox.hidden = itens.length === 0;
 
   itens.forEach((item) => {
     const li = document.createElement("li");
@@ -1679,21 +1795,41 @@ function desenhar() {
   desenharFiltros();
 
   const chave = hojeStr();
-  const base =
+  let base =
     filtroCategoria === "Todas"
       ? habitos
       : habitos.filter((h) => (h.categoria || "Geral") === filtroCategoria);
 
+  if (modoCabecaLeve()) {
+    base = filtrarModoLeve(base, chave);
+  }
+
   const visiveis = ordenarComPrioridades(ordenarPorHorario(base), chave);
+
+  if (toggleCabecaLeve) {
+    toggleCabecaLeve.classList.toggle("ativo", modoCabecaLeve());
+    toggleCabecaLeve.setAttribute("aria-pressed", modoCabecaLeve() ? "true" : "false");
+  }
 
   if (rotuloFoco) rotuloFoco.hidden = habitos.length === 0;
 
   listaHabitos.innerHTML = "";
-  mensagemVazia.style.display = habitos.length === 0 ? "block" : "none";
+  if (habitos.length === 0) {
+    mensagemVazia.style.display = "block";
+    mensagemVazia.innerHTML =
+      'Nenhum hábito na agenda. Vá em <strong>Rotina</strong> para criar o primeiro.';
+  } else if (visiveis.length === 0 && modoCabecaLeve()) {
+    mensagemVazia.style.display = "block";
+    mensagemVazia.textContent =
+      "Modo essencial: marque ☆ ou defina hábitos como Essenciais na Rotina.";
+  } else {
+    mensagemVazia.style.display = "none";
+  }
 
   visiveis.forEach((habito) => listaHabitos.appendChild(criarItem(habito)));
 
   desenharResumoAgenda();
+  desenharRelogio();
   atualizarResumo();
   desenharGrafico();
   desenharMetasSemana();
@@ -1790,6 +1926,16 @@ function ligarTodosEventos() {
     definirRevisaoCampo(hojeStr(), "amanha", revisaoAmanha.value);
   });
   botaoLembretes?.addEventListener("click", ativarLembretes);
+  botaoArquivarInbox?.addEventListener("click", arquivarInbox);
+  toggleCabecaLeve?.addEventListener("click", () => {
+    definirModoCabecaLeve(!modoCabecaLeve());
+    desenhar();
+    mostrarFeedback(
+      modoCabecaLeve()
+        ? "Mostrando só essenciais e prioridades."
+        : "Mostrando todos os hábitos."
+    );
+  });
 }
 
 // ============ INICIALIZAÇÃO ============
@@ -1806,6 +1952,11 @@ export function initApp() {
   mostrarDicaInicio();
   atualizarLembretesStatus();
   iniciarVerificacaoLembretes(rodarLembretes);
+  if (intervaloRelogio) clearInterval(intervaloRelogio);
+  intervaloRelogio = setInterval(() => {
+    desenharRelogio();
+    if (timerAtivo()) atualizarTimerUI(segundosRestantesTimer());
+  }, 1000);
   desenhar();
 }
 

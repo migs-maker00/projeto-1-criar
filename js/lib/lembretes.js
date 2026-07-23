@@ -52,6 +52,12 @@ function horaAtual() {
   return `${String(agora.getHours()).padStart(2, "0")}:${String(agora.getMinutes()).padStart(2, "0")}`;
 }
 
+function somarMinutos(hhmm, delta) {
+  const [hh, mm] = hhmm.split(":").map(Number);
+  const total = ((hh * 60 + mm + delta) % (24 * 60) + 24 * 60) % (24 * 60);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
 function dispararNotificacao(titulo, corpo, tag) {
   if (!lembretesAtivos() || Notification.permission !== "granted") return;
   try {
@@ -76,13 +82,20 @@ export function verificarLembretes(habitos, chave, { estaPendente, horariosDoHab
 
     const horarios = horariosDoHabito(habito);
     horarios.forEach((hora) => {
-      if (hora !== hhmm) return;
-      const id = `${habito.id}-${hora}`;
-      if (enviados.includes(id)) return;
+      const disparos = [
+        { hora, sufixo: "", prefixo: "" },
+        { hora: somarMinutos(hora, 15), sufixo: "-reforco", prefixo: "Ainda dá tempo — " },
+      ];
 
-      marcarEnviado(chave, id);
-      const ctx = habito.contextoLembrete || "Hora de fazer isso — um passo só.";
-      dispararNotificacao(habito.nome, ctx, id);
+      disparos.forEach(({ hora: hDisparo, sufixo, prefixo }) => {
+        if (hDisparo !== hhmm) return;
+        const id = `${habito.id}-${hora}${sufixo}`;
+        if (enviados.includes(id)) return;
+
+        marcarEnviado(chave, id);
+        const ctx = habito.contextoLembrete || "Hora de fazer isso — um passo só.";
+        dispararNotificacao(habito.nome, `${prefixo}${ctx}`, id);
+      });
     });
   });
 }

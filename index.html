@@ -20,7 +20,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=1.6.0" />
+  <link rel="stylesheet" href="style.css?v=1.7.0" />
 </head>
 <body>
   <div class="ambiente">
@@ -186,6 +186,11 @@
 
       <!-- HOJE: checklist do dia -->
       <section id="painel-hoje" class="painel" aria-label="Hoje" hidden>
+        <div id="barra-relogio" class="barra-relogio" aria-live="polite">
+          <span id="relogio-atual" class="relogio-atual">--:--:--</span>
+          <span id="countdown-proximo" class="countdown-proximo"></span>
+        </div>
+
         <section id="bloco-agora" class="bloco bloco-primeiro bloco-agora" aria-label="O que fazer agora">
           <p class="secao-rotulo">Agora</p>
           <div id="agora-conteudo" class="agora-conteudo"></div>
@@ -206,6 +211,9 @@
           </div>
           <ul id="lista-inbox" class="lista-inbox"></ul>
           <p id="inbox-vazio" class="mensagem-vazia inbox-vazio">Nada na inbox. Quando surgir algo, jogue aqui.</p>
+          <button type="button" id="botao-arquivar-inbox" class="botao-texto inbox-arquivar" hidden>
+            Guardar tudo e limpar a cabeça
+          </button>
         </section>
 
         <div id="agenda-resumo" class="agenda-resumo" aria-live="polite"></div>
@@ -232,6 +240,11 @@
         </section>
 
         <div id="filtros" class="filtros"></div>
+        <div class="linha-modo-leve">
+          <button type="button" id="toggle-cabeca-leve" class="chip chip-modo-leve" aria-pressed="false">
+            Só o essencial
+          </button>
+        </div>
         <p id="rotulo-foco" class="secao-rotulo rotulo-foco" hidden>Máx. 3 prioridades — toque na ☆</p>
         <ul id="lista-habitos" class="lista-habitos"></ul>
         <p id="mensagem-vazia" class="mensagem-vazia">
@@ -425,7 +438,7 @@
 
   <script>
     (function () {
-      var V = "1.6.0";
+      var V = "1.7.0";
       var salva = localStorage.getItem("app-versao");
       if (salva && salva !== V) {
         localStorage.setItem("app-versao", V);
@@ -442,7 +455,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script type="module" src="js/main.js?v=1.6.0"></script>
+  <script type="module" src="js/main.js?v=1.7.0"></script>
   <script defer src="sync.js?v=4"></script>
 </body>
 </html>

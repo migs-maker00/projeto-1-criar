@@ -37,6 +37,52 @@ export function removerInbox(id) {
   return lista;
 }
 
+export function carregarInboxArquivo() {
+  try {
+    const lista = JSON.parse(localStorage.getItem("inbox-arquivo") || "[]");
+    return Array.isArray(lista) ? lista : [];
+  } catch {
+    return [];
+  }
+}
+
+export function arquivarInboxCompleta() {
+  const atual = carregarInbox();
+  if (!atual.length) {
+    return { ok: false, mensagem: "Inbox já está vazia." };
+  }
+
+  const arquivo = [
+    ...atual.map((item) => ({
+      ...item,
+      arquivadoEm: new Date().toISOString(),
+    })),
+    ...carregarInboxArquivo(),
+  ].slice(0, 200);
+
+  localStorage.setItem("inbox-arquivo", JSON.stringify(arquivo));
+  salvarInbox([]);
+  return {
+    ok: true,
+    mensagem: `${atual.length} ${atual.length === 1 ? "item guardado" : "itens guardados"}. Cabeça mais leve.`,
+  };
+}
+
+export function modoCabecaLeve() {
+  return localStorage.getItem("modo-cabeca-leve") === "1";
+}
+
+export function definirModoCabecaLeve(ativo) {
+  localStorage.setItem("modo-cabeca-leve", ativo ? "1" : "0");
+}
+
+export function filtrarModoLeve(habitos, chave, mapa = carregarPrioridades()) {
+  const prio = prioridadesDoDia(chave, mapa);
+  return habitos.filter(
+    (h) => prio.includes(h.id) || normalizarImportancia(h.importancia) === 1
+  );
+}
+
 export function carregarPrioridades() {
   try {
     const dados = JSON.parse(localStorage.getItem("prioridades-dia") || "{}");
