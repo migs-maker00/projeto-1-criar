@@ -1,5 +1,5 @@
-import { APP_VERSION } from "./config.js?v=1.8.1";
-import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.8.1";
+import { APP_VERSION } from "./config.js?v=1.8.2";
+import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.8.2";
 import {
   criarHabitoAgua,
   detectarTextoAgua,
@@ -24,13 +24,13 @@ import {
   textoHorariosLembretes,
   textoPlanoB,
   todosMicroFeitos,
-} from "./lib/habitos.js?v=1.8.1";
+} from "./lib/habitos.js?v=1.8.2";
 import {
   carregarPerfil,
   marcarPerfilInicializado,
   perfilInicializado,
   salvarPerfil,
-} from "./lib/perfil.js?v=1.8.1";
+} from "./lib/perfil.js?v=1.8.2";
 import {
   correspondePreset,
   habitosRotinaCompleta,
@@ -39,26 +39,26 @@ import {
   PRIORIDADES_PRESET,
   rotinaJaMontada,
   textosPlanejadorRotina,
-} from "./lib/rotina-preset.js?v=1.8.1";
+} from "./lib/rotina-preset.js?v=1.8.2";
 import {
   detectarHabitoEstudo,
   ehHorarioDificil,
   mensagemTarde,
   sugestaoTarde,
-} from "./lib/tarde.js?v=1.8.1";
+} from "./lib/tarde.js?v=1.8.2";
 import {
   complementoCoachDiario,
   gerarResumoSemana,
   sugerirHabito,
   textoSugestao,
-} from "./lib/inteligencia.js?v=1.8.1";
+} from "./lib/inteligencia.js?v=1.8.2";
 import {
   iniciarVerificacaoLembretes,
   lembretesAtivos,
   pedirPermissaoLembretes,
   verificarLembretes,
-} from "./lib/lembretes.js?v=1.8.1";
-import { sincronizarAgendaSW } from "./lib/agenda-notif.js?v=1.8.1";
+} from "./lib/lembretes.js?v=1.8.2";
+import { sincronizarAgendaSW } from "./lib/agenda-notif.js?v=1.8.2";
 import {
   cancelarTimer,
   cronometroAtivo,
@@ -73,12 +73,12 @@ import {
   segundosRestantesTimer,
   textoCountdown,
   timerAtivo,
-} from "./lib/foco.js?v=1.8.1";
+} from "./lib/foco.js?v=1.8.2";
 import {
   carregarPerfilRotina,
   gerarRotina,
   salvarPerfilRotina,
-} from "./lib/rotina-local.js?v=1.8.1";
+} from "./lib/rotina-local.js?v=1.8.2";
 import {
   adicionarInbox,
   alternarPrioridade,
@@ -110,7 +110,7 @@ import {
   salvarPrioridades,
   salvarTemaSemana,
   sugestaoAgora,
-} from "./lib/tdah.js?v=1.8.1";
+} from "./lib/tdah.js?v=1.8.2";
 
 // ---- Referências aos elementos da página (DOM) ----
 const entradaHabito = document.getElementById("entrada-habito");
@@ -201,7 +201,7 @@ let habitos = [];
 let notas = {};
 let filtroCategoria = "Todas";
 let idArrastando = null;
-let painelAtivo = "rotina";
+let painelAtivo = "hoje";
 let intervaloRelogio = null;
 let dataDiarioSelecionada = hojeStr();
 let sugestaoAtual = null;
@@ -613,7 +613,7 @@ function adicionarAtalho(tipo) {
   limparFormularioHabito();
   salvar();
   desenhar();
-  mostrarFeedback(`${ROTULOS_ATALHO[tipo] || "Hábito"} adicionado! Veja na aba Hoje.`);
+  mostrarFeedback(`${ROTULOS_ATALHO[tipo] || "Hábito"} adicionado!`);
 }
 
 function avancarHabito(id) {
