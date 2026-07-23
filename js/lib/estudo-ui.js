@@ -212,6 +212,13 @@ function renderPraticar(chaveDia) {
     </section>`;
 }
 
+function alvoElemento(evento) {
+  const t = evento.target;
+  if (t instanceof Element) return t;
+  if (t?.parentElement instanceof Element) return t.parentElement;
+  return null;
+}
+
 function renderFalar(dados) {
   const p = palavraAtual(dados);
   if (!p) {
@@ -277,7 +284,7 @@ function renderFalar(dados) {
         <button type="button" class="botao-secundario" data-estudo-ouvir="en">🔊 Ouvir palavra</button>
         <button type="button" class="botao-secundario" data-estudo-ouvir="frase">🔊 Ouvir frase</button>
         ${botoesMic}
-        <button type="button" class="botao-secundario" data-estudo-proxima-palavra">Próxima →</button>
+        <button type="button" class="botao-secundario estudo-btn-proxima" data-estudo-acao="proxima">Próxima →</button>
       </div>
       ${avisoMic}
       ${seletorVoz}
@@ -396,14 +403,17 @@ export function renderResumoHoje(dados, chaveDia) {
 }
 
 export function ligarPainelEstudo(root, getState, setState, opts = {}) {
-  if (!root || root.dataset.ligado === "1") return;
-  root.dataset.ligado = "1";
+  if (!root || root.dataset.estudoLigado === "1") return;
+  root.dataset.estudoLigado = "1";
 
   const { chaveDia, onTimer, onAtualizarHoje, mostrarFeedback } = opts;
 
   root.addEventListener("click", (evento) => {
-    const alvo = evento.target.closest(
-      "[data-estudo-aba], [data-estudo-link], [data-estudo-remover], [data-estudo-timer], [data-estudo-marcar], [data-estudo-ouvir], [data-estudo-mic], [data-estudo-proxima-palavra], [data-estudo-selecionar-livro], [data-estudo-cat], .estudo-pratica-confirmar, .estudo-pratica-opcao, [data-ir-painel]"
+    const origem = alvoElemento(evento);
+    if (!origem) return;
+
+    const alvo = origem.closest(
+      "[data-estudo-acao], [data-estudo-aba], [data-estudo-link], [data-estudo-remover], [data-estudo-timer], [data-estudo-marcar], [data-estudo-ouvir], [data-estudo-mic], [data-estudo-selecionar-livro], [data-estudo-cat], .estudo-pratica-confirmar, .estudo-pratica-opcao, [data-ir-painel]"
     );
 
     if (!alvo) return;
@@ -414,6 +424,14 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
     }
 
     let dados = getState();
+
+    if (alvo.dataset.estudoAcao === "proxima") {
+      pararEscuta();
+      const prox = avancarPalavra(getState());
+      setState({ ...prox, abaAtiva: "falar", falaFeedback: null });
+      onAtualizarHoje?.();
+      return;
+    }
 
     if (alvo.dataset.estudoAba) {
       pararEscuta();
@@ -501,13 +519,6 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
           onAtualizarHoje?.();
         },
       });
-      return;
-    }
-
-    if (alvo.closest("[data-estudo-proxima-palavra]")) {
-      pararEscuta();
-      const prox = avancarPalavra(dados);
-      setState({ ...prox, falaFeedback: null });
       return;
     }
 
