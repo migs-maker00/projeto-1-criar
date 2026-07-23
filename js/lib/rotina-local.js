@@ -42,6 +42,16 @@ function validarHabito(item) {
   const habito = { nome, categoria, metaSemanal, horario, motivo };
   if (lembretes) habito.lembretes = lembretes;
 
+  let importancia = Number(item.importancia);
+  if (importancia === 1 || importancia === 2) habito.importancia = importancia;
+
+  if (Array.isArray(item.microPassos) && item.microPassos.length) {
+    habito.microPassos = item.microPassos
+      .filter((p) => typeof p === "string" && p.trim())
+      .map((p) => p.trim().slice(0, 80))
+      .slice(0, 8);
+  }
+
   if (Array.isArray(item.horariosLembretes) && item.horariosLembretes.length) {
     habito.horariosLembretes = item.horariosLembretes
       .filter((h) => typeof h === "string" && /^\d{2}:\d{2}$/.test(h))
@@ -121,6 +131,7 @@ function gerarRotinaLocal(dados) {
       metaSemanal: 7,
       horario: horarios[0],
       lembretes: horarios.length,
+      importancia: 1,
       horariosLembretes: horarios,
       motivo: `${horarios.length} lembretes: ${horarios.join(", ")}`,
     });
@@ -137,6 +148,7 @@ function gerarRotinaLocal(dados) {
       categoria: "Saúde",
       metaSemanal: meta,
       horario: slot,
+      importancia: 2,
       motivo: "Fora dos horários ocupados que você descreveu",
     });
   }
@@ -186,6 +198,8 @@ function gerarRotinaLocal(dados) {
       categoria: "Estudo",
       metaSemanal: 5,
       horario: slot,
+      importancia: 1,
+      microPassos: ["Abrir o material", "Focar 25 minutos", "Revisar anotações"],
       motivo: "Bloco de foco fora do horário de aula",
     });
   }
