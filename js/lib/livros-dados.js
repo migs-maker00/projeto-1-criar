@@ -447,7 +447,7 @@ export const LIVRO_MEDITACOES = {
   subtitulo: "Filosofia estoica para o dia a dia",
   categoria: "filosofia",
   tags: ["filosofia", "estoicismo", "clássico"],
-  palavrasChave: ["marco aurélio", "meditações", "estoicismo", "filosofia", "controle"],
+  palavrasChave: ["marco aurélio", "marco aurelio", "meditações", "estoicismo", "filosofia", "controle"],
   modulos: [
     {
       id: "controle",
@@ -502,11 +502,338 @@ export const LIVRO_MEDITACOES = {
   ],
 };
 
+export const LIVRO_SENECA = {
+  id: "seneca-brevidade",
+  titulo: "Sobre a Brevidade da Vida",
+  autor: "Sêneca",
+  subtitulo: "Estoicismo — o tempo é seu bem mais precioso",
+  categoria: "filosofia",
+  tags: ["filosofia", "estoicismo", "seneca", "tempo"],
+  palavrasChave: ["sêneca", "seneca", "brevidade", "estoicismo", "cartas", "lucílio", "lucilio"],
+  modulos: [
+    {
+      id: "tempo",
+      nome: "A vida não é curta — a gente desperdiça",
+      ideia: "Não falta tempo; falta usar bem o que temos.",
+      perguntas: [
+        {
+          id: "se1",
+          tipo: "escolha",
+          pergunta: "Passar 3h no celular e dizer ‘não tive tempo’ para estudar. Sêneca diria que…",
+          opcoes: [
+            "O tempo sumiu sozinho",
+            "Você escolheu onde colocou o tempo",
+            "Culpa é só da escola",
+          ],
+          correta: 1,
+          dica: "Tempo ‘curto’ muitas vezes é tempo mal gasto.",
+        },
+        {
+          id: "se2",
+          tipo: "reflexao",
+          pergunta: "Onde você mais ‘vaza’ tempo sem perceber?",
+          dica: "Honestidade aqui já é filosofia prática.",
+        },
+      ],
+    },
+    {
+      id: "presente",
+      nome: "Viver o presente",
+      ideia: "O passado foi; o futuro pode não vir — o agora é seu.",
+      perguntas: [
+        {
+          id: "se3",
+          tipo: "escolha",
+          pergunta: "Ficar remoendo erro do passado o dia inteiro. Isso é…",
+          opcoes: [
+            "Aprender de verdade",
+            "Roubar o presente de si mesmo",
+            "Ser profundo",
+          ],
+          correta: 1,
+          dica: "Refletir ≠ repetir a dor sem fim.",
+        },
+        {
+          id: "se4",
+          tipo: "reflexao",
+          pergunta: "Uma coisa boa que você pode fazer HOJE, sem esperar ‘o momento certo’?",
+          dica: "Sêneca: quem adia a vida nunca vive.",
+        },
+      ],
+    },
+    {
+      id: "morte",
+      nome: "Memento mori — lembrar que vamos morrer",
+      ideia: "Consciência da morte torna a vida mais urgente e real.",
+      perguntas: [
+        {
+          id: "se5",
+          tipo: "reflexao",
+          pergunta: "Se esta semana fosse sua última com foco total, o que você priorizaria?",
+          dica: "Não é morbido — é clareza.",
+        },
+        {
+          id: "se6",
+          tipo: "escolha",
+          pergunta: "Lembrar que a vida acaba pode…",
+          opcoes: [
+            "Paralisar para sempre",
+            "Te fazer valorizar o que importa",
+            "Só servir para idosos",
+          ],
+          correta: 1,
+          dica: "Urgência saudável muda escolhas pequenas.",
+        },
+      ],
+    },
+  ],
+};
+
+export const LIVRO_CAMUS = {
+  id: "camus-sisifo",
+  titulo: "O Mito de Sísifo",
+  autor: "Albert Camus",
+  subtitulo: "O absurdo e a revolta — filosofia existencial",
+  categoria: "filosofia",
+  tags: ["filosofia", "existencialismo", "camus", "absurdo"],
+  palavrasChave: ["camus", "sísifo", "sisifo", "absurdo", "estrangeiro", "albert"],
+  modulos: [
+    {
+      id: "absurdo",
+      nome: "O absurdo",
+      ideia: "Queremos sentido num mundo que nem sempre responde.",
+      perguntas: [
+        {
+          id: "ca1",
+          tipo: "escolha",
+          pergunta: "Você se esforça muito e às vezes parece que ‘não adianta’. Camus chamaria isso de…",
+          opcoes: [
+            "Prova de que você é fraco",
+            "Choque entre seu desejo de sentido e o silêncio do mundo",
+            "Motivo para parar de tentar",
+          ],
+          correta: 1,
+          dica: "Absurdo ≠ sem esperança — é reconhecer o choque.",
+        },
+        {
+          id: "ca2",
+          tipo: "reflexao",
+          pergunta: "Quando você sentiu que o mundo ‘não fazia sentido’? O que fez depois?",
+          dica: "Não precisa ter resposta bonita.",
+        },
+      ],
+    },
+    {
+      id: "sisifo",
+      nome: "Sísifo e a pedra",
+      ideia: "Repetir o esforço mesmo sabendo que é difícil — e escolher continuar.",
+      perguntas: [
+        {
+          id: "ca3",
+          tipo: "escolha",
+          pergunta: "Estudar todo dia parecendo que esquece tudo. Atitude camusiana?",
+          opcoes: [
+            "Desistir — é inútil",
+            "Continuar e criar sentido na própria luta",
+            "Fingir que não liga",
+          ],
+          correta: 1,
+          dica: "Imaginar Sísifo feliz = aceitar a luta e ainda assim agir.",
+        },
+        {
+          id: "ca4",
+          tipo: "reflexao",
+          pergunta: "Qual ‘pedra’ você empurra todo dia? (escola, rotina, trabalho…)",
+          dica: "Nomear a luta já muda como você a vê.",
+        },
+      ],
+    },
+    {
+      id: "revolta",
+      nome: "A revolta",
+      ideia: "Dizer ‘não’ ao desespero e viver com intensidade consciente.",
+      perguntas: [
+        {
+          id: "ca5",
+          tipo: "escolha",
+          pergunta: "Diante do absurdo, Camus prefere…",
+          opcoes: [
+            "Suicídio filosófico (desistir de viver)",
+            "A revolta: viver mesmo assim, com lucidez",
+            "Fé cega sem pensar",
+          ],
+          correta: 1,
+          dica: "Revolta = lucidez + vida, não negação.",
+        },
+        {
+          id: "ca6",
+          tipo: "reflexao",
+          pergunta: "O que te faz continuar num dia difícil, mesmo sem ‘sentido’ claro?",
+          dica: "Amizade, curiosidade, raiva boa, música — tudo conta.",
+        },
+      ],
+    },
+  ],
+};
+
+export const LIVRO_SARTRE = {
+  id: "sartre-existencialismo",
+  titulo: "O Existencialismo é um Humanismo",
+  autor: "Jean-Paul Sartre",
+  subtitulo: "Liberdade, escolha e responsabilidade",
+  categoria: "filosofia",
+  tags: ["filosofia", "existencialismo", "sartre", "liberdade"],
+  palavrasChave: ["sartre", "existencialismo", "náusea", "nausea", "ser e nada", "liberdade", "escolha"],
+  modulos: [
+    {
+      id: "essencia",
+      nome: "A existência precede a essência",
+      ideia: "Você não nasce pronto — se constrói pelas escolhas.",
+      perguntas: [
+        {
+          id: "sa1",
+          tipo: "escolha",
+          pergunta: "‘Sou assim mesmo, não mudo.’ Sartre diria que…",
+          opcoes: [
+            "Personalidade é fixa para sempre",
+            "Você está se escondendo das próprias escolhas",
+            "Filosofia não serve para nada",
+          ],
+          correta: 1,
+          dica: "Dizer ‘sou assim’ pode ser fugir da responsabilidade de mudar.",
+        },
+        {
+          id: "sa2",
+          tipo: "reflexao",
+          pergunta: "Que tipo de pessoa você está ESCOLHENDO ser esta semana?",
+          dica: "Um hábito, uma atitude, um limite.",
+        },
+      ],
+    },
+    {
+      id: "má-fé",
+      nome: "Má-fé",
+      ideia: "Fingir que não tem escolha quando tem.",
+      perguntas: [
+        {
+          id: "sa3",
+          tipo: "escolha",
+          pergunta: "‘Não tenho escolha, sou obrigado.’ Quando isso é má-fé?",
+          opcoes: [
+            "Nunca — sempre é literal",
+            "Quando há opções, mas você finge que não há",
+            "Só em filosofia de faculdade",
+          ],
+          correta: 1,
+          dica: "Má-fé = mentir para si sobre sua liberdade.",
+        },
+        {
+          id: "sa4",
+          tipo: "reflexao",
+          pergunta: "Alguma desculpa que você usa muito? Qual seria a escolha por trás dela?",
+          dica: "Ex.: ‘depois da escola não dá’ → escolhi descansar sem limite.",
+        },
+      ],
+    },
+    {
+      id: "angustia",
+      nome: "Angústia e responsabilidade",
+      ideia: "Escolher é carregar o peso do que você faz do mundo.",
+      perguntas: [
+        {
+          id: "sa5",
+          tipo: "escolha",
+          pergunta: "Sartre diz que estamos ‘condenados a ser livres’. Isso significa…",
+          opcoes: [
+            "Liberdade total sem consequência",
+            "Não dá para fugir das escolhas — elas definem quem você é",
+            "Só políticos são livres",
+          ],
+          correta: 1,
+          dica: "Liberdade assusta porque não há roteiro pronto.",
+        },
+        {
+          id: "sa6",
+          tipo: "reflexao",
+          pergunta: "Uma escolha recente que mostrou quem você quer ser (ou não ser)?",
+          dica: "Pequenas escolhas também contam.",
+        },
+      ],
+    },
+  ],
+};
+
+export const LIVRO_EPICTETO = {
+  id: "epicteto-manual",
+  titulo: "Manual de Epicteto",
+  autor: "Epicteto",
+  subtitulo: "Estoicismo direto — dicotomia do controle",
+  categoria: "filosofia",
+  tags: ["filosofia", "estoicismo", "epicteto"],
+  palavrasChave: ["epicteto", "estoicismo", "manual", "enchiridion", "dicotomia", "controle"],
+  modulos: [
+    {
+      id: "dicotomia",
+      nome: "Dicotomia do controle",
+      ideia: "Algumas coisas dependem de você; outras não.",
+      perguntas: [
+        {
+          id: "ep1",
+          tipo: "reflexao",
+          pergunta: "Separe em duas colunas (mentalmente): o que depende de você hoje e o que não.",
+          dica: "Só a primeira coluna merece sua energia emocional.",
+        },
+        {
+          id: "ep2",
+          tipo: "escolha",
+          pergunta: "Nota baixa na prova. O que Epicteto diria para focar?",
+          opcoes: [
+            "A nota em si (já passou)",
+            "O que você aprende e faz na próxima",
+            "O professor ‘que odeia você’",
+          ],
+          correta: 1,
+          dica: "Resultado passado ≠ seu campo de ação agora.",
+        },
+      ],
+    },
+    {
+      id: "impressoes",
+      nome: "Não são as coisas que perturbam",
+      ideia: "São os julgamentos que fazemos sobre elas.",
+      perguntas: [
+        {
+          id: "ep3",
+          tipo: "escolha",
+          pergunta: "Alguém te ignorou. O que mais perturba?",
+          opcoes: [
+            "O fato em si",
+            "A história que você conta na cabeça sobre isso",
+            "Sempre a outra pessoa",
+          ],
+          correta: 1,
+          dica: "Mudar o julgamento muda o peso emocional.",
+        },
+        {
+          id: "ep4",
+          tipo: "reflexao",
+          pergunta: "Uma situação que piorou porque você ‘encheu a cabeça’? E se fosse só um fato neutro?",
+          dica: "Não negar sentimento — questionar a narrativa.",
+        },
+      ],
+    },
+  ],
+};
+
 export const TODOS_LIVROS = [
   LIVRO_8_HABITOS,
   LIVRO_ATOMICOS,
-  LIVRO_NOITES_BRANCAS,
   LIVRO_MEDITACOES,
+  LIVRO_SENECA,
+  LIVRO_EPICTETO,
+  LIVRO_CAMUS,
+  LIVRO_SARTRE,
+  LIVRO_NOITES_BRANCAS,
 ];
 
 export const LIVRO_PADRAO = LIVRO_8_HABITOS;
