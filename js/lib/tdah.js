@@ -229,3 +229,108 @@ export function definirRevisaoCampo(chave, campo, valor, mapa = carregarRevisaoN
   atual[campo] = valor;
   salvarRevisaoNoturna({ ...mapa, [chave]: atual });
 }
+
+export function carregarRevisaoManha() {
+  try {
+    return JSON.parse(localStorage.getItem("revisao-manha") || "{}");
+  } catch {
+    return {};
+  }
+}
+
+export function salvarRevisaoManha(mapa) {
+  localStorage.setItem("revisao-manha", JSON.stringify(mapa));
+}
+
+export function revisaoManhaDoDia(chave, mapa = carregarRevisaoManha()) {
+  const dados = mapa[chave];
+  if (!dados || typeof dados !== "object") {
+    return { foco1: "", foco2: "", foco3: "" };
+  }
+  return {
+    foco1: dados.foco1 || "",
+    foco2: dados.foco2 || "",
+    foco3: dados.foco3 || "",
+  };
+}
+
+export function definirRevisaoManhaCampo(chave, campo, valor, mapa = carregarRevisaoManha()) {
+  const atual = revisaoManhaDoDia(chave, mapa);
+  atual[campo] = valor;
+  salvarRevisaoManha({ ...mapa, [chave]: atual });
+}
+
+export function carregarInboxDepois() {
+  try {
+    const lista = JSON.parse(localStorage.getItem("inbox-depois") || "[]");
+    return Array.isArray(lista) ? lista : [];
+  } catch {
+    return [];
+  }
+}
+
+export function salvarInboxDepois(lista) {
+  localStorage.setItem("inbox-depois", JSON.stringify(lista.slice(0, 80)));
+}
+
+export function moverInboxParaDepois(id) {
+  const item = carregarInbox().find((i) => i.id === id);
+  if (!item) return null;
+  removerInbox(id);
+  const depois = [{ ...item, movidoEm: new Date().toISOString() }, ...carregarInboxDepois()].slice(0, 80);
+  salvarInboxDepois(depois);
+  return item;
+}
+
+export function limiteDiarioAtivo() {
+  return localStorage.getItem("limite-diario-5") === "1";
+}
+
+export function definirLimiteDiario(ativo) {
+  localStorage.setItem("limite-diario-5", ativo ? "1" : "0");
+}
+
+export const LIMITE_DIARIO = 5;
+
+export function aplicarLimiteDiario(lista, chave, mapa = carregarPrioridades()) {
+  if (!limiteDiarioAtivo()) return lista;
+  const prio = prioridadesDoDia(chave, mapa);
+  const emFoco = [];
+  const resto = [];
+
+  prio.forEach((id) => {
+    const h = lista.find((item) => item.id === id);
+    if (h) emFoco.push(h);
+  });
+  lista.forEach((h) => {
+    if (!prio.includes(h.id)) resto.push(h);
+  });
+
+  const combinado = [...emFoco, ...resto];
+  return combinado.slice(0, LIMITE_DIARIO);
+}
+
+export function modoCerebroVazio() {
+  return localStorage.getItem("modo-cerebro-vazio") === "1";
+}
+
+export function definirModoCerebroVazio(ativo) {
+  localStorage.setItem("modo-cerebro-vazio", ativo ? "1" : "0");
+}
+
+export function filtrarCerebroVazio(lista, chave, mapa = carregarPrioridades()) {
+  const prio = prioridadesDoDia(chave, mapa);
+  if (prio.length) {
+    const h = lista.find((item) => item.id === prio[0]);
+    return h ? [h] : lista.slice(0, 1);
+  }
+  return lista.slice(0, 1);
+}
+
+export function carregarTemaSemana() {
+  return localStorage.getItem("tema-semana") || "";
+}
+
+export function salvarTemaSemana(texto) {
+  localStorage.setItem("tema-semana", (texto || "").trim().slice(0, 80));
+}

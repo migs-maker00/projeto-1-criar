@@ -93,6 +93,15 @@ export function verificarLembretes(habitos, chave, { estaPendente, horariosDoHab
         if (enviados.includes(id)) return;
 
         marcarEnviado(chave, id);
+        if (sufixo === "-reforco") {
+          try {
+            const ign = JSON.parse(localStorage.getItem("lembretes-ignorados") || "{}");
+            ign[habito.id] = (ign[habito.id] || 0) + 1;
+            localStorage.setItem("lembretes-ignorados", JSON.stringify(ign));
+          } catch {
+            /* silencioso */
+          }
+        }
         const ctx = habito.contextoLembrete || "Hora de fazer isso — um passo só.";
         dispararNotificacao(habito.nome, `${prefixo}${ctx}`, id);
       });

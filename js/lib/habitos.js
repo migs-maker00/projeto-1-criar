@@ -26,6 +26,35 @@ export function rotuloImportancia(habito) {
   return ROTULOS_IMPORTANCIA[normalizarImportancia(habito.importancia)] || "Normal";
 }
 
+export function listaPreparar(habito) {
+  if (!Array.isArray(habito.preparar)) return [];
+  return habito.preparar
+    .map((p) => (typeof p === "string" ? p.trim() : ""))
+    .filter(Boolean)
+    .slice(0, 6);
+}
+
+export function textoPlanoB(habito) {
+  const plano = (habito.planoB || "").trim();
+  if (plano) return plano;
+  const passos = listaMicroPassos(habito);
+  if (passos[0]) return `Só fazer: "${passos[0]}" — 30 segundos.`;
+  return "Só abrir ou preparar o espaço — 30 segundos já conta.";
+}
+
+export function ehAtivoHoje(habito, data = new Date()) {
+  if (!Array.isArray(habito.diasAtivos) || !habito.diasAtivos.length) return true;
+  return habito.diasAtivos.includes(data.getDay());
+}
+
+export function parsePrepararTexto(texto) {
+  return (texto || "")
+    .split("\n")
+    .map((l) => l.trim().replace(/^[-•*]\s*/, ""))
+    .filter(Boolean)
+    .slice(0, 6);
+}
+
 export function listaMicroPassos(habito) {
   if (!Array.isArray(habito.microPassos)) return [];
   return habito.microPassos
@@ -141,6 +170,16 @@ export function normalizarHabito(h) {
   if (micro.length) habito.microPassos = micro;
   if (h.microHistorico && typeof h.microHistorico === "object") {
     habito.microHistorico = h.microHistorico;
+  }
+  if (typeof h.planoB === "string" && h.planoB.trim()) {
+    habito.planoB = h.planoB.trim().slice(0, 120);
+  }
+  const preparar = listaPreparar(h);
+  if (preparar.length) habito.preparar = preparar;
+  if (Array.isArray(h.diasAtivos) && h.diasAtivos.length) {
+    habito.diasAtivos = h.diasAtivos
+      .map((d) => Number(d))
+      .filter((d) => d >= 0 && d <= 6);
   }
   if (Number.isFinite(lembretes) && lembretes > 1) {
     habito.lembretes = Math.round(lembretes);

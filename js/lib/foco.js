@@ -71,6 +71,7 @@ export function metaTimer() {
 }
 
 export function iniciarTimer(segundos, meta, { onTick, onFim }) {
+  pararCronometro();
   cancelarTimer();
   timerRestante = segundos;
   timerMeta = meta;
@@ -91,4 +92,40 @@ export function cancelarTimer() {
   timerInterval = null;
   timerRestante = 0;
   timerMeta = null;
+  pararCronometro();
+}
+
+let cronometroInterval = null;
+let cronometroSegundos = 0;
+let cronometroMeta = null;
+
+export function cronometroAtivo() {
+  return cronometroInterval !== null;
+}
+
+export function segundosCronometro() {
+  return cronometroSegundos;
+}
+
+export function metaCronometro() {
+  return cronometroMeta;
+}
+
+export function iniciarCronometro(meta, { onTick }) {
+  pararCronometro();
+  cancelarTimer();
+  cronometroSegundos = 0;
+  cronometroMeta = meta;
+  onTick?.(cronometroSegundos, cronometroMeta);
+  cronometroInterval = setInterval(() => {
+    cronometroSegundos += 1;
+    onTick?.(cronometroSegundos, cronometroMeta);
+  }, 1000);
+}
+
+export function pararCronometro() {
+  if (cronometroInterval) clearInterval(cronometroInterval);
+  cronometroInterval = null;
+  cronometroSegundos = 0;
+  cronometroMeta = null;
 }

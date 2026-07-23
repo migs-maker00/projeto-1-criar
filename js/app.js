@@ -1,13 +1,15 @@
-import { APP_VERSION } from "./config.js?v=1.7.0";
-import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.7.0";
+import { APP_VERSION } from "./config.js?v=1.8.0";
+import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.8.0";
 import {
   criarHabitoAgua,
   detectarTextoAgua,
   ehHabitoAgua,
+  ehAtivoHoje,
   ehMultiPassos,
   estaCompletoNoDia,
   horariosLembretes,
   listaMicroPassos,
+  listaPreparar,
   microFeitosNoDia,
   microPassoFeito,
   migrarHabitosAgua,
@@ -15,59 +17,91 @@ import {
   normalizarHabito,
   normalizarImportancia,
   parseMicroPassosTexto,
+  parsePrepararTexto,
   passosTotal,
   progressoNoDia,
   rotuloImportancia,
   textoHorariosLembretes,
+  textoPlanoB,
   todosMicroFeitos,
-} from "./lib/habitos.js?v=1.7.0";
+} from "./lib/habitos.js?v=1.8.0";
+import {
+  carregarPerfil,
+  habitosSugeridosPerfil,
+  marcarPerfilInicializado,
+  perfilInicializado,
+  salvarPerfil,
+} from "./lib/perfil.js?v=1.8.0";
+import {
+  detectarHabitoEstudo,
+  ehHorarioDificil,
+  mensagemTarde,
+  sugestaoTarde,
+} from "./lib/tarde.js?v=1.8.0";
 import {
   complementoCoachDiario,
   gerarResumoSemana,
   sugerirHabito,
   textoSugestao,
-} from "./lib/inteligencia.js?v=1.7.0";
+} from "./lib/inteligencia.js?v=1.8.0";
 import {
   iniciarVerificacaoLembretes,
   lembretesAtivos,
   pedirPermissaoLembretes,
   verificarLembretes,
-} from "./lib/lembretes.js?v=1.7.0";
+} from "./lib/lembretes.js?v=1.8.0";
+import { sincronizarAgendaSW } from "./lib/agenda-notif.js?v=1.8.0";
 import {
   cancelarTimer,
+  cronometroAtivo,
   formatarTimer,
   horaFormatada,
+  iniciarCronometro,
   iniciarTimer,
   minutosAte,
+  pararCronometro,
   proximoHorarioPendente,
+  segundosCronometro,
   segundosRestantesTimer,
   textoCountdown,
   timerAtivo,
-} from "./lib/foco.js?v=1.7.0";
+} from "./lib/foco.js?v=1.8.0";
 import {
   carregarPerfilRotina,
   gerarRotina,
   salvarPerfilRotina,
-} from "./lib/rotina-local.js?v=1.7.0";
+} from "./lib/rotina-local.js?v=1.8.0";
 import {
   adicionarInbox,
   alternarPrioridade,
+  aplicarLimiteDiario,
   arquivarInboxCompleta,
   carregarInbox,
   carregarPrioridades,
+  carregarRevisaoManha,
   carregarRevisaoNoturna,
+  carregarTemaSemana,
+  definirLimiteDiario,
   definirModoCabecaLeve,
+  definirModoCerebroVazio,
   definirRevisaoCampo,
+  definirRevisaoManhaCampo,
   ehPrioridadeHoje,
+  filtrarCerebroVazio,
   filtrarModoLeve,
+  limiteDiarioAtivo,
   MAX_PRIORIDADES,
   modoCabecaLeve,
+  modoCerebroVazio,
+  moverInboxParaDepois,
   ordenarComPrioridades,
   prioridadesDoDia,
   removerInbox,
   revisaoDoDia,
+  revisaoManhaDoDia,
+  salvarTemaSemana,
   sugestaoAgora,
-} from "./lib/tdah.js?v=1.7.0";
+} from "./lib/tdah.js?v=1.8.0";
 
 // ---- Referências aos elementos da página (DOM) ----
 const entradaHabito = document.getElementById("entrada-habito");
@@ -77,6 +111,8 @@ const entradaHorario = document.getElementById("entrada-horario");
 const entradaImportancia = document.getElementById("entrada-importancia");
 const entradaMicro = document.getElementById("entrada-micro");
 const entradaContexto = document.getElementById("entrada-contexto");
+const entradaPlanoB = document.getElementById("entrada-plano-b");
+const entradaPreparar = document.getElementById("entrada-preparar");
 const botaoAdicionar = document.getElementById("botao-adicionar");
 const listaHabitos = document.getElementById("lista-habitos");
 const mensagemVazia = document.getElementById("mensagem-vazia");
@@ -140,6 +176,16 @@ const relogioAtual = document.getElementById("relogio-atual");
 const countdownProximo = document.getElementById("countdown-proximo");
 const botaoArquivarInbox = document.getElementById("botao-arquivar-inbox");
 const toggleCabecaLeve = document.getElementById("toggle-cabeca-leve");
+const toggleLimiteDiario = document.getElementById("toggle-limite-diario");
+const toggleCerebroVazio = document.getElementById("toggle-cerebro-vazio");
+const bannerTarde = document.getElementById("banner-tarde");
+const manhaFoco1 = document.getElementById("manha-foco1");
+const manhaFoco2 = document.getElementById("manha-foco2");
+const manhaFoco3 = document.getElementById("manha-foco3");
+const resumoNaoEsqueci = document.getElementById("resumo-nao-esqueci");
+const entradaTemaSemana = document.getElementById("entrada-tema-semana");
+const perfilResumo = document.getElementById("perfil-resumo");
+const botaoRotinaPersonalizada = document.getElementById("botao-rotina-personalizada");
 
 // ---- Estado (a "fonte da verdade" do app) ----
 let habitos = [];
@@ -226,6 +272,18 @@ function salvar() {
     if (typeof window.agendarSyncNuvem === "function") window.agendarSyncNuvem();
   }
   rodarLembretes();
+  sincronizarLembretesSW();
+}
+
+function sincronizarLembretesSW() {
+  const chave = hojeStr();
+  const perfil = carregarPerfil();
+  sincronizarAgendaSW(habitos, chave, {
+    estaPendente: (h) => ehAtivoHoje(h) && !estaFeitoHoje(h),
+    horariosDoHabito: horariosParaLembrete,
+    prioridades: prioridadesDoDia(chave),
+    prioridadesVida: perfil.prioridadesVida || [],
+  });
 }
 
 function salvarNotas() {
@@ -419,6 +477,12 @@ function montarHabitoDoFormulario(texto) {
   const micro = parseMicroPassosTexto(entradaMicro?.value || "");
   if (micro.length) habito.microPassos = micro;
 
+  const planoB = entradaPlanoB?.value.trim();
+  if (planoB) habito.planoB = planoB;
+
+  const preparar = parsePrepararTexto(entradaPreparar?.value || "");
+  if (preparar.length) habito.preparar = preparar;
+
   if (detectarTextoAgua(texto) || sugestao.lembretes > 1) {
     habito.nome = nomeAguaLimpo();
     habito.categoria = "Saúde";
@@ -432,6 +496,9 @@ function montarHabitoDoFormulario(texto) {
 
   if (/estud|prova|ler|leitura/.test(texto.toLowerCase()) && !micro.length) {
     habito.microPassos = ["Abrir o material", "Focar 10 minutos", "Marcar o que ficou"];
+    habito.planoB = habito.planoB || "Só abrir o material e ler 1 página.";
+    habito.preparar = habito.preparar || ["Mesa limpa", "Celular longe"];
+    habito.diasAtivos = [1, 2, 3, 4, 5];
   }
 
   return habito;
@@ -460,6 +527,8 @@ function limparFormularioHabito() {
   if (entradaImportancia) entradaImportancia.value = "3";
   if (entradaMicro) entradaMicro.value = "";
   if (entradaContexto) entradaContexto.value = "";
+  if (entradaPlanoB) entradaPlanoB.value = "";
+  if (entradaPreparar) entradaPreparar.value = "";
   sugestaoAtual = null;
   if (sugestaoHabito) sugestaoHabito.hidden = true;
 }
@@ -493,12 +562,16 @@ const ATALHOS_RAPIDOS = {
   }),
   estudo: () => ({
     id: novoIdHabito(),
-    nome: "Estudar 30 min",
+    nome: "Estudar 15 min",
     categoria: "Estudo",
-    metaSemanal: 7,
+    metaSemanal: 5,
     horario: "19:00",
     importancia: 1,
+    diasAtivos: [1, 2, 3, 4, 5],
     microPassos: ["Abrir o material", "Focar 10 minutos", "Anotar dúvidas"],
+    planoB: "Só abrir o material e ler 1 página.",
+    preparar: ["Mesa limpa", "Água por perto", "Celular longe"],
+    contextoLembrete: "Chegou da escola — só 10 min já conta.",
     historico: {},
   }),
   meditar: () => ({
@@ -514,7 +587,7 @@ const ATALHOS_RAPIDOS = {
 const ROTULOS_ATALHO = {
   agua: "Beber água",
   academia: "Academia",
-  estudo: "Estudar 30 min",
+  estudo: "Estudar 15 min",
   meditar: "Meditar 10 min",
 };
 
@@ -1321,9 +1394,10 @@ function horariosParaLembrete(habito) {
 
 function rodarLembretes() {
   verificarLembretes(habitos, hojeStr(), {
-    estaPendente: (h) => !estaFeitoHoje(h),
+    estaPendente: (h) => ehAtivoHoje(h) && !estaFeitoHoje(h),
     horariosDoHabito: horariosParaLembrete,
   });
+  sincronizarLembretesSW();
 }
 
 function atualizarLembretesStatus() {
@@ -1333,7 +1407,8 @@ function atualizarLembretesStatus() {
     return;
   }
   if (lembretesAtivos() && Notification.permission === "granted") {
-    lembretesStatus.textContent = "Lembretes ativos — você recebe aviso no horário do hábito.";
+    lembretesStatus.textContent =
+      "Lembretes ativos — avisos no horário (melhor com app na tela inicial).";
   } else if (Notification.permission === "denied") {
     lembretesStatus.textContent = "Permissão bloqueada. Libere nas configurações do navegador.";
   } else {
@@ -1346,6 +1421,13 @@ async function ativarLembretes() {
   atualizarLembretesStatus();
   mostrarFeedback(resultado.mensagem, resultado.ok ? "ok" : "aviso");
   rodarLembretes();
+  if (resultado.ok && "serviceWorker" in navigator) {
+    try {
+      await navigator.serviceWorker.register(`./sw.js?v=${APP_VERSION}`);
+    } catch {
+      /* silencioso */
+    }
+  }
 }
 
 function carregarRevisaoCampos() {
@@ -1408,39 +1490,65 @@ function arquivarInbox() {
 
 function atualizarTimerUI(segundos) {
   const el = document.getElementById("agora-timer-valor");
-  if (el) el.textContent = formatarTimer(segundos);
+  if (!el) return;
+  if (cronometroAtivo()) el.textContent = formatarTimer(segundos);
+  else el.textContent = formatarTimer(segundos);
 }
 
-function onTimer2minFim(meta) {
+function comecarTimer(segundos, habito, rotulo) {
+  const passos = listaMicroPassos(habito);
+  const primeiroPasso = passos[0];
+  iniciarTimer(
+    segundos,
+    { habitoId: habito.id, nome: habito.nome, rotulo },
+    { onTick: atualizarTimerUI, onFim: onTimerFim }
+  );
+  desenharAgora();
+  const dica =
+    segundos <= 30
+      ? primeiroPasso
+        ? `Só abrir: "${primeiroPasso}"`
+        : "Só 30 segundos para começar."
+      : primeiroPasso
+        ? `Só: "${primeiroPasso}" — ${rotulo}.`
+        : `${rotulo}. Sem precisar terminar.`;
+  mostrarFeedback(dica);
+}
+
+function comecar2minutos(habito) {
+  comecarTimer(120, habito, "2 minutos");
+}
+
+function comecarCronometro(habito) {
+  iniciarCronometro(
+    { habitoId: habito.id, nome: habito.nome },
+    { onTick: atualizarTimerUI }
+  );
+  desenharAgora();
+  mostrarFeedback("Cronômetro ligado — veja quanto tempo passa.");
+}
+
+function onTimerFim(meta) {
   if (lembretesAtivos() && Notification.permission === "granted") {
     try {
-      new Notification("2 minutos!", {
-        body: meta?.nome ? `Como foi com "${meta.nome}"? Marque um passo ou continue.` : "Um passo já conta.",
-        tag: "timer-2min",
+      new Notification(meta?.rotulo || "Tempo!", {
+        body: meta?.nome
+          ? `Como foi com "${meta.nome}"? Marque um passo ou continue.`
+          : "Um passo já conta.",
+        tag: "timer-foco",
         icon: "icon-192.png",
       });
     } catch {
       /* silencioso */
     }
   }
-  mostrarFeedback("2 minutos! Marque um passo ou continue — já vale.");
+  mostrarFeedback("Tempo! Marque um passo ou continue — já vale.");
   desenharAgora();
   if (meta?.habitoId) irParaHabito(meta.habitoId);
 }
 
-function comecar2minutos(habito) {
-  const passos = listaMicroPassos(habito);
-  const primeiroPasso = passos[0];
-  iniciarTimer(
-    120,
-    { habitoId: habito.id, nome: habito.nome },
-    { onTick: atualizarTimerUI, onFim: onTimer2minFim }
-  );
-  desenharAgora();
-  const dica = primeiroPasso
-    ? `Só: "${primeiroPasso}" — 2 minutos.`
-    : "Só 2 minutos. Sem precisar terminar.";
-  mostrarFeedback(dica);
+function onTimer2minFim(meta) {
+  onTimerFim(meta);
 }
 
 function desenharRelogio() {
@@ -1449,8 +1557,8 @@ function desenharRelogio() {
   if (!countdownProximo) return;
 
   const prox = proximoHorarioPendente(habitos, {
-    estaPendente: (h) => !estaFeitoHoje(h),
-    horariosDoHabito: (h) => horariosLembretes(h),
+    estaPendente: (h) => ehAtivoHoje(h) && !estaFeitoHoje(h),
+    horariosDoHabito: horariosParaLembrete,
   });
 
   if (!prox) {
@@ -1460,19 +1568,40 @@ function desenharRelogio() {
 
   const min = minutosAte(prox.horario);
   const texto = textoCountdown(min);
-  countdownProximo.textContent =
-    texto === "passou" ? "" : `Próximo: ${prox.habito.nome} ${texto}`;
+  if (texto === "passou") {
+    countdownProximo.textContent = "";
+    return;
+  }
+  if (min != null && min <= 10 && min > 0) {
+    countdownProximo.textContent = `⏰ ${prox.habito.nome} em ${min} min`;
+    return;
+  }
+  countdownProximo.textContent = `Próximo: ${prox.habito.nome} ${texto}`;
+}
+
+function obterSugestaoAgora() {
+  const chave = hojeStr();
+  const pendente = (h) => ehAtivoHoje(h) && !estaFeitoHoje(h);
+
+  if (ehHorarioDificil()) {
+    const tarde = sugestaoTarde(habitos, {
+      estaPendente: pendente,
+      detectarEstudo: detectarHabitoEstudo,
+    });
+    if (tarde) return tarde;
+  }
+
+  return sugestaoAgora(habitos, chave, {
+    estaPendente: pendente,
+    ordenarPorHorario,
+    prioridades: prioridadesDoDia(chave),
+  });
 }
 
 function desenharAgora() {
   if (!agoraConteudo) return;
 
-  const chave = hojeStr();
-  const sugestao = sugestaoAgora(habitos, chave, {
-    estaPendente: (h) => !estaFeitoHoje(h),
-    ordenarPorHorario,
-    prioridades: prioridadesDoDia(chave),
-  });
+  const sugestao = obterSugestaoAgora();
 
   if (!sugestao) {
     agoraConteudo.innerHTML = `
@@ -1483,17 +1612,24 @@ function desenharAgora() {
   const { habito, motivo } = sugestao;
   const horario = habito.horario ? `<span class="agora-hora">${habito.horario}</span>` : "";
   const passos = listaMicroPassos(habito);
+  const preparar = listaPreparar(habito);
   const dicaPasso = passos[0]
     ? `<p class="agora-micro">Primeiro passo: <strong>${passos[0]}</strong></p>`
     : "";
+  const prepHtml = preparar.length
+    ? `<p class="agora-preparar">Preparar: ${preparar.join(" · ")}</p>`
+    : "";
 
-  const timerHtml = timerAtivo()
-    ? `<div class="agora-timer" id="agora-timer">
-        <span class="agora-timer-label">Foco</span>
-        <span class="agora-timer-valor" id="agora-timer-valor">${formatarTimer(segundosRestantesTimer())}</span>
+  const timerHtml =
+    timerAtivo() || cronometroAtivo()
+      ? `<div class="agora-timer" id="agora-timer">
+        <span class="agora-timer-label">${cronometroAtivo() ? "Cronômetro" : "Foco"}</span>
+        <span class="agora-timer-valor" id="agora-timer-valor">${formatarTimer(
+          cronometroAtivo() ? segundosCronometro() : segundosRestantesTimer()
+        )}</span>
         <button type="button" class="agora-timer-cancelar" id="agora-cancelar-timer">Parar</button>
       </div>`
-    : "";
+      : "";
 
   agoraConteudo.innerHTML = `
     ${timerHtml}
@@ -1503,21 +1639,40 @@ function desenharAgora() {
       <span class="agora-nome">${habito.nome}</span>
     </button>
     ${dicaPasso}
+    ${prepHtml}
+    <div class="agora-acoes agora-timers">
+      <button type="button" class="botao-secundario agora-timer-btn" data-seg="30">Só abrir</button>
+      <button type="button" class="botao-secundario agora-timer-btn" data-seg="120">2 min</button>
+      <button type="button" class="botao-secundario agora-timer-btn" data-seg="300">5 min</button>
+      <button type="button" class="botao-secundario agora-timer-btn" data-seg="600">10 min</button>
+      <button type="button" class="botao-secundario agora-timer-btn" data-seg="1500">25 min</button>
+    </div>
     <div class="agora-acoes">
-      <button type="button" class="botao-secundario agora-2min" data-2min="${habito.id}">
-        Começar 2 min
-      </button>
+      <button type="button" class="botao-secundario" id="agora-cronometro">Cronômetro</button>
+      <button type="button" class="botao-secundario agora-travei" data-travei="${habito.id}">Travei</button>
     </div>
     <p class="agora-dica">Um passo só. Sem precisar fazer tudo.</p>`;
 
   agoraConteudo.querySelector(".agora-botao")?.addEventListener("click", () => {
     irParaHabito(habito.id);
   });
-  agoraConteudo.querySelector(".agora-2min")?.addEventListener("click", () => {
-    comecar2minutos(habito);
+  agoraConteudo.querySelectorAll(".agora-timer-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const seg = Number(btn.dataset.seg);
+      const rotulo =
+        seg <= 30 ? "30 segundos" : seg === 120 ? "2 minutos" : `${Math.round(seg / 60)} minutos`;
+      comecarTimer(seg, habito, rotulo);
+    });
+  });
+  agoraConteudo.querySelector("#agora-cronometro")?.addEventListener("click", () => {
+    comecarCronometro(habito);
+  });
+  agoraConteudo.querySelector(".agora-travei")?.addEventListener("click", () => {
+    mostrarFeedback(textoPlanoB(habito), "aviso");
   });
   agoraConteudo.querySelector("#agora-cancelar-timer")?.addEventListener("click", () => {
     cancelarTimer();
+    pararCronometro();
     desenharAgora();
     mostrarFeedback("Timer parado.");
   });
@@ -1539,6 +1694,51 @@ function desenharInbox() {
     texto.className = "inbox-texto";
     texto.textContent = item.texto;
 
+    const acoes = document.createElement("div");
+    acoes.className = "inbox-acoes";
+
+    const btnHabito = document.createElement("button");
+    btnHabito.type = "button";
+    btnHabito.className = "inbox-acao";
+    btnHabito.textContent = "Hábito";
+    btnHabito.title = "Criar hábito na Rotina";
+    btnHabito.addEventListener("click", () => {
+      removerInbox(item.id);
+      ativarPainel("rotina");
+      if (entradaHabito) {
+        entradaHabito.value = item.texto;
+        entradaHabito.focus();
+      }
+      desenharInbox();
+      mostrarFeedback("Texto colocado em Rotina — ajuste e adicione.");
+    });
+
+    const btnNota = document.createElement("button");
+    btnNota.type = "button";
+    btnNota.className = "inbox-acao";
+    btnNota.textContent = "Nota";
+    btnNota.title = "Mover para anotações de hoje";
+    btnNota.addEventListener("click", () => {
+      const hoje = hojeStr();
+      const atual = notas[hoje] || "";
+      const novo = atual ? `${atual}\n• ${item.texto}` : `• ${item.texto}`;
+      definirNota(hoje, novo);
+      removerInbox(item.id);
+      desenharInbox();
+      mostrarFeedback("Adicionado às anotações de hoje.");
+    });
+
+    const btnDepois = document.createElement("button");
+    btnDepois.type = "button";
+    btnDepois.className = "inbox-acao";
+    btnDepois.textContent = "Depois";
+    btnDepois.title = "Guardar para outro dia";
+    btnDepois.addEventListener("click", () => {
+      moverInboxParaDepois(item.id);
+      desenharInbox();
+      mostrarFeedback("Guardado para depois.");
+    });
+
     const remover = document.createElement("button");
     remover.type = "button";
     remover.className = "inbox-remover";
@@ -1549,10 +1749,109 @@ function desenharInbox() {
       desenharInbox();
     });
 
+    acoes.appendChild(btnHabito);
+    acoes.appendChild(btnNota);
+    acoes.appendChild(btnDepois);
+    acoes.appendChild(remover);
+
     li.appendChild(texto);
-    li.appendChild(remover);
+    li.appendChild(acoes);
     listaInbox.appendChild(li);
   });
+}
+
+function desenharManha() {
+  const chave = hojeStr();
+  const dados = revisaoManhaDoDia(chave);
+  if (manhaFoco1) manhaFoco1.value = dados.foco1;
+  if (manhaFoco2) manhaFoco2.value = dados.foco2;
+  if (manhaFoco3) manhaFoco3.value = dados.foco3;
+
+  if (!resumoNaoEsqueci) return;
+
+  const perfil = carregarPerfil();
+  const prio = prioridadesDoDia(chave);
+
+  const focos = [dados.foco1, dados.foco2, dados.foco3].filter((t) => t.trim());
+  const habitoNomes = prio
+    .map((id) => habitos.find((h) => h.id === id)?.nome)
+    .filter(Boolean);
+
+  if (focos.length || habitoNomes.length) {
+    const linhas = focos.length ? focos : habitoNomes;
+    resumoNaoEsqueci.hidden = false;
+    resumoNaoEsqueci.innerHTML = `<strong>Não esquecer:</strong> ${linhas.slice(0, 3).join(" · ")}`;
+  } else if (perfil.prioridadesVida?.length) {
+    resumoNaoEsqueci.hidden = false;
+    resumoNaoEsqueci.innerHTML = `<strong>Seu foco:</strong> ${perfil.prioridadesVida.join(" · ")}`;
+  } else {
+    resumoNaoEsqueci.hidden = true;
+  }
+
+  if (entradaTemaSemana && entradaTemaSemana.value !== carregarTemaSemana()) {
+    entradaTemaSemana.value = carregarTemaSemana();
+  }
+}
+
+function desenharBannerTarde() {
+  if (!bannerTarde) return;
+  const ativo = ehHorarioDificil();
+  bannerTarde.hidden = !ativo;
+  if (ativo) {
+    const texto = bannerTarde.querySelector(".banner-tarde-texto");
+    if (texto) texto.textContent = mensagemTarde();
+  }
+}
+
+function desenharPerfilAjustes() {
+  if (!perfilResumo) return;
+  const perfil = carregarPerfil();
+  perfilResumo.textContent = `Acorda ${perfil.acordar}, escola seg–sex, tarde difícil ${perfil.tardeDificilInicio}–${perfil.tardeDificilFim}. Prioridades: ${(perfil.prioridadesVida || []).join(", ")}.`;
+}
+
+function aplicarRotinaPersonalizada() {
+  const sugeridos = habitosSugeridosPerfil();
+  let adicionados = 0;
+
+  sugeridos.forEach((modelo) => {
+    const jaExiste = habitos.some((h) => {
+      if (/água|agua/i.test(modelo.nome)) return ehHabitoAgua(h);
+      return h.nome.toLowerCase() === modelo.nome.toLowerCase();
+    });
+    if (jaExiste) return;
+
+    if (/água|agua/i.test(modelo.nome)) {
+      habitos.push(criarHabitoAgua(novoIdHabito()));
+      adicionados++;
+      return;
+    }
+
+    const habito = { ...modelo, id: novoIdHabito(), historico: {} };
+    if (habito.lembretes) {
+      habito.horariosLembretes = horariosLembretes(habito);
+    }
+    habitos.push(normalizarHabito(habito));
+    adicionados++;
+  });
+
+  marcarPerfilInicializado();
+  salvarPerfil(carregarPerfil());
+  salvar();
+  desenhar();
+  mostrarFeedback(
+    adicionados
+      ? `${adicionados} hábito(s) adicionados com base na sua rotina.`
+      : "Sua rotina sugerida já está na agenda."
+  );
+}
+
+function processarHashHabito() {
+  const hash = location.hash;
+  if (!hash.startsWith("#habito-")) return;
+  const id = Number(hash.replace("#habito-", ""));
+  if (!Number.isFinite(id)) return;
+  ativarPainel("hoje");
+  setTimeout(() => irParaHabito(id), 300);
 }
 
 function desenharResumoAgenda() {
@@ -1576,6 +1875,8 @@ function desenharResumoAgenda() {
 
   agendaResumo.innerHTML = `<p class="agenda-resumo-texto">${texto}</p>`;
   desenharFilosofia();
+  desenharManha();
+  desenharBannerTarde();
   desenharAgora();
   desenharInbox();
   desenharRevisao();
@@ -1800,15 +2101,29 @@ function desenhar() {
       ? habitos
       : habitos.filter((h) => (h.categoria || "Geral") === filtroCategoria);
 
+  base = base.filter((h) => ehAtivoHoje(h));
+
   if (modoCabecaLeve()) {
     base = filtrarModoLeve(base, chave);
   }
+  if (modoCerebroVazio()) {
+    base = filtrarCerebroVazio(base, chave);
+  }
 
-  const visiveis = ordenarComPrioridades(ordenarPorHorario(base), chave);
+  let visiveis = ordenarComPrioridades(ordenarPorHorario(base), chave);
+  visiveis = aplicarLimiteDiario(visiveis, chave);
 
   if (toggleCabecaLeve) {
     toggleCabecaLeve.classList.toggle("ativo", modoCabecaLeve());
     toggleCabecaLeve.setAttribute("aria-pressed", modoCabecaLeve() ? "true" : "false");
+  }
+  if (toggleLimiteDiario) {
+    toggleLimiteDiario.classList.toggle("ativo", limiteDiarioAtivo());
+    toggleLimiteDiario.setAttribute("aria-pressed", limiteDiarioAtivo() ? "true" : "false");
+  }
+  if (toggleCerebroVazio) {
+    toggleCerebroVazio.classList.toggle("ativo", modoCerebroVazio());
+    toggleCerebroVazio.setAttribute("aria-pressed", modoCerebroVazio() ? "true" : "false");
   }
 
   if (rotuloFoco) rotuloFoco.hidden = habitos.length === 0;
@@ -1818,10 +2133,10 @@ function desenhar() {
     mensagemVazia.style.display = "block";
     mensagemVazia.innerHTML =
       'Nenhum hábito na agenda. Vá em <strong>Rotina</strong> para criar o primeiro.';
-  } else if (visiveis.length === 0 && modoCabecaLeve()) {
+  } else if (visiveis.length === 0 && (modoCabecaLeve() || modoCerebroVazio() || limiteDiarioAtivo())) {
     mensagemVazia.style.display = "block";
     mensagemVazia.textContent =
-      "Modo essencial: marque ☆ ou defina hábitos como Essenciais na Rotina.";
+      "Nenhum hábito visível com os filtros atuais. Desative um modo ou marque prioridades.";
   } else {
     mensagemVazia.style.display = "none";
   }
@@ -1837,6 +2152,7 @@ function desenhar() {
   desenharResumoSemana();
   desenharCalendario();
   desenharListaDiario();
+  desenharPerfilAjustes();
 }
 
 function carregarNotaHoje() {
@@ -1936,10 +2252,41 @@ function ligarTodosEventos() {
         : "Mostrando todos os hábitos."
     );
   });
+  toggleLimiteDiario?.addEventListener("click", () => {
+    definirLimiteDiario(!limiteDiarioAtivo());
+    desenhar();
+    mostrarFeedback(limiteDiarioAtivo() ? "Hoje só 5 compromissos visíveis." : "Mostrando todos.");
+  });
+  toggleCerebroVazio?.addEventListener("click", () => {
+    definirModoCerebroVazio(!modoCerebroVazio());
+    desenhar();
+    mostrarFeedback(modoCerebroVazio() ? "Só 1 coisa na tela." : "Mostrando todos.");
+  });
+  manhaFoco1?.addEventListener("input", () => {
+    definirRevisaoManhaCampo(hojeStr(), "foco1", manhaFoco1.value);
+    desenharManha();
+  });
+  manhaFoco2?.addEventListener("input", () => {
+    definirRevisaoManhaCampo(hojeStr(), "foco2", manhaFoco2.value);
+    desenharManha();
+  });
+  manhaFoco3?.addEventListener("input", () => {
+    definirRevisaoManhaCampo(hojeStr(), "foco3", manhaFoco3.value);
+    desenharManha();
+  });
+  entradaTemaSemana?.addEventListener("input", () => {
+    salvarTemaSemana(entradaTemaSemana.value);
+  });
+  botaoRotinaPersonalizada?.addEventListener("click", aplicarRotinaPersonalizada);
 }
 
 // ============ INICIALIZAÇÃO ============
 export function initApp() {
+  if (!perfilInicializado()) {
+    salvarPerfil(carregarPerfil());
+    marcarPerfilInicializado();
+  }
+
   aplicarTema(localStorage.getItem("tema") || "claro");
   mostrarData();
   carregar();
@@ -1956,7 +2303,12 @@ export function initApp() {
   intervaloRelogio = setInterval(() => {
     desenharRelogio();
     if (timerAtivo()) atualizarTimerUI(segundosRestantesTimer());
+    else if (cronometroAtivo()) atualizarTimerUI(segundosCronometro());
   }, 1000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") rodarLembretes();
+  });
+  processarHashHabito();
   desenhar();
 }
 
