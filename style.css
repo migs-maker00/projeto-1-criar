@@ -2419,18 +2419,51 @@ body {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--marca) 30%, transparent);
 }
 
-.estudo-livro-titulo {
+.estudo-livro-cabecalho {
+  margin: 0 0 10px;
+}
+
+.estudo-livro-cabecalho-destaque {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--marca) 8%, var(--superficie));
+  border: 1px solid color-mix(in srgb, var(--marca) 18%, var(--borda));
+  margin-bottom: 12px;
+}
+
+.estudo-livro-cabecalho .estudo-livro-titulo {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
+  line-height: 1.3;
   color: var(--texto);
 }
 
+.estudo-livro-cabecalho-destaque .estudo-livro-titulo {
+  font-size: 1.1rem;
+}
+
+.estudo-por {
+  font-weight: 500;
+  font-style: italic;
+  color: var(--texto-suave);
+  margin-right: 2px;
+}
+
+.estudo-por-inline {
+  font-style: italic;
+  color: var(--texto-suave);
+}
+
 .estudo-livro-autor {
-  margin: 2px 0 0;
-  font-size: 0.85rem;
+  margin: 4px 0 0;
+  font-size: 0.92rem;
   color: var(--marca);
   font-weight: 600;
+}
+
+.estudo-livro-cabecalho-destaque .estudo-livro-autor {
+  font-size: 0.95rem;
 }
 
 .estudo-livro-sub {
