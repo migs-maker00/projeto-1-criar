@@ -6,7 +6,7 @@ import {
   PLANO_B_VOCABULARIO,
 } from "./aprender.js";
 
-export const CHAVE_ROTINA_MONTADA = "rotina-montada-v1.8.3";
+export const CHAVE_ROTINA_MONTADA = "rotina-montada-v1.9.0";
 
 export const HORARIOS_AGUA_ROTINA = [
   "06:15", "09:30", "12:00", "15:30", "18:00", "21:00",
@@ -74,6 +74,18 @@ export function habitosRotinaCompleta() {
       planoB: PLANO_B_APRENDER,
       preparar: ["Fone ou alto-falante", "Água por perto", "Celular longe"],
       contextoLembrete: CONTEXTO_APRENDER,
+    },
+    {
+      presetId: "praticalivro",
+      nome: "Prática do livro (10 min)",
+      categoria: "Estudo",
+      metaSemanal: 5,
+      horario: "19:10",
+      importancia: 2,
+      diasAtivos: [1, 2, 3, 4, 5],
+      microPassos: ["Abrir Prática do livro", "Responder 3 questões", "Aplicar 1 ideia hoje"],
+      planoB: "Só 1 questão e pensar na resposta.",
+      contextoLembrete: "Aprender na prática — sem precisar ler o capítulo.",
     },
     {
       presetId: "vocabulario",
@@ -154,6 +166,7 @@ export function correspondePreset(habito, presetId) {
     organizar: /organiz/i,
     aprender: /aprend|estud/i,
     vocabulario: /vocabul/i,
+    praticalivro: /prática do livro|pratica do livro/i,
     estudo: /aprend|estud|vocabul/i,
     academia: /academia|treino/i,
     telas: /tela|desligar/i,
