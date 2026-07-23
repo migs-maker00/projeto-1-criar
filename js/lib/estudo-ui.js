@@ -20,6 +20,12 @@ import {
   suportaReconhecimentoVoz,
 } from "./estudo-fala.js";
 import {
+  listarVozesUI,
+  rotuloVozAtual,
+  salvarVozPreferida,
+  vozSalva,
+} from "./voz-sintese.js";
+import {
   buscarLivros,
   carregarProgressoLivro,
   CATEGORIAS_LIVRO,
@@ -232,6 +238,31 @@ function renderFalar(dados) {
         <button type="button" class="botao-secundario estudo-btn-mic" data-estudo-mic="frase">🎤 Falar frase</button>`
     : "";
 
+  const vozesEn = listarVozesUI("en-US");
+  const vozAtual = vozSalva("en-US");
+  const opcoesVoz =
+    vozesEn.length > 0
+      ? vozesEn
+          .map(
+            (v) =>
+              `<option value="${esc(v.uri)}" ${vozAtual === v.uri ? "selected" : ""}>${esc(v.nome)}</option>`
+          )
+          .join("")
+      : "";
+
+  const seletorVoz =
+    vozesEn.length > 0
+      ? `
+      <div class="estudo-voz-linha">
+        <label class="estudo-form-rotulo" for="estudo-voz-en">Voz ao ouvir (inglês)</label>
+        <select id="estudo-voz-en" class="campo-opcao" data-estudo-voz="en-US" aria-label="Voz em inglês">
+          <option value="">Automática — ${esc(rotuloVozAtual("en-US"))}</option>
+          ${opcoesVoz}
+        </select>
+        <p class="estudo-voz-dica">Escolha uma voz mais natural. No Chrome costuma aparecer “Google US English”.</p>
+      </div>`
+      : "";
+
   return `
     <section class="estudo-bloco estudo-falar">
       <h2 class="bloco-titulo">Falar em voz alta</h2>
@@ -249,6 +280,7 @@ function renderFalar(dados) {
         <button type="button" class="botao-secundario" data-estudo-proxima-palavra">Próxima →</button>
       </div>
       ${avisoMic}
+      ${seletorVoz}
       <form class="estudo-form-vocab" data-estudo-form="vocab">
         <p class="estudo-form-rotulo">Adicionar palavra sua</p>
         <input type="text" name="en" class="campo-opcao" placeholder="Inglês" maxlength="40" />
@@ -427,7 +459,9 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
       const p = palavraAtual(dados);
       if (!p) return;
       const texto = alvo.dataset.estudoOuvir === "frase" ? p.frase || p.en : p.en;
-      if (!falarTexto(texto)) mostrarFeedback?.("Seu navegador não suporta voz sintética.");
+      if (!falarTexto(texto, { lang: "en-US", tipo: "en" })) {
+        mostrarFeedback?.("Seu navegador não suporta voz sintética.");
+      }
       return;
     }
 
@@ -485,6 +519,15 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
     if (alvo.classList.contains("estudo-pratica-opcao")) {
       confirmarPratica(root, chaveDia(), mostrarFeedback, getState, setState, onAtualizarHoje, Number(alvo.dataset.indice));
     }
+  });
+
+  root.addEventListener("change", (evento) => {
+    const sel = evento.target.closest("[data-estudo-voz]");
+    if (!sel) return;
+    salvarVozPreferida(sel.dataset.estudoVoz || "en-US", sel.value);
+    const dados = getState();
+    setState({ ...dados, abaAtiva: "falar" });
+    mostrarFeedback?.(sel.value ? "Voz salva!" : "Voz automática ativada.");
   });
 
   root.addEventListener("input", (evento) => {
