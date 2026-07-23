@@ -83,7 +83,7 @@ export function habitosRotinaCompleta() {
       horario: "19:10",
       importancia: 2,
       diasAtivos: [1, 2, 3, 4, 5],
-      microPassos: ["Abrir aba Estudo → Praticar", "Responder 3 questões", "Aplicar 1 ideia hoje"],
+    microPassos: ["Abrir Estudo → Livros", "Responder 3 questões", "Aplicar 1 ideia hoje"],
       planoB: "Só 1 questão e pensar na resposta.",
       contextoLembrete: "Aprender na prática — sem precisar ler o capítulo.",
     },

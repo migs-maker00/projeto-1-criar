@@ -1,7 +1,7 @@
 /**
  * Ponto de entrada do app — expõe API para sync.js e inicializa a UI.
  */
-import { APP_VERSION } from "./config.js?v=2.0.0";
+import { APP_VERSION } from "./config.js?v=2.1.0";
 
 function mostrarErroCarregamento(erro) {
   const detalhe = erro?.message || String(erro);
