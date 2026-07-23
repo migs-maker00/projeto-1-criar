@@ -15,6 +15,11 @@ import {
   resumoSessao,
 } from "./estudo-hub.js";
 import {
+  escutarPronuncia,
+  pararEscuta,
+  suportaReconhecimentoVoz,
+} from "./estudo-fala.js";
+import {
   buscarLivros,
   carregarProgressoLivro,
   CATEGORIAS_LIVRO,
@@ -208,22 +213,42 @@ function renderFalar(dados) {
   }
 
   const frase = p.frase || `I use the word "${p.en}" today.`;
+  const fb = dados.falaFeedback;
+  let feedbackHtml = "";
+  if (fb?.mensagem) {
+    const cls = fb.status === "ouvindo" ? "ouvindo" : fb.ok ? "ok" : "erro";
+    feedbackHtml = `<p class="estudo-fala-feedback ${cls}" role="status">${esc(fb.mensagem)}</p>`;
+  } else {
+    feedbackHtml = `<p class="estudo-fala-feedback" hidden role="status"></p>`;
+  }
+
+  const avisoMic = suportaReconhecimentoVoz()
+    ? `<p class="estudo-falar-mic-aviso">Toque no microfone, permita o acesso e fale em inglês. Funciona melhor no Chrome.</p>`
+    : `<p class="estudo-falar-mic-aviso estudo-falar-mic-off">Reconhecimento de voz indisponível neste navegador — use Chrome no celular.</p>`;
+
+  const botoesMic = suportaReconhecimentoVoz()
+    ? `
+        <button type="button" class="botao-secundario estudo-btn-mic" data-estudo-mic="en">🎤 Falar palavra</button>
+        <button type="button" class="botao-secundario estudo-btn-mic" data-estudo-mic="frase">🎤 Falar frase</button>`
+    : "";
 
   return `
     <section class="estudo-bloco estudo-falar">
       <h2 class="bloco-titulo">Falar em voz alta</h2>
-      <p class="bloco-apoio">Ouça → repita 3 vezes → use numa frase. Palavra ${p.indice + 1}/${p.total}.</p>
+      <p class="bloco-apoio">Ouça → fale no microfone → veja se acertou. Palavra ${p.indice + 1}/${p.total}.</p>
       <div class="estudo-vocab-card">
         <p class="estudo-vocab-en">${esc(p.en)}</p>
         <p class="estudo-vocab-pt">${esc(p.pt)}</p>
         <p class="estudo-vocab-frase">"${esc(frase)}"</p>
       </div>
+      ${feedbackHtml}
       <div class="estudo-falar-botoes">
         <button type="button" class="botao-secundario" data-estudo-ouvir="en">🔊 Ouvir palavra</button>
         <button type="button" class="botao-secundario" data-estudo-ouvir="frase">🔊 Ouvir frase</button>
+        ${botoesMic}
         <button type="button" class="botao-secundario" data-estudo-proxima-palavra">Próxima →</button>
       </div>
-      <p class="estudo-falar-dica">Diga em voz alta antes de passar. Ninguém precisa ouvir — o importante é sua boca fazer o movimento.</p>
+      ${avisoMic}
       <form class="estudo-form-vocab" data-estudo-form="vocab">
         <p class="estudo-form-rotulo">Adicionar palavra sua</p>
         <input type="text" name="en" class="campo-opcao" placeholder="Inglês" maxlength="40" />
@@ -346,7 +371,7 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
 
   root.addEventListener("click", (evento) => {
     const alvo = evento.target.closest(
-      "[data-estudo-aba], [data-estudo-link], [data-estudo-remover], [data-estudo-timer], [data-estudo-marcar], [data-estudo-ouvir], [data-estudo-proxima-palavra], [data-estudo-selecionar-livro], [data-estudo-cat], .estudo-pratica-confirmar, .estudo-pratica-opcao, [data-ir-painel]"
+      "[data-estudo-aba], [data-estudo-link], [data-estudo-remover], [data-estudo-timer], [data-estudo-marcar], [data-estudo-ouvir], [data-estudo-mic], [data-estudo-proxima-palavra], [data-estudo-selecionar-livro], [data-estudo-cat], .estudo-pratica-confirmar, .estudo-pratica-opcao, [data-ir-painel]"
     );
 
     if (!alvo) return;
@@ -359,7 +384,8 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
     let dados = getState();
 
     if (alvo.dataset.estudoAba) {
-      setState({ ...dados, abaAtiva: alvo.dataset.estudoAba });
+      pararEscuta();
+      setState({ ...dados, abaAtiva: alvo.dataset.estudoAba, falaFeedback: null });
       return;
     }
 
@@ -405,10 +431,49 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
       return;
     }
 
+    if (alvo.dataset.estudoMic) {
+      const p = palavraAtual(dados);
+      if (!p) return;
+      const ehFrase = alvo.dataset.estudoMic === "frase";
+      const esperado = ehFrase ? p.frase || p.en : p.en;
+
+      setState({
+        ...dados,
+        falaFeedback: { status: "ouvindo", mensagem: "Preparando microfone…", ok: null },
+      });
+
+      escutarPronuncia(esperado, {
+        frase: ehFrase,
+        onStatus: (msg) => {
+          setState({ ...getState(), falaFeedback: { status: "ouvindo", mensagem: msg, ok: null } });
+        },
+        onError: (msg) => {
+          setState({ ...getState(), falaFeedback: { status: "erro", mensagem: msg, ok: false } });
+        },
+        onResult: (resultado) => {
+          let atual = getState();
+          if (resultado.ok) {
+            const falar = (atual.sessao?.falar || 0) + 1;
+            atual = marcarSessao(atual, "falar", falar);
+          }
+          setState({
+            ...atual,
+            falaFeedback: {
+              status: resultado.ok ? "ok" : "erro",
+              mensagem: resultado.mensagem,
+              ok: resultado.ok,
+            },
+          });
+          onAtualizarHoje?.();
+        },
+      });
+      return;
+    }
+
     if (alvo.closest("[data-estudo-proxima-palavra]")) {
+      pararEscuta();
       const prox = avancarPalavra(dados);
-      const comFalar = marcarSessao(prox, "falar", (prox.sessao.falar || 0) + 1);
-      setState(comFalar);
+      setState({ ...prox, falaFeedback: null });
       return;
     }
 
