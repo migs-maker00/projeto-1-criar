@@ -2318,6 +2318,10 @@ body {
   color: var(--texto);
 }
 
+.estudo-btn-proxima {
+  font-weight: 700;
+}
+
 .estudo-falar-botoes {
   display: flex;
   flex-wrap: wrap;
