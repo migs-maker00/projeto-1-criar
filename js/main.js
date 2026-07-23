@@ -1,7 +1,7 @@
 /**
  * Ponto de entrada do app — expõe API para sync.js e inicializa a UI.
  */
-import { APP_VERSION } from "./config.js?v=1.7.0";
+import { APP_VERSION } from "./config.js?v=1.8.0";
 
 function mostrarErroCarregamento(erro) {
   const detalhe = erro?.message || String(erro);
@@ -25,6 +25,10 @@ function mostrarErroCarregamento(erro) {
 }
 
 try {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register(`./sw.js?v=${APP_VERSION}`).catch(() => {});
+  }
+
   const app = await import(`./app.js?v=${APP_VERSION}`);
 
   app.initApp();

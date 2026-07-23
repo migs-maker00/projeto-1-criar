@@ -1724,6 +1724,99 @@ body {
   font-family: inherit;
 }
 
+.agora-timers {
+  flex-wrap: wrap;
+}
+
+.agora-timers .agora-timer-btn {
+  flex: 1 1 calc(33% - 8px);
+  min-width: 4.5rem;
+  font-size: 0.78rem;
+  padding: 8px 6px;
+}
+
+.agora-preparar {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+}
+
+.banner-tarde {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, #c45c26 14%, var(--superficie-elevada));
+  border: 1px solid color-mix(in srgb, #c45c26 35%, var(--borda));
+}
+
+.banner-tarde-texto {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--texto);
+}
+
+.bloco-manha {
+  margin-bottom: 12px;
+}
+
+.resumo-nao-esqueci {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--marca) 10%, var(--superficie));
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.linha-tema-semana {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.tema-semana-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+  white-space: nowrap;
+}
+
+.tema-semana-input {
+  flex: 1;
+}
+
+.inbox-item {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.inbox-acoes {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.inbox-acao {
+  border: 1px solid var(--borda);
+  background: var(--superficie);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--texto);
+}
+
+.linha-modo-leve {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
   margin-top: 0;
   font-size: 0.88rem;
 }

@@ -20,7 +20,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=1.7.0" />
+  <link rel="stylesheet" href="style.css?v=1.8.0" />
 </head>
 <body>
   <div class="ambiente">
@@ -114,6 +114,21 @@
             placeholder="Ex.: Sentar na mesa e abrir o caderno"
             maxlength="120"
           />
+          <label class="rotina-label" for="entrada-plano-b">Se não der hoje (plano B)</label>
+          <input
+            type="text"
+            id="entrada-plano-b"
+            class="campo-opcao"
+            placeholder="Ex.: Só abrir o material e ler 1 página"
+            maxlength="120"
+          />
+          <label class="rotina-label" for="entrada-preparar">Preparar ambiente (opcional, um por linha)</label>
+          <textarea
+            id="entrada-preparar"
+            class="nota-campo micro-campo"
+            rows="2"
+            placeholder="Ex.: Mesa limpa&#10;Celular longe"
+          ></textarea>
           <div id="sugestao-habito" class="sugestao-habito" hidden>
             <p id="sugestao-texto" class="sugestao-texto"></p>
             <button type="button" id="botao-usar-sugestao" class="botao-secundario botao-sugestao">
@@ -191,7 +206,34 @@
           <span id="countdown-proximo" class="countdown-proximo"></span>
         </div>
 
-        <section id="bloco-agora" class="bloco bloco-primeiro bloco-agora" aria-label="O que fazer agora">
+        <div id="banner-tarde" class="banner-tarde" hidden>
+          <p class="banner-tarde-texto"></p>
+        </div>
+
+        <section class="bloco bloco-manha" aria-label="Revisão da manhã">
+          <h2 class="bloco-titulo">Manhã — 2 min</h2>
+          <p class="bloco-apoio">O que importa hoje? Três linhas no máximo.</p>
+          <div id="resumo-nao-esqueci" class="resumo-nao-esqueci" hidden></div>
+          <label class="revisao-label" for="manha-foco1">Prioridade 1</label>
+          <input type="text" id="manha-foco1" class="campo-opcao revisao-campo" maxlength="80" />
+          <label class="revisao-label" for="manha-foco2">Prioridade 2</label>
+          <input type="text" id="manha-foco2" class="campo-opcao revisao-campo" maxlength="80" />
+          <label class="revisao-label" for="manha-foco3">Prioridade 3</label>
+          <input type="text" id="manha-foco3" class="campo-opcao revisao-campo" maxlength="80" />
+        </section>
+
+        <div class="linha-tema-semana">
+          <label class="tema-semana-label" for="entrada-tema-semana">Tema da semana</label>
+          <input
+            type="text"
+            id="entrada-tema-semana"
+            class="campo-opcao tema-semana-input"
+            placeholder="Ex.: Conhecimento e rotina"
+            maxlength="80"
+          />
+        </div>
+
+        <section id="bloco-agora" class="bloco bloco-agora" aria-label="O que fazer agora">
           <p class="secao-rotulo">Agora</p>
           <div id="agora-conteudo" class="agora-conteudo"></div>
         </section>
@@ -243,6 +285,12 @@
         <div class="linha-modo-leve">
           <button type="button" id="toggle-cabeca-leve" class="chip chip-modo-leve" aria-pressed="false">
             Só o essencial
+          </button>
+          <button type="button" id="toggle-limite-diario" class="chip chip-modo-leve" aria-pressed="false">
+            Hoje só 5
+          </button>
+          <button type="button" id="toggle-cerebro-vazio" class="chip chip-modo-leve" aria-pressed="false">
+            1 coisa só
           </button>
         </div>
         <p id="rotulo-foco" class="secao-rotulo rotulo-foco" hidden>Máx. 3 prioridades — toque na ☆</p>
@@ -402,12 +450,21 @@
         </section>
 
         <section class="bloco">
-          <h2 class="bloco-titulo">Lembretes</h2>
+          <h2 class="bloco-titulo">Lembretes no celular</h2>
           <p class="bloco-apoio">
-            Notificação no horário do hábito (funciona com o app instalado ou aberto no navegador).
+            Instale o app na tela inicial para receber avisos mesmo com o navegador fechado.
+            Abra o menu do navegador → <strong>Adicionar à tela inicial</strong>.
           </p>
           <p id="lembretes-status" class="lembretes-status"></p>
           <button type="button" id="botao-lembretes" class="botao-secundario">Ativar lembretes</button>
+        </section>
+
+        <section class="bloco">
+          <h2 class="bloco-titulo">Sua rotina</h2>
+          <p class="bloco-apoio" id="perfil-resumo"></p>
+          <button type="button" id="botao-rotina-personalizada" class="botao-secundario">
+            Aplicar rotina sugerida para você
+          </button>
         </section>
 
         <section class="bloco">
@@ -438,7 +495,7 @@
 
   <script>
     (function () {
-      var V = "1.7.0";
+      var V = "1.8.0";
       var salva = localStorage.getItem("app-versao");
       if (salva && salva !== V) {
         localStorage.setItem("app-versao", V);
@@ -455,7 +512,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script type="module" src="js/main.js?v=1.7.0"></script>
+  <script type="module" src="js/main.js?v=1.8.0"></script>
   <script defer src="sync.js?v=4"></script>
 </body>
 </html>
