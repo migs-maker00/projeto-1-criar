@@ -1,6 +1,12 @@
-// Rotina completa pré-montada — baseada no perfil do usuário
+import {
+  CONTEXTO_APRENDER,
+  MICRO_APRENDER,
+  MICRO_VOCABULARIO,
+  PLANO_B_APRENDER,
+  PLANO_B_VOCABULARIO,
+} from "./aprender.js";
 
-export const CHAVE_ROTINA_MONTADA = "rotina-montada-v1.8.1";
+export const CHAVE_ROTINA_MONTADA = "rotina-montada-v1.8.3";
 
 export const HORARIOS_AGUA_ROTINA = [
   "06:15", "09:30", "12:00", "15:30", "18:00", "21:00",
@@ -21,7 +27,7 @@ export function textosPlanejadorRotina() {
     horarios:
       "Segunda a sexta: escola 07:00–16:00, chego em casa por volta das 17h (às 18h quando corto o cabelo). Tarde difícil das 17h às 20h — costumo jogar. Trabalho na praia sábado e domingo quando faz sol, saio ~9:30 e volto 18h–19h. Durmo entre 23h e meia-noite.",
     objetivos:
-      "Manter hábito de estudar (mesmo 15 min), rotina de sono, organização ao chegar em casa, academia quando der, e beber água ao longo do dia.",
+      "Aprender com vídeo/áudio (15 min), vocabulário falado, rotina de sono, organização ao chegar, academia e água.",
   };
 }
 
@@ -50,24 +56,36 @@ export function habitosRotinaCompleta() {
       microPassos: [
         "Tirar mochila e material",
         "Separar o que precisa amanhã",
-        "Mesa limpa para estudar",
+        "Mesa limpa para aprender",
       ],
       planoB: "Só tirar a mochila e pegar 1 coisa pra amanhã.",
       preparar: ["Mochila perto da porta", "Lista do que falta"],
       contextoLembrete: "Chegou da escola — 10 min antes de relaxar/jogar.",
     },
     {
-      presetId: "estudo",
-      nome: "Estudar 15 min",
+      presetId: "aprender",
+      nome: "Aprender 15 min",
       categoria: "Estudo",
       metaSemanal: 5,
       horario: "19:00",
       importancia: 1,
       diasAtivos: [1, 2, 3, 4, 5],
-      microPassos: ["Abrir o material", "Focar 10 minutos", "Fechar com 1 anotação"],
-      planoB: "Só abrir o material e ler 1 página.",
-      preparar: ["Mesa limpa", "Água por perto", "Celular longe"],
-      contextoLembrete: "Só 15 min — não precisa terminar tudo.",
+      microPassos: [...MICRO_APRENDER],
+      planoB: PLANO_B_APRENDER,
+      preparar: ["Fone ou alto-falante", "Água por perto", "Celular longe"],
+      contextoLembrete: CONTEXTO_APRENDER,
+    },
+    {
+      presetId: "vocabulario",
+      nome: "Vocabulário 5 min",
+      categoria: "Estudo",
+      metaSemanal: 5,
+      horario: "19:20",
+      importancia: 2,
+      diasAtivos: [1, 2, 3, 4, 5],
+      microPassos: [...MICRO_VOCABULARIO],
+      planoB: PLANO_B_VOCABULARIO,
+      contextoLembrete: "Falar em voz alta fixa mais que ler.",
     },
     {
       presetId: "academia",
@@ -128,13 +146,15 @@ export function habitosRotinaCompleta() {
   ];
 }
 
-export const PRIORIDADES_PRESET = ["organizar", "estudo", "agua"];
+export const PRIORIDADES_PRESET = ["organizar", "aprender", "agua"];
 
 export function correspondePreset(habito, presetId) {
   if (presetId === "agua") return /agua|água|hidrata/i.test(habito.nome || "");
   const padroes = {
     organizar: /organiz/i,
-    estudo: /estud/i,
+    aprender: /aprend|estud/i,
+    vocabulario: /vocabul/i,
+    estudo: /aprend|estud|vocabul/i,
     academia: /academia|treino/i,
     telas: /tela|desligar/i,
     sono: /dormir|sono/i,
