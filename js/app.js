@@ -1,5 +1,5 @@
-import { APP_VERSION } from "./config.js?v=2.0.0";
-import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=2.0.0";
+import { APP_VERSION } from "./config.js?v=2.1.0";
+import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=2.1.0";
 import {
   criarHabitoAgua,
   detectarTextoAgua,
@@ -24,13 +24,13 @@ import {
   textoHorariosLembretes,
   textoPlanoB,
   todosMicroFeitos,
-} from "./lib/habitos.js?v=2.0.0";
+} from "./lib/habitos.js?v=2.1.0";
 import {
   carregarPerfil,
   marcarPerfilInicializado,
   perfilInicializado,
   salvarPerfil,
-} from "./lib/perfil.js?v=2.0.0";
+} from "./lib/perfil.js?v=2.1.0";
 import {
   correspondePreset,
   habitosRotinaCompleta,
@@ -39,41 +39,41 @@ import {
   PRIORIDADES_PRESET,
   rotinaJaMontada,
   textosPlanejadorRotina,
-} from "./lib/rotina-preset.js?v=2.0.0";
+} from "./lib/rotina-preset.js?v=2.1.0";
 import {
   MICRO_APRENDER,
   migrarHabitosAprendizado,
   PLANO_B_APRENDER,
   textoSugereAprender,
-} from "./lib/aprender.js?v=2.0.0";
+} from "./lib/aprender.js?v=2.1.0";
 import {
   carregarEstudo,
   resetSessaoSeNovoDia,
   salvarEstudo,
-} from "./lib/estudo-hub.js?v=2.0.0";
+} from "./lib/estudo-hub.js?v=2.1.0";
 import {
   ligarPainelEstudo,
   renderPainelEstudo,
   renderResumoHoje,
-} from "./lib/estudo-ui.js?v=2.0.0";
+} from "./lib/estudo-ui.js?v=2.1.0";
 import {
   ehHorarioDificil,
   mensagemTarde,
   sugestaoTarde,
-} from "./lib/tarde.js?v=2.0.0";
+} from "./lib/tarde.js?v=2.1.0";
 import {
   complementoCoachDiario,
   gerarResumoSemana,
   sugerirHabito,
   textoSugestao,
-} from "./lib/inteligencia.js?v=2.0.0";
+} from "./lib/inteligencia.js?v=2.1.0";
 import {
   iniciarVerificacaoLembretes,
   lembretesAtivos,
   pedirPermissaoLembretes,
   verificarLembretes,
-} from "./lib/lembretes.js?v=2.0.0";
-import { sincronizarAgendaSW } from "./lib/agenda-notif.js?v=2.0.0";
+} from "./lib/lembretes.js?v=2.1.0";
+import { sincronizarAgendaSW } from "./lib/agenda-notif.js?v=2.1.0";
 import {
   cancelarTimer,
   cronometroAtivo,
@@ -88,12 +88,12 @@ import {
   segundosRestantesTimer,
   textoCountdown,
   timerAtivo,
-} from "./lib/foco.js?v=2.0.0";
+} from "./lib/foco.js?v=2.1.0";
 import {
   carregarPerfilRotina,
   gerarRotina,
   salvarPerfilRotina,
-} from "./lib/rotina-local.js?v=2.0.0";
+} from "./lib/rotina-local.js?v=2.1.0";
 import {
   adicionarInbox,
   alternarPrioridade,
@@ -125,7 +125,7 @@ import {
   salvarPrioridades,
   salvarTemaSemana,
   sugestaoAgora,
-} from "./lib/tdah.js?v=2.0.0";
+} from "./lib/tdah.js?v=2.1.0";
 
 // ---- Referências aos elementos da página (DOM) ----
 const entradaHabito = document.getElementById("entrada-habito");
@@ -623,7 +623,7 @@ const ATALHOS_RAPIDOS = {
     horario: "19:10",
     importancia: 2,
     diasAtivos: [1, 2, 3, 4, 5],
-    microPassos: ["Abrir Prática do livro", "Responder 3 questões", "Aplicar 1 ideia hoje"],
+    microPassos: ["Abrir Estudo → Livros", "Responder 3 questões", "Aplicar 1 ideia hoje"],
     planoB: "Só 1 questão e pensar na resposta.",
     contextoLembrete: "Aprender na prática — sem precisar ler o capítulo.",
     historico: {},
@@ -2449,7 +2449,10 @@ export function initApp() {
     },
     onAtualizarHoje: (painel) => {
       if (painel === "estudo") ativarPainel("estudo");
-      else desenharEstudoResumo();
+      else {
+        desenharEstudoResumo();
+        if (painelAtivo === "estudo") desenharPainelEstudo();
+      }
     },
     mostrarFeedback,
   });

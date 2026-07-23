@@ -15,7 +15,9 @@ import {
   resumoSessao,
 } from "./estudo-hub.js";
 import {
+  buscarLivros,
   carregarProgressoLivro,
+  CATEGORIAS_LIVRO,
   livroAtivo,
   META_PERGUNTAS_DIA,
   metaDiariaAtingida,
@@ -23,6 +25,7 @@ import {
   perguntaAtual,
   progressoGeral,
   registrarResposta,
+  selecionarLivro,
 } from "./livros-pratica.js";
 
 function esc(s) {
@@ -34,6 +37,7 @@ function esc(s) {
 
 function renderSessao(dados, metaPratica) {
   const r = resumoSessao(dados, metaPratica);
+  const livro = livroAtivo();
   const passosHtml = r.passos
     .map(
       (p) =>
@@ -44,9 +48,10 @@ function renderSessao(dados, metaPratica) {
   return `
     <section class="estudo-bloco estudo-sessao">
       <h2 class="bloco-titulo">Sessão de hoje</h2>
-      <p class="bloco-apoio">${r.feitos}/${r.total} etapas — vídeo, áudio, questões e falar em voz alta.</p>
+      <p class="bloco-apoio">Livro: <strong>${esc(livro.titulo)}</strong> · ${r.feitos}/${r.total} etapas.</p>
       <ul class="estudo-passos">${passosHtml}</ul>
       <div class="estudo-sessao-botoes">
+        <button type="button" class="botao-secundario" data-estudo-aba="livros">📚 Livros</button>
         <button type="button" class="botao-secundario" data-estudo-aba="assistir">▶ Assistir</button>
         <button type="button" class="botao-secundario" data-estudo-aba="ouvir">🎧 Ouvir</button>
         <button type="button" class="botao-secundario" data-estudo-aba="praticar">📖 Praticar</button>
@@ -127,7 +132,7 @@ function renderOuvir(dados) {
 
 function renderPraticar(chaveDia) {
   const progresso = carregarProgressoLivro();
-  const livro = livroAtivo(progresso.livroId);
+  const livro = livroAtivo();
   const g = progressoGeral(livro, progresso);
 
   if (metaDiariaAtingida(progresso, chaveDia)) {
@@ -170,7 +175,10 @@ function renderPraticar(chaveDia) {
   return `
     <section class="estudo-bloco estudo-pratica" data-estudo-pratica="1">
       <h2 class="bloco-titulo">Praticar</h2>
-      <p class="pratica-livro-nome">${esc(livro.titulo)}</p>
+      <p class="estudo-pratica-trocar">
+        <button type="button" class="botao-texto" data-estudo-aba="livros">Trocar livro →</button>
+      </p>
+      <p class="pratica-livro-nome">${esc(livro.titulo)} · ${esc(livro.autor)}</p>
       <p class="pratica-modulo">${esc(mod.nome)}</p>
       <p class="pratica-ideia">${esc(mod.ideia)}</p>
       <p class="pratica-meta">Hoje: ${hojeCount}/${META_PERGUNTAS_DIA} · Livro: ${g.pct}%</p>
@@ -212,8 +220,69 @@ function renderFalar(dados) {
     </section>`;
 }
 
+function renderLivros(dados) {
+  const progresso = carregarProgressoLivro();
+  const ativo = livroAtivo();
+  const g = progressoGeral(ativo, progresso);
+  const termo = dados.buscaLivro || "";
+  const cat = dados.categoriaLivro || "todos";
+  const resultados = buscarLivros(termo, cat);
+
+  const chips = CATEGORIAS_LIVRO.map(
+    (c) =>
+      `<button type="button" class="estudo-cat-chip ${cat === c.id ? "ativo" : ""}" data-estudo-cat="${c.id}">${c.rotulo}</button>`
+  ).join("");
+
+  const lista =
+    resultados.length === 0
+      ? `<p class="estudo-vazio">Nenhum livro encontrado. Tente outro nome — ex.: <strong>noites brancas</strong>, <strong>hábitos atômicos</strong>.</p>`
+      : `<ul class="estudo-livros-lista">
+    ${resultados
+      .map((livro) => {
+        const prog = progressoGeral(livro, progresso);
+        const selecionado = livro.id === ativo.id;
+        return `
+      <li class="estudo-livro-card ${selecionado ? "ativo" : ""}">
+        <div class="estudo-livro-info">
+          <p class="estudo-livro-titulo">${esc(livro.titulo)}</p>
+          <p class="estudo-livro-autor">${esc(livro.autor)}</p>
+          <p class="estudo-livro-sub">${esc(livro.subtitulo)}</p>
+          <p class="estudo-livro-tags">${(livro.tags || []).map((t) => `#${esc(t)}`).join(" ")}</p>
+          ${prog.pct > 0 ? `<p class="estudo-livro-prog">Progresso: ${prog.pct}%</p>` : ""}
+        </div>
+        <button type="button" class="botao-secundario" data-estudo-selecionar-livro="${livro.id}">
+          ${selecionado ? "Estudando ✓" : "Estudar este"}
+        </button>
+      </li>`;
+      })
+      .join("")}
+  </ul>`;
+
+  return `
+    <section class="estudo-bloco estudo-biblioteca">
+      <h2 class="bloco-titulo">Biblioteca</h2>
+      <p class="bloco-apoio">Busque um livro, escolha e pratique com questões — sem precisar ler capítulo por capítulo.</p>
+      <div class="estudo-lendo-agora">
+        <span class="estudo-lendo-rotulo">Lendo agora</span>
+        <strong>${esc(ativo.titulo)}</strong> — ${esc(ativo.autor)}
+        <span class="estudo-lendo-pct">${g.pct}% do estudo</span>
+      </div>
+      <input
+        type="search"
+        class="campo-opcao estudo-busca-livro"
+        data-estudo-busca-livro
+        placeholder="Buscar: noites brancas, hábitos atômicos, 8 hábitos…"
+        value="${esc(termo)}"
+        maxlength="80"
+      />
+      <div class="estudo-categorias">${chips}</div>
+      ${lista}
+    </section>`;
+}
+
 const ABAS = [
   { id: "sessao", rotulo: "Início", icone: "🏠" },
+  { id: "livros", rotulo: "Livros", icone: "📚" },
   { id: "assistir", rotulo: "Assistir", icone: "▶" },
   { id: "ouvir", rotulo: "Ouvir", icone: "🎧" },
   { id: "praticar", rotulo: "Praticar", icone: "📖" },
@@ -229,6 +298,7 @@ export function renderPainelEstudo(dados, chaveDia) {
 
   let conteudo = "";
   if (aba === "sessao") conteudo = renderSessao(dados, META_PERGUNTAS_DIA);
+  else if (aba === "livros") conteudo = renderLivros(dados);
   else if (aba === "assistir") conteudo = renderAssistir(dados);
   else if (aba === "ouvir") conteudo = renderOuvir(dados);
   else if (aba === "praticar") conteudo = renderPraticar(chaveDia);
@@ -242,12 +312,13 @@ export function renderPainelEstudo(dados, chaveDia) {
 export function renderResumoHoje(dados, chaveDia) {
   const r = resumoSessao(dados, META_PERGUNTAS_DIA);
   const progresso = carregarProgressoLivro();
+  const livro = livroAtivo();
   const praticaOk = metaDiariaAtingida(progresso, chaveDia);
   const pct = Math.round((r.feitos / r.total) * 100);
 
   return `
     <h2 class="bloco-titulo">Estudo de hoje</h2>
-    <p class="bloco-apoio">Vídeo, áudio, questões e falar — tudo na aba <strong>Estudo</strong>.</p>
+    <p class="bloco-apoio">Livro: <strong>${esc(livro.titulo)}</strong> — vídeo, áudio, questões e falar.</p>
     <div class="estudo-resumo-barra"><div class="estudo-resumo-fill" style="width:${pct}%"></div></div>
     <p class="estudo-resumo-texto">${r.feitos}/${r.total} etapas · Prática: ${praticaOk ? "✓" : "pendente"}</p>
     <button type="button" class="botao-secundario estudo-ir-aba" data-ir-painel="estudo">Abrir Estudo →</button>`;
@@ -260,7 +331,9 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
   const { chaveDia, onTimer, onAtualizarHoje, mostrarFeedback } = opts;
 
   root.addEventListener("click", (evento) => {
-    const alvo = evento.target.closest("[data-estudo-aba], [data-estudo-link], [data-estudo-remover], [data-estudo-timer], [data-estudo-marcar], [data-estudo-ouvir], [data-estudo-proxima-palavra], .estudo-pratica-confirmar, .estudo-pratica-opcao, [data-ir-painel]");
+    const alvo = evento.target.closest(
+      "[data-estudo-aba], [data-estudo-link], [data-estudo-remover], [data-estudo-timer], [data-estudo-marcar], [data-estudo-ouvir], [data-estudo-proxima-palavra], [data-estudo-selecionar-livro], [data-estudo-cat], .estudo-pratica-confirmar, .estudo-pratica-opcao, [data-ir-painel]"
+    );
 
     if (!alvo) return;
 
@@ -273,6 +346,19 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
 
     if (alvo.dataset.estudoAba) {
       setState({ ...dados, abaAtiva: alvo.dataset.estudoAba });
+      return;
+    }
+
+    if (alvo.dataset.estudoSelecionarLivro) {
+      selecionarLivro(alvo.dataset.estudoSelecionarLivro);
+      setState({ ...dados, abaAtiva: "praticar" });
+      mostrarFeedback?.("Livro selecionado! Vá em Praticar.");
+      onAtualizarHoje?.();
+      return;
+    }
+
+    if (alvo.dataset.estudoCat) {
+      setState({ ...dados, categoriaLivro: alvo.dataset.estudoCat });
       return;
     }
 
@@ -322,6 +408,13 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
     }
   });
 
+  root.addEventListener("input", (evento) => {
+    const campo = evento.target.closest("[data-estudo-busca-livro]");
+    if (!campo) return;
+    const dados = getState();
+    setState({ ...dados, buscaLivro: campo.value });
+  });
+
   root.addEventListener("submit", (evento) => {
     evento.preventDefault();
     const form = evento.target.closest("[data-estudo-form]");
@@ -355,7 +448,7 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
 
 function confirmarPratica(root, chave, mostrarFeedback, getState, setState, onAtualizarHoje, indiceEscolhido) {
   const progresso = carregarProgressoLivro();
-  const livro = livroAtivo(progresso.livroId);
+  const livro = livroAtivo();
   const pergunta = perguntaAtual(livro, progresso);
   if (!pergunta) return;
 

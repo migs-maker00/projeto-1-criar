@@ -21,6 +21,8 @@ function estadoInicial() {
     linkAtivoId: null,
     sessao: { data: "", assistir: false, ouvir: false, praticar: 0, falar: 0 },
     abaAtiva: "sessao",
+    buscaLivro: "",
+    categoriaLivro: "todos",
   };
 }
 
