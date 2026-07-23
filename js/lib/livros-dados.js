@@ -825,12 +825,301 @@ export const LIVRO_EPICTETO = {
   ],
 };
 
+export const LIVRO_NIETZSCHE = {
+  id: "nietzsche-zarathustra",
+  titulo: "Assim Falou Zaratustra",
+  autor: "Friedrich Nietzsche",
+  subtitulo: "Vontade de potência, amor fati e superação",
+  categoria: "filosofia",
+  tags: ["filosofia", "nietzsche", "vontade", "superação"],
+  palavrasChave: ["nietzsche", "zaratustra", "übermensch", "super-homem", "fati", "vontade de potência", "eterno retorno"],
+  modulos: [
+    {
+      id: "moral",
+      nome: "Além do bem e do mal",
+      ideia: "Questionar regras herdadas sem pensar — criar seus próprios valores.",
+      perguntas: [
+        {
+          id: "ni1",
+          tipo: "escolha",
+          pergunta: "Fazer algo ‘porque sempre foi assim’. Nietzsche chamaria isso de…",
+          opcoes: [
+            "Sabedoria tradicional",
+            "Moral de rebanho — seguir sem questionar",
+            "O único caminho certo",
+          ],
+          correta: 1,
+          dica: "Perguntar ‘por quê?’ já é começar a filosofar.",
+        },
+        {
+          id: "ni2",
+          tipo: "reflexao",
+          pergunta: "Uma regra ou crença que você segue sem nunca ter questionado?",
+          dica: "Não precisa abandonar — só olhar de frente.",
+        },
+      ],
+    },
+    {
+      id: "fati",
+      nome: "Amor fati — amar o destino",
+      ideia: "Não só aceitar o que aconteceu, mas abraçar como parte da sua força.",
+      perguntas: [
+        {
+          id: "ni3",
+          tipo: "escolha",
+          pergunta: "Erro grave no passado. Amor fati sugere…",
+          opcoes: [
+            "Apagar da memória e fingir que não existiu",
+            "Integrar: ‘isso também me formou’",
+            "Odiar a si para sempre",
+          ],
+          correta: 1,
+          dica: "Não é gostar do erro — é não deixar que ele te defina só como vítima.",
+        },
+        {
+          id: "ni4",
+          tipo: "reflexao",
+          pergunta: "Algo difícil que, olhando hoje, te fortaleceu de algum jeito?",
+          dica: "Pode ser pequeno — um tropeço que ensinou.",
+        },
+      ],
+    },
+    {
+      id: "superacao",
+      nome: "Tornar-se quem você é",
+      ideia: "Superar a si mesmo, não os outros.",
+      perguntas: [
+        {
+          id: "ni5",
+          tipo: "escolha",
+          pergunta: "Comparar-se o tempo todo com influencers. Nietzsche diria que…",
+          opcoes: [
+            "É motivação saudável",
+            "Você está vivendo o script dos outros, não o seu",
+            "Redes sociais são a verdade",
+          ],
+          correta: 1,
+          dica: "Superação = seu próprio padrão, não o de ninguém.",
+        },
+        {
+          id: "ni6",
+          tipo: "reflexao",
+          pergunta: "Se ninguém estivesse olhando, o que você faria diferente esta semana?",
+          dica: "A resposta honesta aponta para quem você quer ser.",
+        },
+      ],
+    },
+  ],
+};
+
+export const LIVRO_PLATAO = {
+  id: "platao-republica",
+  titulo: "A República",
+  autor: "Platão",
+  subtitulo: "Justiça, verdade e a alegoria da caverna",
+  categoria: "filosofia",
+  tags: ["filosofia", "platão", "platao", "clássico", "verdade"],
+  palavrasChave: ["platão", "platao", "república", "republica", "caverna", "sócrates", "socrates", "ideias"],
+  modulos: [
+    {
+      id: "caverna",
+      nome: "A alegoria da caverna",
+      ideia: "O que vemos pode ser só sombra — a verdade exige esforço para sair.",
+      perguntas: [
+        {
+          id: "pl1",
+          tipo: "escolha",
+          pergunta: "Acreditar em tudo que aparece no feed sem checar. Isso é…",
+          opcoes: [
+            "Ver a realidade completa",
+            "Ficar na caverna — ver sombras como verdade",
+            "Ser moderno",
+          ],
+          correta: 1,
+          dica: "Platão: sair da caverna = questionar, estudar, pensar.",
+        },
+        {
+          id: "pl2",
+          tipo: "reflexao",
+          pergunta: "Uma ‘verdade’ que você acreditava e depois descobriu que era incompleta?",
+          dica: "Todo mundo já esteve na caverna em algum tema.",
+        },
+      ],
+    },
+    {
+      id: "justica",
+      nome: "O que é justiça?",
+      ideia: "Justiça não é só ‘não ser pego’ — é harmonia da alma.",
+      perguntas: [
+        {
+          id: "pl3",
+          tipo: "escolha",
+          pergunta: "Colar na prova sem ninguém ver. Para Platão, isso…",
+          opcoes: [
+            "É inteligente se funcionar",
+            "Prejudica você — desorganiza a alma por dentro",
+            "Não tem consequência moral",
+          ],
+          correta: 1,
+          dica: "Injustiça corrói quem pratica, mesmo em segredo.",
+        },
+        {
+          id: "pl4",
+          tipo: "reflexao",
+          pergunta: "Quando você fez o certo mesmo sendo difícil — como se sentiu depois?",
+          dica: "Justiça interior = paz, não só regra externa.",
+        },
+      ],
+    },
+    {
+      id: "filosofo",
+      nome: "O amor à sabedoria",
+      ideia: "Filosofar é buscar a verdade, não ter todas as respostas.",
+      perguntas: [
+        {
+          id: "pl5",
+          tipo: "escolha",
+          pergunta: "‘Filósofo’ para Platão é quem…",
+          opcoes: [
+            "Sabe tudo e nunca erra",
+            "Reconhece que não sabe e busca entender",
+            "Só fala palavras difíceis",
+          ],
+          correta: 1,
+          dica: "Sócrates: ‘só sei que nada sei’ — e isso é o começo.",
+        },
+        {
+          id: "pl6",
+          tipo: "reflexao",
+          pergunta: "Sobre o que você gostaria de entender mais fundo (não só decorar)?",
+          dica: "Curiosidade genuína = motor do estudo.",
+        },
+      ],
+    },
+  ],
+};
+
+export const LIVRO_SCHOPENHAUER = {
+  id: "schopenhauer-mundo",
+  titulo: "O Mundo como Vontade e Representação",
+  autor: "Arthur Schopenhauer",
+  subtitulo: "O pessimista que entende o sofrimento — e a arte como refúgio",
+  categoria: "filosofia",
+  tags: ["filosofia", "schopenhauer", "pessimismo", "sofrimento"],
+  palavrasChave: ["schopenhauer", "pessimismo", "vontade", "sofrimento", "representação", "arte"],
+  modulos: [
+    {
+      id: "sofrimento",
+      nome: "A vida oscila entre dor e tédio",
+      ideia: "Schopenhauer é direto: sofrer faz parte — negar isso só piora.",
+      perguntas: [
+        {
+          id: "sc1",
+          tipo: "escolha",
+          pergunta: "‘A vida deveria ser só feliz.’ Schopenhauer diria que…",
+          opcoes: [
+            "Sim, e qualquer tristeza é defeito",
+            "Esperar só alegria é receita para frustração",
+            "Filosofia pessimista não serve",
+          ],
+          correta: 1,
+          dica: "Aceitar que há dor não é desistir — é ser realista.",
+        },
+        {
+          id: "sc2",
+          tipo: "reflexao",
+          pergunta: "Um momento em que o tédio (não dor) foi o problema. O que você fez?",
+          dica: "Oscilar entre ‘quero mais’ e ‘não quero nada’ é humano.",
+        },
+      ],
+    },
+    {
+      id: "vontade",
+      nome: "A vontade cega",
+      ideia: "Desejamos sem parar — e a satisfação é sempre temporária.",
+      perguntas: [
+        {
+          id: "sc3",
+          tipo: "escolha",
+          pergunta: "Comprou/jogou/consumiu o que queria e logo quis outra coisa. Isso ilustra…",
+          opcoes: [
+            "Que você é ingrato",
+            "O ciclo da vontade — satisfação nunca dura",
+            "Que dinheiro resolve tudo",
+          ],
+          correta: 1,
+          dica: "Conhecer o ciclo ajuda a não ser escravo dele.",
+        },
+        {
+          id: "sc4",
+          tipo: "reflexao",
+          pergunta: "Um desejo que você perseguiu e, ao conseguir, não preencheu como imaginava?",
+          dica: "Honestidade sem drama — só observação.",
+        },
+      ],
+    },
+    {
+      id: "arte",
+      nome: "Arte e contemplação",
+      ideia: "Na música, natureza e beleza, há pausa do sofrimento.",
+      perguntas: [
+        {
+          id: "sc5",
+          tipo: "escolha",
+          pergunta: "Schopenhauer via a arte como…",
+          opcoes: [
+            "Perda de tempo",
+            "Refúgio — momento de paz fora da vontade",
+            "Só para ricos",
+          ],
+          correta: 1,
+          dica: "Uma música, um pôr do sol, um livro — pausa legítima.",
+        },
+        {
+          id: "sc6",
+          tipo: "reflexao",
+          pergunta: "O que te tira da ‘roda’ do estresse por alguns minutos? (música, mar, desenho…)",
+          dica: "Não é fuga permanente — é oxigênio.",
+        },
+      ],
+    },
+    {
+      id: "compaixao",
+      nome: "Compaixão",
+      ideia: "Reconhecer o sofrimento alheio nos aproxima da moral verdadeira.",
+      perguntas: [
+        {
+          id: "sc7",
+          tipo: "escolha",
+          pergunta: "Ver alguém mal e pensar ‘isso não é problema meu’. Schopenhauer criticaria…",
+          opcoes: [
+            "Sim — compaixão é base moral",
+            "Não — cada um por si",
+            "Só importa quem você ama",
+          ],
+          correta: 0,
+          dica: "Todos sofremos — isso pode unir, não separar.",
+        },
+        {
+          id: "sc8",
+          tipo: "reflexao",
+          pergunta: "Quando você se colocou no lugar de alguém que sofre? O que mudou na sua atitude?",
+          dica: "Empatia não é fraqueza — é lucidez.",
+        },
+      ],
+    },
+  ],
+};
+
 export const TODOS_LIVROS = [
   LIVRO_8_HABITOS,
   LIVRO_ATOMICOS,
   LIVRO_MEDITACOES,
   LIVRO_SENECA,
   LIVRO_EPICTETO,
+  LIVRO_PLATAO,
+  LIVRO_NIETZSCHE,
+  LIVRO_SCHOPENHAUER,
   LIVRO_CAMUS,
   LIVRO_SARTRE,
   LIVRO_NOITES_BRANCAS,
