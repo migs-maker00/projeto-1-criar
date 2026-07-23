@@ -1,5 +1,5 @@
-import { APP_VERSION } from "./config.js?v=2.3.0";
-import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=2.3.0";
+import { APP_VERSION } from "./config.js?v=2.3.1";
+import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=2.3.1";
 import {
   criarHabitoAgua,
   detectarTextoAgua,
@@ -24,13 +24,13 @@ import {
   textoHorariosLembretes,
   textoPlanoB,
   todosMicroFeitos,
-} from "./lib/habitos.js?v=2.3.0";
+} from "./lib/habitos.js?v=2.3.1";
 import {
   carregarPerfil,
   marcarPerfilInicializado,
   perfilInicializado,
   salvarPerfil,
-} from "./lib/perfil.js?v=2.3.0";
+} from "./lib/perfil.js?v=2.3.1";
 import {
   correspondePreset,
   habitosRotinaCompleta,
@@ -39,42 +39,42 @@ import {
   PRIORIDADES_PRESET,
   rotinaJaMontada,
   textosPlanejadorRotina,
-} from "./lib/rotina-preset.js?v=2.3.0";
+} from "./lib/rotina-preset.js?v=2.3.1";
 import {
   detectarHabitoAprender,
   MICRO_APRENDER,
   migrarHabitosAprendizado,
   PLANO_B_APRENDER,
   textoSugereAprender,
-} from "./lib/aprender.js?v=2.3.0";
+} from "./lib/aprender.js?v=2.3.1";
 import {
   carregarEstudo,
   resetSessaoSeNovoDia,
   salvarEstudo,
-} from "./lib/estudo-hub.js?v=2.3.0";
+} from "./lib/estudo-hub.js?v=2.3.1";
 import {
   ligarPainelEstudo,
   renderPainelEstudo,
   renderResumoHoje,
-} from "./lib/estudo-ui.js?v=2.3.0";
+} from "./lib/estudo-ui.js?v=2.3.1";
 import {
   ehHorarioDificil,
   mensagemTarde,
   sugestaoTarde,
-} from "./lib/tarde.js?v=2.3.0";
+} from "./lib/tarde.js?v=2.3.1";
 import {
   complementoCoachDiario,
   gerarResumoSemana,
   sugerirHabito,
   textoSugestao,
-} from "./lib/inteligencia.js?v=2.3.0";
+} from "./lib/inteligencia.js?v=2.3.1";
 import {
   iniciarVerificacaoLembretes,
   lembretesAtivos,
   pedirPermissaoLembretes,
   verificarLembretes,
-} from "./lib/lembretes.js?v=2.3.0";
-import { sincronizarAgendaSW } from "./lib/agenda-notif.js?v=2.3.0";
+} from "./lib/lembretes.js?v=2.3.1";
+import { sincronizarAgendaSW } from "./lib/agenda-notif.js?v=2.3.1";
 import {
   cancelarTimer,
   cronometroAtivo,
@@ -89,12 +89,12 @@ import {
   segundosRestantesTimer,
   textoCountdown,
   timerAtivo,
-} from "./lib/foco.js?v=2.3.0";
+} from "./lib/foco.js?v=2.3.1";
 import {
   carregarPerfilRotina,
   gerarRotina,
   salvarPerfilRotina,
-} from "./lib/rotina-local.js?v=2.3.0";
+} from "./lib/rotina-local.js?v=2.3.1";
 import {
   adicionarInbox,
   alternarPrioridade,
@@ -126,7 +126,7 @@ import {
   salvarPrioridades,
   salvarTemaSemana,
   sugestaoAgora,
-} from "./lib/tdah.js?v=2.3.0";
+} from "./lib/tdah.js?v=2.3.1";
 
 // ---- Referências aos elementos da página (DOM) ----
 const entradaHabito = document.getElementById("entrada-habito");

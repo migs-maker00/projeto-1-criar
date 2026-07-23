@@ -35,6 +35,17 @@ function esc(s) {
     .replace(/"/g, "&quot;");
 }
 
+/** Título + autor — exibido em todo o app de estudo */
+function cabecalhoLivro(livro, { destaque = false } = {}) {
+  const cls = destaque ? "estudo-livro-cabecalho estudo-livro-cabecalho-destaque" : "estudo-livro-cabecalho";
+  const autor = livro.autor ? `<p class="estudo-livro-autor"><span class="estudo-por">por</span> ${esc(livro.autor)}</p>` : "";
+  return `
+    <div class="${cls}">
+      <p class="estudo-livro-titulo">${esc(livro.titulo)}</p>
+      ${autor}
+    </div>`;
+}
+
 function renderSessao(dados, metaPratica) {
   const r = resumoSessao(dados, metaPratica);
   const livro = livroAtivo();
@@ -48,7 +59,8 @@ function renderSessao(dados, metaPratica) {
   return `
     <section class="estudo-bloco estudo-sessao">
       <h2 class="bloco-titulo">Sessão de hoje</h2>
-      <p class="bloco-apoio">Livro: <strong>${esc(livro.titulo)}</strong> · ${r.feitos}/${r.total} etapas.</p>
+      ${cabecalhoLivro(livro, { destaque: true })}
+      <p class="bloco-apoio">${r.feitos}/${r.total} etapas — vídeo, áudio, questões e falar.</p>
       <ul class="estudo-passos">${passosHtml}</ul>
       <div class="estudo-sessao-botoes">
         <button type="button" class="botao-secundario" data-estudo-aba="livros">📚 Livros</button>
@@ -139,7 +151,8 @@ function renderPraticar(chaveDia) {
     return `
       <section class="estudo-bloco estudo-pratica">
         <h2 class="bloco-titulo">Praticar ✓</h2>
-        <p class="bloco-apoio">Meta de hoje feita (${META_PERGUNTAS_DIA} questões). Livro: ${g.pct}%.</p>
+        ${cabecalhoLivro(livro, { destaque: true })}
+        <p class="bloco-apoio">Meta de hoje feita (${META_PERGUNTAS_DIA} questões). Progresso: ${g.pct}%.</p>
       </section>`;
   }
 
@@ -149,7 +162,8 @@ function renderPraticar(chaveDia) {
     return `
       <section class="estudo-bloco estudo-pratica">
         <h2 class="bloco-titulo">Praticar — completo!</h2>
-        <p class="bloco-apoio">Você terminou ${esc(livro.titulo)}.</p>
+        ${cabecalhoLivro(livro, { destaque: true })}
+        <p class="bloco-apoio">Você terminou todos os módulos desta obra.</p>
       </section>`;
   }
 
@@ -178,7 +192,7 @@ function renderPraticar(chaveDia) {
       <p class="estudo-pratica-trocar">
         <button type="button" class="botao-texto" data-estudo-aba="livros">Trocar livro →</button>
       </p>
-      <p class="pratica-livro-nome">${esc(livro.titulo)} · ${esc(livro.autor)}</p>
+      ${cabecalhoLivro(livro, { destaque: true })}
       <p class="pratica-modulo">${esc(mod.nome)}</p>
       <p class="pratica-ideia">${esc(mod.ideia)}</p>
       <p class="pratica-meta">Hoje: ${hojeCount}/${META_PERGUNTAS_DIA} · Livro: ${g.pct}%</p>
@@ -244,8 +258,7 @@ function renderLivros(dados) {
         return `
       <li class="estudo-livro-card ${selecionado ? "ativo" : ""}">
         <div class="estudo-livro-info">
-          <p class="estudo-livro-titulo">${esc(livro.titulo)}</p>
-          <p class="estudo-livro-autor">${esc(livro.autor)}</p>
+          ${cabecalhoLivro(livro)}
           <p class="estudo-livro-sub">${esc(livro.subtitulo)}</p>
           <p class="estudo-livro-tags">${(livro.tags || []).map((t) => `#${esc(t)}`).join(" ")}</p>
           ${prog.pct > 0 ? `<p class="estudo-livro-prog">Progresso: ${prog.pct}%</p>` : ""}
@@ -264,7 +277,7 @@ function renderLivros(dados) {
       <p class="bloco-apoio">Busque um livro, escolha e pratique com questões — sem precisar ler capítulo por capítulo.</p>
       <div class="estudo-lendo-agora">
         <span class="estudo-lendo-rotulo">Lendo agora</span>
-        <strong>${esc(ativo.titulo)}</strong> — ${esc(ativo.autor)}
+        ${cabecalhoLivro(ativo, { destaque: true })}
         <span class="estudo-lendo-pct">${g.pct}% do estudo</span>
       </div>
       <input
@@ -318,7 +331,8 @@ export function renderResumoHoje(dados, chaveDia) {
 
   return `
     <h2 class="bloco-titulo">Estudo de hoje</h2>
-    <p class="bloco-apoio">Livro: <strong>${esc(livro.titulo)}</strong> — vídeo, áudio, questões e falar.</p>
+    ${cabecalhoLivro(livro, { destaque: true })}
+    <p class="bloco-apoio">Vídeo, áudio, questões e falar em voz alta.</p>
     <div class="estudo-resumo-barra"><div class="estudo-resumo-fill" style="width:${pct}%"></div></div>
     <p class="estudo-resumo-texto">${r.feitos}/${r.total} etapas · Prática: ${praticaOk ? "✓" : "pendente"}</p>
     <button type="button" class="botao-secundario estudo-ir-aba" data-ir-painel="estudo">Abrir Estudo →</button>`;
