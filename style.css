@@ -2332,6 +2332,61 @@ body {
   text-align: center;
 }
 
+.estudo-falar-mic-aviso {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  color: var(--texto-suave);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.estudo-falar-mic-off {
+  color: color-mix(in srgb, var(--marca) 70%, var(--texto-suave));
+}
+
+.estudo-btn-mic {
+  border-color: color-mix(in srgb, var(--marca) 40%, var(--borda));
+  font-weight: 700;
+}
+
+.estudo-fala-feedback {
+  margin: 12px 0 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.estudo-fala-feedback.ok {
+  background: color-mix(in srgb, #2d6a4f 14%, var(--superficie));
+  border: 1px solid color-mix(in srgb, #2d6a4f 35%, var(--borda));
+  color: color-mix(in srgb, #2d6a4f 90%, var(--texto));
+}
+
+.estudo-fala-feedback.erro {
+  background: color-mix(in srgb, #b45309 12%, var(--superficie));
+  border: 1px solid color-mix(in srgb, #b45309 30%, var(--borda));
+  color: color-mix(in srgb, #92400e 85%, var(--texto));
+}
+
+.estudo-fala-feedback.ouvindo {
+  background: color-mix(in srgb, var(--marca) 12%, var(--superficie));
+  border: 1px solid color-mix(in srgb, var(--marca) 28%, var(--borda));
+  color: var(--marca);
+  animation: estudo-pulso-mic 1.2s ease-in-out infinite;
+}
+
+@keyframes estudo-pulso-mic {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
 .estudo-link-externo a {
   color: var(--marca);
   font-weight: 600;
