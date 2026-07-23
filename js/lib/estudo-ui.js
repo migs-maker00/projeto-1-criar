@@ -235,7 +235,7 @@ function renderLivros(dados) {
 
   const lista =
     resultados.length === 0
-      ? `<p class="estudo-vazio">Nenhum livro encontrado. Tente: <strong>seneca</strong>, <strong>camus</strong>, <strong>sartre</strong>, <strong>marco aurelio</strong>.</p>`
+      ? `<p class="estudo-vazio">Nenhum livro encontrado. Tente: <strong>nietzsche</strong>, <strong>platão</strong>, <strong>schopenhauer</strong>.</p>`
       : `<ul class="estudo-livros-lista">
     ${resultados
       .map((livro) => {
@@ -271,7 +271,7 @@ function renderLivros(dados) {
         type="search"
         class="campo-opcao estudo-busca-livro"
         data-estudo-busca-livro
-        placeholder="Buscar: sêneca, camus, sartre, noites brancas…"
+        placeholder="Buscar: nietzsche, platão, schopenhauer, camus…"
         value="${esc(termo)}"
         maxlength="80"
       />
