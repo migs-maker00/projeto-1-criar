@@ -20,7 +20,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=1.8.1" />
+  <link rel="stylesheet" href="style.css?v=1.8.2" />
 </head>
 <body>
   <div class="ambiente">
@@ -35,29 +35,20 @@
       </header>
 
       <nav class="nav-paineis" aria-label="Seções do app">
-        <button type="button" class="nav-item ativo" data-painel="rotina">Rotina</button>
-        <button type="button" class="nav-item" data-painel="hoje">Hoje</button>
+        <button type="button" class="nav-item ativo" data-painel="hoje">Hoje</button>
+        <button type="button" class="nav-item" data-painel="rotina">Rotina</button>
         <button type="button" class="nav-item" data-painel="semana">Semana</button>
         <button type="button" class="nav-item" data-painel="diario">Diário</button>
         <button type="button" class="nav-item" data-painel="insights">Insights</button>
         <button type="button" class="nav-item" data-painel="ajustes">Ajustes</button>
       </nav>
 
-      <!-- ROTINA: criar hábitos e montar rotina -->
-      <section id="painel-rotina" class="painel ativo" aria-label="Rotina">
-        <div id="dica-inicio" class="dica-inicio" hidden>
-          <p class="dica-inicio-texto">
-            <strong>Bem-vindo!</strong> Na aba <strong>Hoje</strong>: use <strong>Agora</strong> para saber o próximo passo,
-            a <strong>Inbox</strong> para anotar pensamentos, e marque até <strong>3 prioridades</strong> com ☆.
-          </p>
-          <button type="button" id="dica-fechar" class="botao-secundario dica-fechar">Entendi</button>
-        </div>
+      <!-- ROTINA: adicionar hábitos (simples) -->
+      <section id="painel-rotina" class="painel" aria-label="Rotina" hidden>
+        <section class="bloco bloco-primeiro adicionar-card rotina-simples">
+          <h2 class="bloco-titulo">Adicionar hábito</h2>
+          <p class="rotina-resumo">Toque num atalho ou escreva o nome. Use a aba <strong>Hoje</strong> para marcar.</p>
 
-        <section class="bloco bloco-primeiro adicionar-card">
-          <h2 class="bloco-titulo">Adicionar hábitos</h2>
-          <p class="bloco-apoio">Atalhos rápidos ou crie um hábito personalizado. Eles aparecem na aba <strong>Hoje</strong>.</p>
-
-          <p class="secao-rotulo">Adicionar rápido</p>
           <div class="atalhos-rapidos">
             <button type="button" class="atalho" data-atalho="agua">💧 Água</button>
             <button type="button" class="atalho" data-atalho="academia">🏋️ Academia</button>
@@ -65,70 +56,28 @@
             <button type="button" class="atalho" data-atalho="meditar">🧘 Meditar</button>
           </div>
 
-          <p class="secao-rotulo">Ou escreva o seu</p>
           <div class="adicionar-linha">
             <input
               type="text"
               id="entrada-habito"
-              placeholder="Ex.: reunião 14h, academia, estudar..."
+              placeholder="Nome do hábito..."
               maxlength="60"
             />
             <button id="botao-adicionar" type="button">Adicionar</button>
           </div>
-          <div class="adicionar-opcoes">
-            <select id="entrada-categoria" class="campo-opcao" aria-label="Categoria">
-              <option value="Geral">Geral</option>
-              <option value="Saúde">Saúde</option>
-              <option value="Estudo">Estudo</option>
-              <option value="Trabalho">Trabalho</option>
-              <option value="Lazer">Lazer</option>
-            </select>
-            <select id="entrada-meta" class="campo-opcao" aria-label="Meta semanal">
-              <option value="7">Todo dia</option>
-              <option value="1">1x/semana</option>
-              <option value="2">2x/semana</option>
-              <option value="3">3x/semana</option>
-              <option value="4">4x/semana</option>
-              <option value="5">5x/semana</option>
-              <option value="6">6x/semana</option>
-            </select>
-            <input type="time" id="entrada-horario" class="campo-opcao" aria-label="Horário" />
-            <select id="entrada-importancia" class="campo-opcao" aria-label="Importância">
-              <option value="1">Essencial</option>
-              <option value="2">Importante</option>
-              <option value="3" selected>Normal</option>
-            </select>
-          </div>
-          <label class="rotina-label" for="entrada-micro">Micro-passos (opcional, um por linha)</label>
-          <textarea
-            id="entrada-micro"
-            class="nota-campo micro-campo"
-            rows="3"
-            placeholder="Ex.: Abrir o PDF&#10;Ler 1 página&#10;Fazer 2 exercícios"
-          ></textarea>
-          <label class="rotina-label" for="entrada-contexto">Lembrete com contexto (opcional)</label>
-          <input
-            type="text"
-            id="entrada-contexto"
-            class="campo-opcao"
-            placeholder="Ex.: Sentar na mesa e abrir o caderno"
-            maxlength="120"
-          />
-          <label class="rotina-label" for="entrada-plano-b">Se não der hoje (plano B)</label>
-          <input
-            type="text"
-            id="entrada-plano-b"
-            class="campo-opcao"
-            placeholder="Ex.: Só abrir o material e ler 1 página"
-            maxlength="120"
-          />
-          <label class="rotina-label" for="entrada-preparar">Preparar ambiente (opcional, um por linha)</label>
-          <textarea
-            id="entrada-preparar"
-            class="nota-campo micro-campo"
-            rows="2"
-            placeholder="Ex.: Mesa limpa&#10;Celular longe"
-          ></textarea>
+
+          <details class="rotina-opcoes">
+            <summary>Horário e importância (opcional)</summary>
+            <div class="adicionar-opcoes adicionar-opcoes-simples">
+              <input type="time" id="entrada-horario" class="campo-opcao" aria-label="Horário" />
+              <select id="entrada-importancia" class="campo-opcao" aria-label="Importância">
+                <option value="1">Essencial</option>
+                <option value="2">Importante</option>
+                <option value="3" selected>Normal</option>
+              </select>
+            </div>
+          </details>
+
           <div id="sugestao-habito" class="sugestao-habito" hidden>
             <p id="sugestao-texto" class="sugestao-texto"></p>
             <button type="button" id="botao-usar-sugestao" class="botao-secundario botao-sugestao">
@@ -138,69 +87,52 @@
           <p id="feedback-adicao" class="feedback-adicao" hidden role="status"></p>
         </section>
 
-        <section class="bloco">
-          <h2 class="bloco-titulo">Planejador de rotina</h2>
-          <p class="bloco-apoio">
-            Conte sobre você, seus horários ocupados e o que quer melhorar.
-            O app monta uma rotina básica nos momentos livres.
-          </p>
-
-          <label class="rotina-label" for="rotina-perfil">Quem é você?</label>
-          <textarea
-            id="rotina-perfil"
-            class="nota-campo"
-            rows="3"
-            placeholder="Ex.: Tenho 16 anos, faço jiu-jitsu 2x por semana, tenho dificuldade em acordar cedo e beber água..."
-          ></textarea>
-
-          <label class="rotina-label" for="rotina-horarios">Agenda e horários ocupados</label>
-          <textarea
-            id="rotina-horarios"
-            class="nota-campo"
-            rows="4"
-            placeholder="Ex.: Segunda a sexta escola 07:00–16:00. Terça e quinta jiu-jitsu 20:30–22:30. Domingo livre."
-          ></textarea>
-
-          <label class="rotina-label" for="rotina-objetivos">O que quer melhorar?</label>
-          <textarea
-            id="rotina-objetivos"
-            class="nota-campo"
-            rows="3"
-            placeholder="Ex.: Beber 3L de água por dia, estudar matemática, dormir antes das 23h..."
-          ></textarea>
-
-          <div class="rotina-acoes">
-            <button type="button" id="botao-montar-adicionar" class="botao-primario">
-              Montar e adicionar
-            </button>
-            <button type="button" id="botao-gerar-rotina" class="botao-secundario">
-              Só montar (revisar antes)
-            </button>
+        <!-- Campos extras e planejador — fora da vista, o app ainda usa por baixo -->
+        <div class="rotina-oculto" hidden aria-hidden="true">
+          <select id="entrada-categoria" class="campo-opcao" aria-label="Categoria">
+            <option value="Geral">Geral</option>
+            <option value="Saúde">Saúde</option>
+            <option value="Estudo">Estudo</option>
+            <option value="Trabalho">Trabalho</option>
+            <option value="Lazer">Lazer</option>
+          </select>
+          <select id="entrada-meta" class="campo-opcao" aria-label="Meta semanal">
+            <option value="7" selected>Todo dia</option>
+            <option value="1">1x/semana</option>
+            <option value="2">2x/semana</option>
+            <option value="3">3x/semana</option>
+            <option value="4">4x/semana</option>
+            <option value="5">5x/semana</option>
+            <option value="6">6x/semana</option>
+          </select>
+          <textarea id="entrada-micro" class="nota-campo micro-campo" rows="1"></textarea>
+          <input type="text" id="entrada-contexto" class="campo-opcao" maxlength="120" />
+          <input type="text" id="entrada-plano-b" class="campo-opcao" maxlength="120" />
+          <textarea id="entrada-preparar" class="nota-campo micro-campo" rows="1"></textarea>
+          <textarea id="rotina-perfil" class="nota-campo" rows="1"></textarea>
+          <textarea id="rotina-horarios" class="nota-campo" rows="1"></textarea>
+          <textarea id="rotina-objetivos" class="nota-campo" rows="1"></textarea>
+          <button type="button" id="botao-montar-adicionar"></button>
+          <button type="button" id="botao-gerar-rotina"></button>
+          <p id="rotina-status"></p>
+          <div id="rotina-resultado" hidden>
+            <p id="rotina-mensagem"></p>
+            <div id="rotina-lista"></div>
+            <input type="checkbox" id="rotina-substituir" />
+            <button type="button" id="botao-aplicar-rotina"></button>
+            <button type="button" id="botao-regenerar-rotina"></button>
           </div>
-          <p id="rotina-status" class="rotina-status" aria-live="polite"></p>
-
-          <div id="rotina-resultado" class="rotina-resultado" hidden>
-            <h3 class="rotina-resultado-titulo">Rotina sugerida</h3>
-            <p id="rotina-mensagem" class="rotina-mensagem"></p>
-            <div id="rotina-lista" class="rotina-lista"></div>
-            <label class="rotina-substituir">
-              <input type="checkbox" id="rotina-substituir" />
-              Substituir todos os hábitos atuais
-            </label>
-            <div class="dados-botoes rotina-botoes">
-              <button type="button" id="botao-aplicar-rotina" class="botao-primario">
-                Adicionar selecionados
-              </button>
-              <button type="button" id="botao-regenerar-rotina" class="botao-secundario">
-                Gerar de novo
-              </button>
-            </div>
-          </div>
-        </section>
+        </div>
       </section>
 
       <!-- HOJE: checklist do dia -->
-      <section id="painel-hoje" class="painel" aria-label="Hoje" hidden>
+      <section id="painel-hoje" class="painel ativo" aria-label="Hoje">
+        <div id="dica-inicio" class="dica-inicio" hidden>
+          <p class="dica-inicio-texto">
+            <strong>Hoje</strong> é sua aba principal: <strong>Agora</strong> diz o próximo passo. Marque até <strong>3 prioridades</strong> com ☆.
+          </p>
+          <button type="button" id="dica-fechar" class="botao-secundario dica-fechar">Entendi</button>
+        </div>
         <div id="barra-relogio" class="barra-relogio" aria-live="polite">
           <span id="relogio-atual" class="relogio-atual">--:--:--</span>
           <span id="countdown-proximo" class="countdown-proximo"></span>
@@ -495,7 +427,7 @@
 
   <script>
     (function () {
-      var V = "1.8.1";
+      var V = "1.8.2";
       var salva = localStorage.getItem("app-versao");
       if (salva && salva !== V) {
         localStorage.setItem("app-versao", V);
@@ -512,7 +444,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script type="module" src="js/main.js?v=1.8.1"></script>
+  <script type="module" src="js/main.js?v=1.8.2"></script>
   <script defer src="sync.js?v=4"></script>
 </body>
 </html>

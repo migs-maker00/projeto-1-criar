@@ -386,6 +386,57 @@ body {
   background: var(--superficie-elevada);
 }
 
+.rotina-simples .bloco-titulo {
+  margin-bottom: 4px;
+}
+
+.rotina-resumo {
+  margin: 0 0 16px;
+  font-size: 0.88rem;
+  color: var(--texto-suave);
+  line-height: 1.45;
+}
+
+.rotina-simples .atalhos-rapidos {
+  margin-bottom: 14px;
+}
+
+.rotina-opcoes {
+  margin-top: 12px;
+  border: 1px dashed var(--borda);
+  border-radius: 10px;
+  padding: 0 12px 10px;
+  background: color-mix(in srgb, var(--superficie) 60%, transparent);
+}
+
+.rotina-opcoes summary {
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+  padding: 10px 0 6px;
+  list-style: none;
+}
+
+.rotina-opcoes summary::-webkit-details-marker {
+  display: none;
+}
+
+.rotina-opcoes[open] summary {
+  color: var(--marca);
+  margin-bottom: 4px;
+}
+
+.adicionar-opcoes-simples {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.rotina-oculto {
+  display: none !important;
+}
+
 .feedback-adicao {
   margin-top: 12px;
   padding: 10px 12px;
