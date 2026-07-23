@@ -259,7 +259,7 @@ function renderFalar(dados) {
           <option value="">Automática — ${esc(rotuloVozAtual("en-US"))}</option>
           ${opcoesVoz}
         </select>
-        <p class="estudo-voz-dica">Escolha uma voz mais natural. No Chrome costuma aparecer “Google US English”.</p>
+        <p class="estudo-voz-dica">Só vozes 🇺🇸 americanas ou 🇬🇧 britânicas — pra não sair “pro a c tive”. Use <strong>Google US English</strong> no Chrome.</p>
       </div>`
       : "";
 
