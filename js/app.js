@@ -1,5 +1,5 @@
-import { APP_VERSION } from "./config.js?v=1.8.3";
-import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.8.3";
+import { APP_VERSION } from "./config.js?v=1.9.0";
+import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.9.0";
 import {
   criarHabitoAgua,
   detectarTextoAgua,
@@ -24,13 +24,13 @@ import {
   textoHorariosLembretes,
   textoPlanoB,
   todosMicroFeitos,
-} from "./lib/habitos.js?v=1.8.3";
+} from "./lib/habitos.js?v=1.9.0";
 import {
   carregarPerfil,
   marcarPerfilInicializado,
   perfilInicializado,
   salvarPerfil,
-} from "./lib/perfil.js?v=1.8.3";
+} from "./lib/perfil.js?v=1.9.0";
 import {
   correspondePreset,
   habitosRotinaCompleta,
@@ -39,31 +39,41 @@ import {
   PRIORIDADES_PRESET,
   rotinaJaMontada,
   textosPlanejadorRotina,
-} from "./lib/rotina-preset.js?v=1.8.3";
+} from "./lib/rotina-preset.js?v=1.9.0";
 import {
   MICRO_APRENDER,
   migrarHabitosAprendizado,
   PLANO_B_APRENDER,
   textoSugereAprender,
-} from "./lib/aprender.js?v=1.8.3";
+} from "./lib/aprender.js?v=1.9.0";
+import {
+  carregarProgressoLivro,
+  livroAtivo,
+  META_PERGUNTAS_DIA,
+  metaDiariaAtingida,
+  moduloAtual,
+  perguntaAtual,
+  progressoGeral,
+  registrarResposta,
+} from "./lib/livros-pratica.js?v=1.9.0";
 import {
   ehHorarioDificil,
   mensagemTarde,
   sugestaoTarde,
-} from "./lib/tarde.js?v=1.8.3";
+} from "./lib/tarde.js?v=1.9.0";
 import {
   complementoCoachDiario,
   gerarResumoSemana,
   sugerirHabito,
   textoSugestao,
-} from "./lib/inteligencia.js?v=1.8.3";
+} from "./lib/inteligencia.js?v=1.9.0";
 import {
   iniciarVerificacaoLembretes,
   lembretesAtivos,
   pedirPermissaoLembretes,
   verificarLembretes,
-} from "./lib/lembretes.js?v=1.8.3";
-import { sincronizarAgendaSW } from "./lib/agenda-notif.js?v=1.8.3";
+} from "./lib/lembretes.js?v=1.9.0";
+import { sincronizarAgendaSW } from "./lib/agenda-notif.js?v=1.9.0";
 import {
   cancelarTimer,
   cronometroAtivo,
@@ -78,12 +88,12 @@ import {
   segundosRestantesTimer,
   textoCountdown,
   timerAtivo,
-} from "./lib/foco.js?v=1.8.3";
+} from "./lib/foco.js?v=1.9.0";
 import {
   carregarPerfilRotina,
   gerarRotina,
   salvarPerfilRotina,
-} from "./lib/rotina-local.js?v=1.8.3";
+} from "./lib/rotina-local.js?v=1.9.0";
 import {
   adicionarInbox,
   alternarPrioridade,
@@ -115,7 +125,7 @@ import {
   salvarPrioridades,
   salvarTemaSemana,
   sugestaoAgora,
-} from "./lib/tdah.js?v=1.8.3";
+} from "./lib/tdah.js?v=1.9.0";
 
 // ---- Referências aos elementos da página (DOM) ----
 const entradaHabito = document.getElementById("entrada-habito");
@@ -176,6 +186,7 @@ const dicaInicio = document.getElementById("dica-inicio");
 const botaoDicaFechar = document.getElementById("dica-fechar");
 const infoVersao = document.getElementById("info-versao");
 const agoraConteudo = document.getElementById("agora-conteudo");
+const praticaLivroConteudo = document.getElementById("pratica-livro-conteudo");
 const entradaInbox = document.getElementById("entrada-inbox");
 const botaoInbox = document.getElementById("botao-inbox");
 const listaInbox = document.getElementById("lista-inbox");
@@ -602,6 +613,19 @@ const ATALHOS_RAPIDOS = {
     contextoLembrete: "Falar fixa mais que ler.",
     historico: {},
   }),
+  praticalivro: () => ({
+    id: novoIdHabito(),
+    nome: "Prática do livro (10 min)",
+    categoria: "Estudo",
+    metaSemanal: 5,
+    horario: "19:10",
+    importancia: 2,
+    diasAtivos: [1, 2, 3, 4, 5],
+    microPassos: ["Abrir Prática do livro", "Responder 3 questões", "Aplicar 1 ideia hoje"],
+    planoB: "Só 1 questão e pensar na resposta.",
+    contextoLembrete: "Aprender na prática — sem precisar ler o capítulo.",
+    historico: {},
+  }),
   meditar: () => ({
     id: novoIdHabito(),
     nome: "Meditar 10 min",
@@ -617,6 +641,7 @@ const ROTULOS_ATALHO = {
   academia: "Academia",
   estudo: "Aprender 15 min",
   vocabulario: "Vocabulário 5 min",
+  praticalivro: "Prática do livro",
   meditar: "Meditar 10 min",
 };
 
@@ -1940,6 +1965,89 @@ function aplicarRotinaPersonalizada() {
   aplicarRotinaCompleta(false);
 }
 
+function confirmarPraticaLivro(pergunta, indiceEscolha) {
+  const progresso = carregarProgressoLivro();
+  const livro = livroAtivo(progresso.livroId);
+  const chave = hojeStr();
+
+  if (pergunta.tipo !== "reflexao" && indiceEscolha !== undefined) {
+    const certa = pergunta.correta === indiceEscolha;
+    mostrarFeedback(
+      certa ? `Certo! ${pergunta.dica}` : `Reflexão: ${pergunta.dica}`,
+      certa ? "ok" : "aviso"
+    );
+  } else {
+    mostrarFeedback(pergunta.dica);
+  }
+
+  registrarResposta(progresso, livro, pergunta.id, chave);
+  desenharPraticaLivro();
+}
+
+function desenharPraticaLivro() {
+  if (!praticaLivroConteudo) return;
+
+  const progresso = carregarProgressoLivro();
+  const livro = livroAtivo(progresso.livroId);
+  const chave = hojeStr();
+  const g = progressoGeral(livro, progresso);
+
+  if (metaDiariaAtingida(progresso, chave)) {
+    praticaLivroConteudo.innerHTML = `
+      <h2 class="bloco-titulo">Prática do livro ✓</h2>
+      <p class="bloco-apoio">Meta de hoje feita (${META_PERGUNTAS_DIA} questões). Progresso do livro: ${g.pct}%.</p>`;
+    return;
+  }
+
+  const mod = moduloAtual(livro, progresso);
+  const pergunta = perguntaAtual(livro, progresso);
+
+  if (!pergunta) {
+    praticaLivroConteudo.innerHTML = `
+      <h2 class="bloco-titulo">Prática do livro — completo!</h2>
+      <p class="bloco-apoio">Você terminou todos os módulos de ${livro.titulo}. Volte amanhã para revisar.</p>`;
+    return;
+  }
+
+  const hojeCount = progresso.ultimoDia === chave ? progresso.perguntasHoje : 0;
+
+  let interacao = "";
+  if (pergunta.tipo === "reflexao") {
+    interacao = `
+      <textarea id="pratica-resposta" class="pratica-reflexao nota-campo" rows="2" placeholder="Sua resposta (pode ser curta)..."></textarea>
+      <button type="button" class="botao-secundario pratica-confirmar">Pronto</button>`;
+  } else {
+    interacao = `
+      <div class="pratica-opcoes">
+        ${pergunta.opcoes
+          .map(
+            (op, i) =>
+              `<button type="button" class="botao-secundario pratica-opcao" data-indice="${i}">${op}</button>`
+          )
+          .join("")}
+      </div>`;
+  }
+
+  praticaLivroConteudo.innerHTML = `
+    <h2 class="bloco-titulo">Prática do livro</h2>
+    <p class="pratica-livro-nome">${livro.titulo}</p>
+    <p class="pratica-modulo">${mod.nome}</p>
+    <p class="pratica-ideia">${mod.ideia}</p>
+    <p class="pratica-meta">Hoje: ${hojeCount}/${META_PERGUNTAS_DIA} questões · Livro: ${g.pct}%</p>
+    <p class="pratica-pergunta">${pergunta.pergunta}</p>
+    ${interacao}`;
+
+  praticaLivroConteudo.querySelector(".pratica-confirmar")?.addEventListener("click", () => {
+    confirmarPraticaLivro(pergunta);
+  });
+
+  praticaLivroConteudo.querySelectorAll(".pratica-opcao").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      confirmarPraticaLivro(pergunta, Number(btn.dataset.indice));
+    });
+  });
+}
+
 function processarHashHabito() {
   const hash = location.hash;
   if (!hash.startsWith("#habito-")) return;
@@ -1973,6 +2081,7 @@ function desenharResumoAgenda() {
   desenharManha();
   desenharBannerTarde();
   desenharAgora();
+  desenharPraticaLivro();
   desenharInbox();
   desenharRevisao();
 }

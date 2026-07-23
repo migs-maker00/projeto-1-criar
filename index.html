@@ -20,7 +20,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=1.8.3" />
+  <link rel="stylesheet" href="style.css?v=1.9.0" />
 </head>
 <body>
   <div class="ambiente">
@@ -54,6 +54,7 @@
             <button type="button" class="atalho" data-atalho="academia">🏋️ Academia</button>
             <button type="button" class="atalho" data-atalho="estudo">🎧 Aprender</button>
             <button type="button" class="atalho" data-atalho="vocabulario">🗣️ Vocabulário</button>
+            <button type="button" class="atalho" data-atalho="praticalivro">📖 Prática</button>
             <button type="button" class="atalho" data-atalho="meditar">🧘 Meditar</button>
           </div>
 
@@ -169,6 +170,10 @@
         <section id="bloco-agora" class="bloco bloco-agora" aria-label="O que fazer agora">
           <p class="secao-rotulo">Agora</p>
           <div id="agora-conteudo" class="agora-conteudo"></div>
+        </section>
+
+        <section id="bloco-pratica-livro" class="bloco bloco-pratica-livro" aria-label="Prática do livro">
+          <div id="pratica-livro-conteudo"></div>
         </section>
 
         <section class="bloco bloco-inbox" aria-label="Caixa de entrada">
@@ -428,7 +433,7 @@
 
   <script>
     (function () {
-      var V = "1.8.3";
+      var V = "1.9.0";
       var salva = localStorage.getItem("app-versao");
       if (salva && salva !== V) {
         localStorage.setItem("app-versao", V);
@@ -445,7 +450,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script type="module" src="js/main.js?v=1.8.3"></script>
+  <script type="module" src="js/main.js?v=1.9.0"></script>
   <script defer src="sync.js?v=4"></script>
 </body>
 </html>

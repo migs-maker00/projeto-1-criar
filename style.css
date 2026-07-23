@@ -1868,6 +1868,70 @@ body {
   gap: 6px;
 }
 
+/* Prática do livro */
+.bloco-pratica-livro {
+  border: 1px solid color-mix(in srgb, var(--marca) 25%, var(--borda));
+  background: color-mix(in srgb, var(--superficie-elevada) 90%, var(--azul-claro));
+}
+
+.pratica-livro-nome {
+  margin: 0 0 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pratica-modulo {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--marca);
+}
+
+.pratica-ideia {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+  line-height: 1.4;
+}
+
+.pratica-meta {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.pratica-pergunta {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.pratica-opcoes {
+  display: grid;
+  gap: 8px;
+}
+
+.pratica-opcoes .pratica-opcao {
+  text-align: left;
+  white-space: normal;
+  line-height: 1.35;
+  padding: 12px 14px;
+}
+
+.pratica-reflexao {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.pratica-confirmar {
+  width: 100%;
+}
+
   margin-top: 0;
   font-size: 0.88rem;
 }
