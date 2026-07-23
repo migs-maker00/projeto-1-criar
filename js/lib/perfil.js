@@ -39,48 +39,10 @@ export function marcarPerfilInicializado() {
 }
 
 export function habitosSugeridosPerfil() {
-  return [
-    {
-      nome: "Estudar 15 min",
-      categoria: "Estudo",
-      metaSemanal: 5,
-      horario: "19:00",
-      importancia: 1,
-      diasAtivos: [1, 2, 3, 4, 5],
-      microPassos: ["Abrir o material", "Focar 10 minutos", "Fechar com 1 anotação"],
-      planoB: "Só abrir o material e ler 1 página.",
-      preparar: ["Mesa limpa", "Água por perto", "Celular longe"],
-      contextoLembrete: "Chegou da escola — só 10 min já conta.",
-    },
-    {
-      nome: "Academia",
-      categoria: "Saúde",
-      metaSemanal: 3,
-      horario: "20:00",
-      importancia: 2,
-      diasAtivos: [1, 2, 3, 4, 5],
-      planoB: "Só se vestir e ir — 15 min na esteira já vale.",
-      contextoLembrete: "Sem pressão — só aparecer.",
-    },
-    {
-      nome: "Dormir no horário",
-      categoria: "Saúde",
-      metaSemanal: 7,
-      horario: "23:00",
-      importancia: 1,
-      planoB: "Desligar telas e deitar — sem precisar dormir já.",
-      contextoLembrete: "Hora de começar a desacelerar.",
-    },
-    {
-      nome: "Beber água",
-      categoria: "Saúde",
-      metaSemanal: 7,
-      horario: "06:30",
-      importancia: 1,
-      lembretes: 6,
-    },
-  ];
+  return habitosRotinaCompleta();
 }
+
+export { habitosRotinaCompleta, textosPlanejadorRotina } from "./rotina-preset.js";
 
 export function hhmmParaMinutos(hhmm) {
   const [hh, mm] = (hhmm || "00:00").split(":").map(Number);

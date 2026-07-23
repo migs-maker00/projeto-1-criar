@@ -1,5 +1,5 @@
-import { APP_VERSION } from "./config.js?v=1.8.0";
-import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.8.0";
+import { APP_VERSION } from "./config.js?v=1.8.1";
+import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.8.1";
 import {
   criarHabitoAgua,
   detectarTextoAgua,
@@ -24,33 +24,41 @@ import {
   textoHorariosLembretes,
   textoPlanoB,
   todosMicroFeitos,
-} from "./lib/habitos.js?v=1.8.0";
+} from "./lib/habitos.js?v=1.8.1";
 import {
   carregarPerfil,
-  habitosSugeridosPerfil,
   marcarPerfilInicializado,
   perfilInicializado,
   salvarPerfil,
-} from "./lib/perfil.js?v=1.8.0";
+} from "./lib/perfil.js?v=1.8.1";
+import {
+  correspondePreset,
+  habitosRotinaCompleta,
+  HORARIOS_AGUA_ROTINA,
+  marcarRotinaMontada,
+  PRIORIDADES_PRESET,
+  rotinaJaMontada,
+  textosPlanejadorRotina,
+} from "./lib/rotina-preset.js?v=1.8.1";
 import {
   detectarHabitoEstudo,
   ehHorarioDificil,
   mensagemTarde,
   sugestaoTarde,
-} from "./lib/tarde.js?v=1.8.0";
+} from "./lib/tarde.js?v=1.8.1";
 import {
   complementoCoachDiario,
   gerarResumoSemana,
   sugerirHabito,
   textoSugestao,
-} from "./lib/inteligencia.js?v=1.8.0";
+} from "./lib/inteligencia.js?v=1.8.1";
 import {
   iniciarVerificacaoLembretes,
   lembretesAtivos,
   pedirPermissaoLembretes,
   verificarLembretes,
-} from "./lib/lembretes.js?v=1.8.0";
-import { sincronizarAgendaSW } from "./lib/agenda-notif.js?v=1.8.0";
+} from "./lib/lembretes.js?v=1.8.1";
+import { sincronizarAgendaSW } from "./lib/agenda-notif.js?v=1.8.1";
 import {
   cancelarTimer,
   cronometroAtivo,
@@ -65,12 +73,12 @@ import {
   segundosRestantesTimer,
   textoCountdown,
   timerAtivo,
-} from "./lib/foco.js?v=1.8.0";
+} from "./lib/foco.js?v=1.8.1";
 import {
   carregarPerfilRotina,
   gerarRotina,
   salvarPerfilRotina,
-} from "./lib/rotina-local.js?v=1.8.0";
+} from "./lib/rotina-local.js?v=1.8.1";
 import {
   adicionarInbox,
   alternarPrioridade,
@@ -99,9 +107,10 @@ import {
   removerInbox,
   revisaoDoDia,
   revisaoManhaDoDia,
+  salvarPrioridades,
   salvarTemaSemana,
   sugestaoAgora,
-} from "./lib/tdah.js?v=1.8.0";
+} from "./lib/tdah.js?v=1.8.1";
 
 // ---- Referências aos elementos da página (DOM) ----
 const entradaHabito = document.getElementById("entrada-habito");
@@ -1064,9 +1073,10 @@ function aplicarSugestaoHabito() {
 
 function carregarCamposRotina() {
   const salvo = carregarPerfilRotina();
-  if (rotinaPerfil) rotinaPerfil.value = salvo.perfil || "";
-  if (rotinaHorarios) rotinaHorarios.value = salvo.horarios || "";
-  if (rotinaObjetivos) rotinaObjetivos.value = salvo.objetivos || "";
+  const padrao = textosPlanejadorRotina();
+  if (rotinaPerfil) rotinaPerfil.value = salvo.perfil || padrao.perfil;
+  if (rotinaHorarios) rotinaHorarios.value = salvo.horarios || padrao.horarios;
+  if (rotinaObjetivos) rotinaObjetivos.value = salvo.objetivos || padrao.objetivos;
 }
 
 function salvarCamposRotina() {
@@ -1809,40 +1819,104 @@ function desenharPerfilAjustes() {
   perfilResumo.textContent = `Acorda ${perfil.acordar}, escola seg–sex, tarde difícil ${perfil.tardeDificilInicio}–${perfil.tardeDificilFim}. Prioridades: ${(perfil.prioridadesVida || []).join(", ")}.`;
 }
 
-function aplicarRotinaPersonalizada() {
-  const sugeridos = habitosSugeridosPerfil();
+function aplicarRotinaCompleta(silencioso = false) {
+  const modelos = habitosRotinaCompleta();
   let adicionados = 0;
+  let atualizados = 0;
 
-  sugeridos.forEach((modelo) => {
-    const jaExiste = habitos.some((h) => {
-      if (/água|agua/i.test(modelo.nome)) return ehHabitoAgua(h);
-      return h.nome.toLowerCase() === modelo.nome.toLowerCase();
-    });
-    if (jaExiste) return;
+  modelos.forEach((modelo) => {
+    const { presetId, ...campos } = modelo;
+    const existente = habitos.find((h) => correspondePreset(h, presetId));
 
-    if (/água|agua/i.test(modelo.nome)) {
-      habitos.push(criarHabitoAgua(novoIdHabito()));
-      adicionados++;
+    if (presetId === "agua") {
+      if (existente) {
+        habitos = habitos.map((h) => {
+          if (!correspondePreset(h, "agua")) return h;
+          return normalizarHabito({
+            ...h,
+            horariosLembretes: HORARIOS_AGUA_ROTINA,
+            lembretes: 6,
+            horario: "06:15",
+            importancia: 1,
+            contextoLembrete: campos.contextoLembrete,
+          });
+        });
+        atualizados++;
+      } else {
+        const agua = criarHabitoAgua(novoIdHabito(), HORARIOS_AGUA_ROTINA);
+        agua.importancia = 1;
+        agua.contextoLembrete = campos.contextoLembrete;
+        habitos.push(normalizarHabito(agua));
+        adicionados++;
+      }
       return;
     }
 
-    const habito = { ...modelo, id: novoIdHabito(), historico: {} };
-    if (habito.lembretes) {
-      habito.horariosLembretes = horariosLembretes(habito);
+    if (existente) {
+      const atualizado = normalizarHabito({
+        ...existente,
+        ...campos,
+        id: existente.id,
+        historico: existente.historico || {},
+      });
+      habitos = habitos.map((h) => (h.id === existente.id ? atualizado : h));
+      atualizados++;
+    } else {
+      habitos.push(
+        normalizarHabito({
+          ...campos,
+          id: novoIdHabito(),
+          historico: {},
+        })
+      );
+      adicionados++;
     }
-    habitos.push(normalizarHabito(habito));
-    adicionados++;
   });
 
+  const chave = hojeStr();
+  const idsPrioridade = PRIORIDADES_PRESET.map((pid) =>
+    habitos.find((h) => correspondePreset(h, pid))?.id
+  )
+    .filter((id) => Number.isFinite(id))
+    .slice(0, MAX_PRIORIDADES);
+
+  if (idsPrioridade.length) {
+    salvarPrioridades({ ...carregarPrioridades(), [chave]: idsPrioridade });
+  }
+
+  const manha = revisaoManhaDoDia(chave);
+  const prioridadesVida = carregarPerfil().prioridadesVida || [];
+  if (!manha.foco1 && prioridadesVida[0]) {
+    definirRevisaoManhaCampo(chave, "foco1", prioridadesVida[0]);
+  }
+  if (!manha.foco2 && prioridadesVida[1]) {
+    definirRevisaoManhaCampo(chave, "foco2", prioridadesVida[1]);
+  }
+  if (!manha.foco3 && prioridadesVida[2]) {
+    definirRevisaoManhaCampo(chave, "foco3", prioridadesVida[2]);
+  }
+
+  if (!carregarTemaSemana()) {
+    salvarTemaSemana("Conhecimento, organização e rotina");
+  }
+
+  salvarPerfilRotina(textosPlanejadorRotina());
+  marcarRotinaMontada();
   marcarPerfilInicializado();
   salvarPerfil(carregarPerfil());
   salvar();
+  carregarCamposRotina();
   desenhar();
-  mostrarFeedback(
-    adicionados
-      ? `${adicionados} hábito(s) adicionados com base na sua rotina.`
-      : "Sua rotina sugerida já está na agenda."
-  );
+
+  if (!silencioso) {
+    mostrarFeedback(
+      `Rotina montada! ${adicionados} novo(s), ${atualizados} atualizado(s). Vá em Ajustes → Ativar lembretes.`
+    );
+  }
+}
+
+function aplicarRotinaPersonalizada() {
+  aplicarRotinaCompleta(false);
 }
 
 function processarHashHabito() {
@@ -2309,6 +2383,9 @@ export function initApp() {
     if (document.visibilityState === "visible") rodarLembretes();
   });
   processarHashHabito();
+  if (!rotinaJaMontada()) {
+    aplicarRotinaCompleta(true);
+  }
   desenhar();
 }
 
