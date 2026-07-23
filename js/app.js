@@ -1,5 +1,5 @@
-import { APP_VERSION } from "./config.js?v=1.5.0";
-import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.5.0";
+import { APP_VERSION } from "./config.js?v=1.6.0";
+import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=1.6.0";
 import {
   criarHabitoAgua,
   detectarTextoAgua,
@@ -7,42 +7,61 @@ import {
   ehMultiPassos,
   estaCompletoNoDia,
   horariosLembretes,
+  listaMicroPassos,
+  microFeitosNoDia,
+  microPassoFeito,
   migrarHabitosAgua,
   nomeAguaLimpo,
   normalizarHabito,
+  normalizarImportancia,
+  parseMicroPassosTexto,
   passosTotal,
   progressoNoDia,
+  rotuloImportancia,
   textoHorariosLembretes,
-} from "./lib/habitos.js?v=1.5.0";
+  todosMicroFeitos,
+} from "./lib/habitos.js?v=1.6.0";
 import {
   complementoCoachDiario,
   gerarResumoSemana,
   sugerirHabito,
   textoSugestao,
-} from "./lib/inteligencia.js?v=1.5.0";
+} from "./lib/inteligencia.js?v=1.6.0";
+import {
+  iniciarVerificacaoLembretes,
+  lembretesAtivos,
+  pedirPermissaoLembretes,
+  verificarLembretes,
+} from "./lib/lembretes.js?v=1.6.0";
 import {
   carregarPerfilRotina,
   gerarRotina,
   salvarPerfilRotina,
-} from "./lib/rotina-local.js?v=1.5.0";
+} from "./lib/rotina-local.js?v=1.6.0";
 import {
   adicionarInbox,
   alternarPrioridade,
   carregarInbox,
   carregarPrioridades,
+  carregarRevisaoNoturna,
+  definirRevisaoCampo,
   ehPrioridadeHoje,
   MAX_PRIORIDADES,
   ordenarComPrioridades,
   prioridadesDoDia,
   removerInbox,
+  revisaoDoDia,
   sugestaoAgora,
-} from "./lib/tdah.js?v=1.5.0";
+} from "./lib/tdah.js?v=1.6.0";
 
 // ---- Referências aos elementos da página (DOM) ----
 const entradaHabito = document.getElementById("entrada-habito");
 const entradaCategoria = document.getElementById("entrada-categoria");
 const entradaMeta = document.getElementById("entrada-meta");
 const entradaHorario = document.getElementById("entrada-horario");
+const entradaImportancia = document.getElementById("entrada-importancia");
+const entradaMicro = document.getElementById("entrada-micro");
+const entradaContexto = document.getElementById("entrada-contexto");
 const botaoAdicionar = document.getElementById("botao-adicionar");
 const listaHabitos = document.getElementById("lista-habitos");
 const mensagemVazia = document.getElementById("mensagem-vazia");
@@ -97,6 +116,11 @@ const botaoInbox = document.getElementById("botao-inbox");
 const listaInbox = document.getElementById("lista-inbox");
 const inboxVazio = document.getElementById("inbox-vazio");
 const rotuloFoco = document.getElementById("rotulo-foco");
+const revisaoFeito = document.getElementById("revisao-feito");
+const revisaoFicou = document.getElementById("revisao-ficou");
+const revisaoAmanha = document.getElementById("revisao-amanha");
+const botaoLembretes = document.getElementById("botao-lembretes");
+const lembretesStatus = document.getElementById("lembretes-status");
 
 // ---- Estado (a "fonte da verdade" do app) ----
 let habitos = [];
@@ -181,6 +205,7 @@ function salvar() {
   if (!window.syncEstaAplicandoRemoto || !window.syncEstaAplicandoRemoto()) {
     if (typeof window.agendarSyncNuvem === "function") window.agendarSyncNuvem();
   }
+  rodarLembretes();
 }
 
 function salvarNotas() {
@@ -364,16 +389,29 @@ function montarHabitoDoFormulario(texto) {
     categoria: entradaCategoria.value || sugestao.categoria,
     metaSemanal: Number(entradaMeta.value) || sugestao.metaSemanal,
     horario: entradaHorario.value || sugestao.horario || "",
+    importancia: normalizarImportancia(entradaImportancia?.value || 3),
     historico: {},
   };
+
+  const contexto = entradaContexto?.value.trim();
+  if (contexto) habito.contextoLembrete = contexto;
+
+  const micro = parseMicroPassosTexto(entradaMicro?.value || "");
+  if (micro.length) habito.microPassos = micro;
 
   if (detectarTextoAgua(texto) || sugestao.lembretes > 1) {
     habito.nome = nomeAguaLimpo();
     habito.categoria = "Saúde";
     habito.metaSemanal = 7;
+    habito.importancia = 1;
     habito.lembretes = sugestao.lembretes || 6;
     habito.horariosLembretes = horariosLembretes({ lembretes: habito.lembretes });
     if (!habito.horario) habito.horario = habito.horariosLembretes[0] || "06:30";
+    if (!habito.contextoLembrete) habito.contextoLembrete = "Beber um copo de água agora.";
+  }
+
+  if (/estud|prova|ler|leitura/.test(texto.toLowerCase()) && !micro.length) {
+    habito.microPassos = ["Abrir o material", "Focar 10 minutos", "Marcar o que ficou"];
   }
 
   return habito;
@@ -399,6 +437,9 @@ function limparFormularioHabito() {
   entradaHorario.value = "";
   entradaMeta.value = "7";
   entradaCategoria.value = "Geral";
+  if (entradaImportancia) entradaImportancia.value = "3";
+  if (entradaMicro) entradaMicro.value = "";
+  if (entradaContexto) entradaContexto.value = "";
   sugestaoAtual = null;
   if (sugestaoHabito) sugestaoHabito.hidden = true;
 }
@@ -427,6 +468,7 @@ const ATALHOS_RAPIDOS = {
     categoria: "Saúde",
     metaSemanal: 5,
     horario: "18:00",
+    importancia: 2,
     historico: {},
   }),
   estudo: () => ({
@@ -435,6 +477,8 @@ const ATALHOS_RAPIDOS = {
     categoria: "Estudo",
     metaSemanal: 7,
     horario: "19:00",
+    importancia: 1,
+    microPassos: ["Abrir o material", "Focar 10 minutos", "Anotar dúvidas"],
     historico: {},
   }),
   meditar: () => ({
@@ -556,11 +600,12 @@ function iniciarEdicao(habito, item, nomeSpan) {
 // ============ EXPORTAR / IMPORTAR ============
 function exportarDados() {
   const dados = {
-    versao: 2,
+    versao: 3,
     habitos,
     notas,
     inbox: carregarInbox(),
     prioridades: carregarPrioridades(),
+    revisao: carregarRevisaoNoturna(),
   };
   const blob = new Blob([JSON.stringify(dados, null, 2)], {
     type: "application/json",
@@ -591,6 +636,9 @@ function importarDados(evento) {
       }
       if (dados.prioridades && typeof dados.prioridades === "object") {
         localStorage.setItem("prioridades-dia", JSON.stringify(dados.prioridades));
+      }
+      if (dados.revisao && typeof dados.revisao === "object") {
+        localStorage.setItem("revisao-noturna", JSON.stringify(dados.revisao));
       }
       salvar();
       salvarNotas();
@@ -1095,6 +1143,9 @@ function aplicarRotinaGerada() {
     };
     if (item.lembretes > 1) habito.lembretes = item.lembretes;
     if (item.horariosLembretes?.length) habito.horariosLembretes = item.horariosLembretes;
+    if (item.importancia) habito.importancia = item.importancia;
+    if (item.microPassos?.length) habito.microPassos = item.microPassos;
+    if (item.motivo && !habito.contextoLembrete) habito.contextoLembrete = item.motivo;
     habitos.push(habito);
     adicionados++;
   });
@@ -1214,6 +1265,78 @@ function ordenarPorHorario(lista) {
     if (b.horario) return 1;
     return 0;
   });
+}
+
+function ciclarImportancia(habitoId) {
+  habitos = habitos.map((h) => {
+    if (h.id !== habitoId) return h;
+    const atual = normalizarImportancia(h.importancia);
+    return { ...h, importancia: atual >= 3 ? 1 : atual + 1 };
+  });
+  salvar();
+  desenhar();
+}
+
+function alternarMicroPasso(habitoId, indice) {
+  const chave = hojeStr();
+  habitos = habitos.map((habito) => {
+    if (habito.id !== habitoId) return habito;
+    const microHistorico = { ...(habito.microHistorico || {}) };
+    const feitos = [...(microHistorico[chave] || [])];
+    const pos = feitos.indexOf(indice);
+    if (pos >= 0) feitos.splice(pos, 1);
+    else feitos.push(indice);
+    microHistorico[chave] = feitos.sort((a, b) => a - b);
+    return { ...habito, microHistorico };
+  });
+  salvar();
+  desenhar();
+}
+
+function horariosParaLembrete(habito) {
+  const extras = horariosLembretes(habito);
+  if (extras.length) return extras;
+  return habito.horario ? [habito.horario] : [];
+}
+
+function rodarLembretes() {
+  verificarLembretes(habitos, hojeStr(), {
+    estaPendente: (h) => !estaFeitoHoje(h),
+    horariosDoHabito: horariosParaLembrete,
+  });
+}
+
+function atualizarLembretesStatus() {
+  if (!lembretesStatus) return;
+  if (!("Notification" in window)) {
+    lembretesStatus.textContent = "Notificações não disponíveis neste navegador.";
+    return;
+  }
+  if (lembretesAtivos() && Notification.permission === "granted") {
+    lembretesStatus.textContent = "Lembretes ativos — você recebe aviso no horário do hábito.";
+  } else if (Notification.permission === "denied") {
+    lembretesStatus.textContent = "Permissão bloqueada. Libere nas configurações do navegador.";
+  } else {
+    lembretesStatus.textContent = "Lembretes desligados.";
+  }
+}
+
+async function ativarLembretes() {
+  const resultado = await pedirPermissaoLembretes();
+  atualizarLembretesStatus();
+  mostrarFeedback(resultado.mensagem, resultado.ok ? "ok" : "aviso");
+  rodarLembretes();
+}
+
+function carregarRevisaoCampos() {
+  const dados = revisaoDoDia(hojeStr());
+  if (revisaoFeito) revisaoFeito.value = dados.feito;
+  if (revisaoFicou) revisaoFicou.value = dados.ficou;
+  if (revisaoAmanha) revisaoAmanha.value = dados.amanha;
+}
+
+function desenharRevisao() {
+  carregarRevisaoCampos();
 }
 
 function proximoCompromisso() {
@@ -1339,6 +1462,7 @@ function desenharResumoAgenda() {
   desenharFilosofia();
   desenharAgora();
   desenharInbox();
+  desenharRevisao();
 }
 
 function desenharFilosofia() {
@@ -1403,6 +1527,15 @@ function criarItem(habito) {
   nome.textContent = habito.nome;
   linha.appendChild(nome);
 
+  const imp = normalizarImportancia(habito.importancia);
+  const badgeImp = document.createElement("button");
+  badgeImp.type = "button";
+  badgeImp.className = "badge-importancia imp-" + imp;
+  badgeImp.textContent = rotuloImportancia(habito);
+  badgeImp.title = "Toque para mudar importância (Essencial → Importante → Normal)";
+  badgeImp.addEventListener("click", () => ciclarImportancia(habito.id));
+  linha.appendChild(badgeImp);
+
   const meta = document.createElement("div");
   meta.className = "item-meta";
 
@@ -1459,6 +1592,36 @@ function criarItem(habito) {
 
   conteudo.appendChild(linha);
   conteudo.appendChild(meta);
+
+  const microLista = listaMicroPassos(habito);
+  if (microLista.length && !multi) {
+    const blocoMicro = document.createElement("ul");
+    blocoMicro.className = "micro-lista";
+    microLista.forEach((passo, indice) => {
+      const li = document.createElement("li");
+      li.className = "micro-item";
+
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.checked = microPassoFeito(habito, hoje, indice);
+      check.addEventListener("change", () => alternarMicroPasso(habito.id, indice));
+
+      const label = document.createElement("span");
+      label.textContent = passo;
+
+      li.appendChild(check);
+      li.appendChild(label);
+      blocoMicro.appendChild(li);
+    });
+    conteudo.appendChild(blocoMicro);
+
+    if (todosMicroFeitos(habito, hoje) && !feito) {
+      const dica = document.createElement("p");
+      dica.className = "micro-completo-dica";
+      dica.textContent = "Micro-passos feitos — pode marcar o hábito principal ✓";
+      conteudo.appendChild(dica);
+    }
+  }
 
   const marcaStreak = document.createElement("span");
   marcaStreak.className = "streak" + (streak > 0 ? " ativa" : "");
@@ -1617,6 +1780,16 @@ function ligarTodosEventos() {
   entradaInbox?.addEventListener("keydown", (evento) => {
     if (evento.key === "Enter") capturarInbox();
   });
+  revisaoFeito?.addEventListener("input", () => {
+    definirRevisaoCampo(hojeStr(), "feito", revisaoFeito.value);
+  });
+  revisaoFicou?.addEventListener("input", () => {
+    definirRevisaoCampo(hojeStr(), "ficou", revisaoFicou.value);
+  });
+  revisaoAmanha?.addEventListener("input", () => {
+    definirRevisaoCampo(hojeStr(), "amanha", revisaoAmanha.value);
+  });
+  botaoLembretes?.addEventListener("click", ativarLembretes);
 }
 
 // ============ INICIALIZAÇÃO ============
@@ -1631,6 +1804,8 @@ export function initApp() {
   ativarPainel(painelAtivo);
   atualizarInfoVersao();
   mostrarDicaInicio();
+  atualizarLembretesStatus();
+  iniciarVerificacaoLembretes(rodarLembretes);
   desenhar();
 }
 

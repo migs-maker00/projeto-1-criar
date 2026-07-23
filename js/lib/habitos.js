@@ -4,6 +4,60 @@ export const HORARIOS_AGUA_PADRAO = [
   "06:30", "09:30", "12:00", "15:30", "18:00", "21:00",
 ];
 
+export const IMPORTANCIA = {
+  ESSENCIAL: 1,
+  IMPORTANTE: 2,
+  NORMAL: 3,
+};
+
+export const ROTULOS_IMPORTANCIA = {
+  1: "Essencial",
+  2: "Importante",
+  3: "Normal",
+};
+
+export function normalizarImportancia(valor) {
+  const n = Number(valor);
+  if (n === 1 || n === 2) return n;
+  return 3;
+}
+
+export function rotuloImportancia(habito) {
+  return ROTULOS_IMPORTANCIA[normalizarImportancia(habito.importancia)] || "Normal";
+}
+
+export function listaMicroPassos(habito) {
+  if (!Array.isArray(habito.microPassos)) return [];
+  return habito.microPassos
+    .map((p) => (typeof p === "string" ? p.trim() : ""))
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+export function microFeitosNoDia(habito, chave) {
+  const lista = habito.microHistorico?.[chave];
+  return Array.isArray(lista) ? lista : [];
+}
+
+export function microPassoFeito(habito, chave, indice) {
+  return microFeitosNoDia(habito, chave).includes(indice);
+}
+
+export function todosMicroFeitos(habito, chave) {
+  const passos = listaMicroPassos(habito);
+  if (!passos.length) return false;
+  const feitos = microFeitosNoDia(habito, chave);
+  return passos.every((_, i) => feitos.includes(i));
+}
+
+export function parseMicroPassosTexto(texto) {
+  return (texto || "")
+    .split("\n")
+    .map((l) => l.trim().replace(/^[-•*]\s*/, ""))
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
 export function passosTotal(habito) {
   const n = Number(habito.lembretes);
   return Number.isFinite(n) && n > 1 ? Math.round(n) : 1;
@@ -77,8 +131,17 @@ export function normalizarHabito(h) {
     categoria: h.categoria || "Geral",
     metaSemanal: h.metaSemanal || 7,
     horario: h.horario || "",
+    importancia: normalizarImportancia(h.importancia),
     historico: h.historico || {},
   };
+  if (typeof h.contextoLembrete === "string" && h.contextoLembrete.trim()) {
+    habito.contextoLembrete = h.contextoLembrete.trim().slice(0, 120);
+  }
+  const micro = listaMicroPassos(h);
+  if (micro.length) habito.microPassos = micro;
+  if (h.microHistorico && typeof h.microHistorico === "object") {
+    habito.microHistorico = h.microHistorico;
+  }
   if (Number.isFinite(lembretes) && lembretes > 1) {
     habito.lembretes = Math.round(lembretes);
   }

@@ -1653,6 +1653,82 @@ body {
   50% { transform: scale(1.01); box-shadow: 0 0 0 3px color-mix(in srgb, var(--marca) 25%, transparent); }
 }
 
+.badge-importancia {
+  border: none;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.badge-importancia.imp-1 {
+  background: color-mix(in srgb, #c94b4b 22%, var(--superficie-elevada));
+  color: #8b2e2e;
+}
+
+.badge-importancia.imp-2 {
+  background: color-mix(in srgb, #c9a24d 28%, var(--superficie-elevada));
+  color: #7a5a12;
+}
+
+.badge-importancia.imp-3 {
+  background: color-mix(in srgb, var(--texto-suave) 15%, var(--superficie-elevada));
+  color: var(--texto-suave);
+}
+
+.micro-campo {
+  margin-bottom: 12px;
+}
+
+.micro-lista {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.micro-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--texto);
+}
+
+.micro-completo-dica {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  color: var(--marca);
+}
+
+.bloco-revisao {
+  border: 1px dashed color-mix(in srgb, var(--marca) 30%, var(--borda));
+}
+
+.revisao-label {
+  display: block;
+  margin: 10px 0 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.revisao-campo {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.lembretes-status {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+  color: var(--texto-suave);
+}
+
 @media (max-width: 480px) {
   html,
   body,

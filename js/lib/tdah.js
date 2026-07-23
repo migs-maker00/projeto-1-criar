@@ -92,9 +92,23 @@ export function sugestaoAgora(habitos, chave, { estaPendente, ordenarPorHorario,
     if (habito) return { habito, motivo: "Sua prioridade de hoje" };
   }
 
+  const porImportancia = [...pendentes].sort((a, b) => {
+    const ia = normalizarImportancia(a.importancia);
+    const ib = normalizarImportancia(b.importancia);
+    if (ia !== ib) return ia - ib;
+    return 0;
+  });
+
+  const essencial = porImportancia.find((h) => normalizarImportancia(h.importancia) === 1);
+  if (essencial) {
+    return { habito: essencial, motivo: "Hábito essencial — maior impacto" };
+  }
+
   const agora = new Date();
   const minutosAgora = agora.getHours() * 60 + agora.getMinutes();
-  const comHorario = ordenarPorHorario(pendentes.filter((h) => h.horario));
+  const comHorario = ordenarPorHorario(
+    porImportancia.filter((h) => h.horario)
+  );
 
   for (const habito of comHorario) {
     const [hh, mm] = habito.horario.split(":").map(Number);
@@ -107,7 +121,19 @@ export function sugestaoAgora(habitos, chave, { estaPendente, ordenarPorHorario,
     return { habito: comHorario[0], motivo: "Próximo da lista por horário" };
   }
 
-  return { habito: pendentes[0], motivo: "Um passo de cada vez" };
+  return { habito: porImportancia[0], motivo: "Um passo de cada vez" };
+}
+
+function normalizarImportancia(valor) {
+  const n = Number(valor);
+  if (n === 1 || n === 2) return n;
+  return 3;
+}
+
+function compararImportancia(a, b) {
+  const diff = normalizarImportancia(a.importancia) - normalizarImportancia(b.importancia);
+  if (diff !== 0) return diff;
+  return 0;
 }
 
 export function ordenarComPrioridades(lista, chave, mapa = carregarPrioridades()) {
@@ -124,5 +150,36 @@ export function ordenarComPrioridades(lista, chave, mapa = carregarPrioridades()
     if (!prio.includes(habito.id)) resto.push(habito);
   });
 
+  resto.sort(compararImportancia);
   return [...emFoco, ...resto];
+}
+
+export function carregarRevisaoNoturna() {
+  try {
+    return JSON.parse(localStorage.getItem("revisao-noturna") || "{}");
+  } catch {
+    return {};
+  }
+}
+
+export function salvarRevisaoNoturna(mapa) {
+  localStorage.setItem("revisao-noturna", JSON.stringify(mapa));
+}
+
+export function revisaoDoDia(chave, mapa = carregarRevisaoNoturna()) {
+  const dados = mapa[chave];
+  if (!dados || typeof dados !== "object") {
+    return { feito: "", ficou: "", amanha: "" };
+  }
+  return {
+    feito: dados.feito || "",
+    ficou: dados.ficou || "",
+    amanha: dados.amanha || "",
+  };
+}
+
+export function definirRevisaoCampo(chave, campo, valor, mapa = carregarRevisaoNoturna()) {
+  const atual = revisaoDoDia(chave, mapa);
+  atual[campo] = valor;
+  salvarRevisaoNoturna({ ...mapa, [chave]: atual });
 }
