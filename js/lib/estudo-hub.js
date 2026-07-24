@@ -25,6 +25,7 @@ function estadoInicial() {
     categoriaLivro: "todos",
     temaLivro: null,
     falaFeedback: null,
+    notasMidia: {},
   };
 }
 
@@ -42,6 +43,8 @@ export function carregarEstudo() {
           ? dados.vocabulario
           : [...VOCAB_PADRAO],
       sessao: { ...estadoInicial().sessao, ...(dados.sessao || {}) },
+      notasMidia:
+        dados.notasMidia && typeof dados.notasMidia === "object" ? { ...dados.notasMidia } : {},
     };
   } catch {
     return estadoInicial();
@@ -163,9 +166,27 @@ function tituloPadrao(tipo) {
 
 export function removerLink(dados, id) {
   const links = dados.links.filter((l) => l.id !== id);
+  const notasMidia = { ...(dados.notasMidia || {}) };
+  delete notasMidia[id];
   const linkAtivoId =
     dados.linkAtivoId === id ? links[0]?.id || null : dados.linkAtivoId;
-  return { ...dados, links, linkAtivoId };
+  return { ...dados, links, linkAtivoId, notasMidia };
+}
+
+export function notaMidia(dados, linkId) {
+  if (!linkId) return "";
+  return (dados.notasMidia || {})[linkId] || "";
+}
+
+export function salvarNotaMidia(dados, linkId, texto) {
+  if (!linkId) return dados;
+  const notasMidia = { ...(dados.notasMidia || {}), [linkId]: String(texto ?? "") };
+  if (!notasMidia[linkId].trim()) delete notasMidia[linkId];
+  return { ...dados, notasMidia };
+}
+
+export function linkTemNota(dados, linkId) {
+  return Boolean(notaMidia(dados, linkId).trim());
 }
 
 export function linkAtivo(dados) {
