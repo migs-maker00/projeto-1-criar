@@ -1,4 +1,4 @@
-import { APP_VERSION } from "./config.js?v=2.5.4";
+import { APP_VERSION } from "./config.js?v=2.6.0";
 import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=2.4.3";
 import {
   criarHabitoAgua,

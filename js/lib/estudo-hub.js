@@ -116,6 +116,11 @@ function escapeAttr(s) {
     .replace(/</g, "&lt;");
 }
 
+function urlJaExiste(dados, url) {
+  const alvo = (url || "").trim();
+  return dados.links.some((l) => l.url.trim() === alvo);
+}
+
 export function adicionarLink(dados, titulo, url) {
   const parsed = parseMediaUrl(url);
   if (!parsed) return dados;
@@ -128,6 +133,25 @@ export function adicionarLink(dados, titulo, url) {
   };
   const links = [...dados.links, link];
   return { ...dados, links, linkAtivoId: link.id };
+}
+
+export function adicionarLinkSugerido(dados, sugestao) {
+  if (!sugestao?.url) return dados;
+  const url = sugestao.url.trim();
+  if (urlJaExiste(dados, url)) {
+    const existente = dados.links.find((l) => l.url.trim() === url);
+    return existente ? { ...dados, linkAtivoId: existente.id } : dados;
+  }
+  const parsed = parseMediaUrl(url);
+  if (!parsed) return dados;
+  const tipo = sugestao.tipo || tipoLinkDetectado(url);
+  const link = {
+    id: `l${Date.now()}`,
+    titulo: (sugestao.titulo || "").trim() || tituloPadrao(tipo),
+    url: parsed.url,
+    tipo,
+  };
+  return { ...dados, links: [...dados.links, link], linkAtivoId: link.id };
 }
 
 function tituloPadrao(tipo) {

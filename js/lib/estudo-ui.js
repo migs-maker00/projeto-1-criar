@@ -2,6 +2,7 @@
 
 import {
   adicionarLink,
+  adicionarLinkSugerido,
   adicionarPalavra,
   avancarPalavra,
   falarTexto,
@@ -38,6 +39,11 @@ import {
   registrarResposta,
   selecionarLivro,
 } from "./livros-pratica.js";
+import {
+  linkSugeridoPorId,
+  linksSugeridosPorTipo,
+  urlJaSalva,
+} from "./estudo-links-sugeridos.js";
 
 function esc(s) {
   return String(s)
@@ -92,6 +98,32 @@ function renderFormLink(placeholder) {
     </form>`;
 }
 
+function renderSugestoesLinks(dados, tipo) {
+  const livro = livroAtivo();
+  const sugestoes = linksSugeridosPorTipo(tipo, livro.id).filter((s) => !urlJaSalva(dados, s.url));
+  if (!sugestoes.length) return "";
+
+  const icone = tipo === "video" ? "▶" : "🎧";
+  return `
+    <div class="estudo-sugestoes">
+      <p class="estudo-form-rotulo">Sugestões para ${esc(livro.titulo)}</p>
+      <ul class="estudo-sugestoes-lista">
+        ${sugestoes
+          .map(
+            (s) => `
+          <li>
+            <button type="button" class="estudo-sugestao-btn" data-estudo-sugerir="${s.id}">
+              <span class="estudo-sugestao-icone">${icone}</span>
+              <span class="estudo-sugestao-titulo">${esc(s.titulo)}</span>
+              <span class="estudo-sugestao-add">+ Adicionar</span>
+            </button>
+          </li>`
+          )
+          .join("")}
+      </ul>
+    </div>`;
+}
+
 function renderListaLinks(links, ativoId, filtro) {
   if (!links.length) {
     return `<p class="estudo-vazio">Nenhum link ainda. Cole um URL do YouTube, Spotify ou arquivo de áudio (.mp3).</p>`;
@@ -123,6 +155,7 @@ function renderAssistir(dados) {
       <h2 class="bloco-titulo">Assistir</h2>
       <p class="bloco-apoio">Vídeos do YouTube aqui dentro — sem sair do app.</p>
       ${player}
+      ${renderSugestoesLinks(dados, "video")}
       ${renderListaLinks(links, dados.linkAtivoId, "video")}
       ${renderFormLink("https://youtube.com/watch?v=...")}
       <div class="estudo-acoes-timer">
@@ -144,6 +177,7 @@ function renderOuvir(dados) {
       <h2 class="bloco-titulo">Ouvir</h2>
       <p class="bloco-apoio">Podcast, Spotify ou arquivo de áudio (.mp3).</p>
       ${player}
+      ${renderSugestoesLinks(dados, "audio")}
       ${renderListaLinks(links, ativo?.id, "audio")}
       ${renderFormLink("https://open.spotify.com/episode/... ou link .mp3")}
       <div class="estudo-acoes-timer">
@@ -413,7 +447,7 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
     if (!origem) return;
 
     const alvo = origem.closest(
-      "[data-estudo-acao], [data-estudo-aba], [data-estudo-link], [data-estudo-remover], [data-estudo-timer], [data-estudo-marcar], [data-estudo-ouvir], [data-estudo-mic], [data-estudo-selecionar-livro], [data-estudo-cat], .estudo-pratica-confirmar, .estudo-pratica-opcao, [data-ir-painel]"
+      "[data-estudo-acao], [data-estudo-aba], [data-estudo-link], [data-estudo-remover], [data-estudo-sugerir], [data-estudo-timer], [data-estudo-marcar], [data-estudo-ouvir], [data-estudo-mic], [data-estudo-selecionar-livro], [data-estudo-cat], .estudo-pratica-confirmar, .estudo-pratica-opcao, [data-ir-painel]"
     );
 
     if (!alvo) return;
@@ -449,6 +483,16 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
 
     if (alvo.dataset.estudoCat) {
       setState({ ...dados, categoriaLivro: alvo.dataset.estudoCat });
+      return;
+    }
+
+    if (alvo.dataset.estudoSugerir) {
+      const sug = linkSugeridoPorId(alvo.dataset.estudoSugerir);
+      if (!sug) return;
+      const novo = adicionarLinkSugerido(dados, sug);
+      const aba = sug.tipo === "video" ? "assistir" : "ouvir";
+      setState({ ...novo, abaAtiva: aba });
+      mostrarFeedback?.("Link adicionado! Toque nele para abrir.");
       return;
     }
 
