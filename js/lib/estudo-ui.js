@@ -14,7 +14,7 @@ import {
   parseMediaUrl,
   removerLink,
   resumoSessao,
-} from "./estudo-hub.js?v=2.7.1";
+} from "./estudo-hub.js?v=2.7.2";
 import {
   escutarPronuncia,
   pararEscuta,
@@ -29,7 +29,6 @@ import {
 import {
   buscarLivros,
   carregarProgressoLivro,
-  CATEGORIAS_LIVRO,
   livroAtivo,
   META_PERGUNTAS_DIA,
   metaDiariaAtingida,
@@ -38,13 +37,13 @@ import {
   progressoGeral,
   registrarResposta,
   selecionarLivro,
-} from "./livros-pratica.js?v=2.7.1";
-import { TEMAS_LIVRO } from "./livros-temas.js?v=2.7.1";
+} from "./livros-pratica.js?v=2.7.2";
+import { CATEGORIAS_LIVRO, TEMAS_LIVRO } from "./livros-dados.js?v=2.7.2";
 import {
   linkSugeridoPorId,
   linksSugeridosPorTipo,
   urlJaSalva,
-} from "./estudo-links-sugeridos.js?v=2.7.1";
+} from "./estudo-links-sugeridos.js?v=2.7.2";
 
 function esc(s) {
   return String(s)

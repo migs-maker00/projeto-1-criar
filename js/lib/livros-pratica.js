@@ -4,11 +4,10 @@ import {
   LIVRO_PADRAO,
   TODOS_LIVROS,
   CATEGORIAS_LIVRO,
-  TEMAS_LIVRO,
   temaPorId,
-} from "./livros-dados.js";
+} from "./livros-dados.js?v=2.7.2";
 
-export { LIVRO_PADRAO, TODOS_LIVROS, CATEGORIAS_LIVRO, TEMAS_LIVRO };
+export { LIVRO_PADRAO, TODOS_LIVROS, CATEGORIAS_LIVRO };
 export const LIVROS_DISPONIVEIS = TODOS_LIVROS;
 
 const CHAVE_PROGRESSO = "livro-pratica-progresso-v2";
