@@ -1,4 +1,4 @@
-import { APP_VERSION } from "./config.js?v=2.4.3";
+import { APP_VERSION } from "./config.js?v=2.5.0";
 import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=2.4.3";
 import {
   criarHabitoAgua,
@@ -152,6 +152,8 @@ const graficoMedia = document.getElementById("grafico-media");
 const botaoTema = document.getElementById("botao-tema");
 const filtros = document.getElementById("filtros");
 const notaHoje = document.getElementById("nota-hoje");
+const notaHojeSalvar = document.getElementById("nota-hoje-salvar");
+const notaHojeStatus = document.getElementById("nota-hoje-status");
 const calendarioGrade = document.getElementById("calendario-grade");
 const botaoExportar = document.getElementById("botao-exportar");
 const entradaImportar = document.getElementById("entrada-importar");
@@ -162,6 +164,8 @@ const cardsInsights = document.getElementById("cards-insights");
 const navPaineis = document.querySelector(".nav-paineis");
 const diarioData = document.getElementById("diario-data");
 const diarioTexto = document.getElementById("diario-texto");
+const diarioSalvar = document.getElementById("diario-salvar");
+const diarioStatus = document.getElementById("diario-status");
 const diarioLegenda = document.getElementById("diario-data-legenda");
 const diarioHojeBotao = document.getElementById("diario-hoje");
 const listaDiario = document.getElementById("lista-diario");
@@ -322,7 +326,57 @@ function salvarNotas() {
   }
 }
 
-function definirNota(chave, texto) {
+function mostrarStatusCampo(elemento, texto, tipo = "ok") {
+  if (!elemento) return;
+  elemento.textContent = texto;
+  elemento.className = "diario-status diario-status-" + tipo;
+  clearTimeout(mostrarStatusCampo._timers?.[elemento.id]);
+  if (!mostrarStatusCampo._timers) mostrarStatusCampo._timers = {};
+  if (texto) {
+    mostrarStatusCampo._timers[elemento.id] = setTimeout(() => {
+      elemento.textContent = "";
+      elemento.className = "diario-status";
+    }, 3500);
+  }
+}
+
+function persistirNotaHojeAtual() {
+  if (!notaHoje) return;
+  definirNota(hojeStr(), notaHoje.value, { silencioso: true });
+}
+
+function persistirNotaDiarioAtual() {
+  if (!diarioTexto || !dataDiarioSelecionada) return;
+  definirNota(dataDiarioSelecionada, diarioTexto.value, { silencioso: true });
+}
+
+function salvarNotaHojeExplicito() {
+  if (!notaHoje) return;
+  const chave = hojeStr();
+  const texto = notaHoje.value;
+  definirNota(chave, texto, { silencioso: true });
+  if (texto.trim()) {
+    mostrarStatusCampo(notaHojeStatus, "Anotações salvas ✓");
+    mostrarFeedback("Anotações de hoje salvas.");
+  } else {
+    mostrarStatusCampo(notaHojeStatus, "Nada para salvar ainda", "aviso");
+  }
+}
+
+function salvarDiarioExplicito() {
+  if (!diarioTexto || !dataDiarioSelecionada) return;
+  const texto = diarioTexto.value;
+  definirNota(dataDiarioSelecionada, texto, { silencioso: true });
+  if (texto.trim()) {
+    mostrarStatusCampo(diarioStatus, "Entrada salva ✓");
+    mostrarFeedback("Entrada do diário salva.");
+  } else {
+    mostrarStatusCampo(diarioStatus, "Escreva algo antes de salvar", "aviso");
+  }
+}
+
+function definirNota(chave, texto, opcoes = {}) {
+  const { silencioso = false } = opcoes;
   const limpo = texto.trim();
   if (limpo) {
     notas[chave] = texto;
@@ -330,11 +384,31 @@ function definirNota(chave, texto) {
     delete notas[chave];
   }
   salvarNotas();
-  if (chave === hojeStr()) notaHoje.value = texto;
-  if (chave === dataDiarioSelecionada) diarioTexto.value = texto;
+  if (chave === hojeStr() && notaHoje && document.activeElement !== notaHoje) {
+    notaHoje.value = texto;
+  }
+  if (chave === dataDiarioSelecionada && diarioTexto && document.activeElement !== diarioTexto) {
+    diarioTexto.value = texto;
+  }
   desenharListaDiario();
   desenharResumoAgenda();
   desenharFilosofia();
+  if (!silencioso) {
+    agendarStatusAutoSalvo(chave);
+  }
+}
+
+function agendarStatusAutoSalvo(chave) {
+  if (!agendarStatusAutoSalvo._timers) agendarStatusAutoSalvo._timers = {};
+  clearTimeout(agendarStatusAutoSalvo._timers[chave]);
+  agendarStatusAutoSalvo._timers[chave] = setTimeout(() => {
+    if (chave === dataDiarioSelecionada) {
+      mostrarStatusCampo(diarioStatus, "Salvo automaticamente");
+    }
+    if (chave === hojeStr()) {
+      mostrarStatusCampo(notaHojeStatus, "Salvo automaticamente");
+    }
+  }, 900);
 }
 
 function formatarDataBR(chave) {
@@ -353,6 +427,13 @@ function formatarDataCurtaBR(chave) {
 }
 
 function carregarNotaDiario(chave) {
+  const trocandoData =
+    dataDiarioSelecionada && chave !== dataDiarioSelecionada && diarioTexto;
+
+  if (trocandoData) {
+    definirNota(dataDiarioSelecionada, diarioTexto.value, { silencioso: true });
+  }
+
   dataDiarioSelecionada = chave;
   diarioData.value = chave;
   diarioTexto.value = notas[chave] || "";
@@ -1383,6 +1464,13 @@ function desenharCardsInsights() {
 }
 
 function ativarPainel(nome) {
+  if (painelAtivo === "diario" && nome !== "diario") {
+    persistirNotaDiarioAtual();
+  }
+  if (painelAtivo === "hoje" && nome !== "hoje") {
+    persistirNotaHojeAtual();
+  }
+
   painelAtivo = nome;
 
   document.querySelectorAll(".nav-item").forEach((botao) => {
@@ -1411,6 +1499,9 @@ function ativarPainel(nome) {
   }
   if (nome === "estudo") {
     desenharPainelEstudo();
+  }
+  if (nome === "diario") {
+    carregarNotaDiario(dataDiarioSelecionada || hojeStr());
   }
 }
 
@@ -2358,9 +2449,13 @@ function ligarTodosEventos() {
   notaHoje?.addEventListener("input", () => {
     definirNota(hojeStr(), notaHoje.value);
   });
+  notaHoje?.addEventListener("blur", persistirNotaHojeAtual);
+  notaHojeSalvar?.addEventListener("click", salvarNotaHojeExplicito);
   diarioTexto?.addEventListener("input", () => {
     definirNota(dataDiarioSelecionada, diarioTexto.value);
   });
+  diarioTexto?.addEventListener("blur", persistirNotaDiarioAtual);
+  diarioSalvar?.addEventListener("click", salvarDiarioExplicito);
   diarioData?.addEventListener("change", () => {
     if (diarioData.value) carregarNotaDiario(diarioData.value);
   });
@@ -2371,9 +2466,6 @@ function ligarTodosEventos() {
     const botao = evento.target.closest(".nav-item");
     if (!botao) return;
     ativarPainel(botao.dataset.painel);
-    if (botao.dataset.painel === "diario") {
-      carregarNotaDiario(dataDiarioSelecionada || hojeStr());
-    }
   });
   botaoDicaFechar?.addEventListener("click", fecharDicaInicio);
   botaoInbox?.addEventListener("click", capturarInbox);
@@ -2473,7 +2565,16 @@ export function initApp() {
     else if (cronometroAtivo()) atualizarTimerUI(segundosCronometro());
   }, 1000);
   document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      persistirNotaHojeAtual();
+      persistirNotaDiarioAtual();
+      return;
+    }
     if (document.visibilityState === "visible") rodarLembretes();
+  });
+  window.addEventListener("pagehide", () => {
+    persistirNotaHojeAtual();
+    persistirNotaDiarioAtual();
   });
   processarHashHabito();
   if (!rotinaJaMontada()) {

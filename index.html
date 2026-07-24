@@ -20,7 +20,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=2.4.3" />
+  <link rel="stylesheet" href="style.css?v=2.5.0" />
 </head>
 <body>
   <div class="ambiente">
@@ -257,7 +257,8 @@
         <section class="bloco">
           <h2 class="bloco-titulo">Anotações do dia</h2>
           <p class="bloco-apoio">
-            O que marcou este dia? O histórico fica na aba <strong>Diário</strong>.
+            O que marcou este dia? O histórico fica na aba <strong>Diário</strong> — é a mesma
+            entrada de hoje.
           </p>
           <textarea
             id="nota-hoje"
@@ -265,6 +266,10 @@
             rows="3"
             placeholder="Anotações, lembretes, como foi o dia…"
           ></textarea>
+          <div class="diario-acoes">
+            <button type="button" id="nota-hoje-salvar" class="botao-secundario">Salvar anotações</button>
+            <p id="nota-hoje-status" class="diario-status" aria-live="polite"></p>
+          </div>
         </section>
       </section>
 
@@ -273,7 +278,8 @@
         <section class="bloco bloco-primeiro">
           <h2 class="bloco-titulo">Diário</h2>
           <p class="bloco-apoio">
-            Cada dia guarda uma entrada. Escolha uma data para ler ou editar como você estava se sentindo.
+            Cada dia guarda uma entrada. Escolha uma data para ler ou editar. Salva sozinho enquanto
+            você escreve — use <strong>Salvar entrada</strong> para garantir.
           </p>
 
           <div class="diario-controles">
@@ -291,6 +297,10 @@
             rows="6"
             placeholder="Escreva sobre este dia…"
           ></textarea>
+          <div class="diario-acoes">
+            <button type="button" id="diario-salvar" class="botao-secundario">Salvar entrada</button>
+            <p id="diario-status" class="diario-status" aria-live="polite"></p>
+          </div>
         </section>
 
         <section class="bloco">
@@ -456,7 +466,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script type="module" src="js/main.js?v=2.4.3"></script>
+  <script type="module" src="js/main.js?v=2.5.0"></script>
   <script defer src="sync.js?v=4"></script>
 </body>
 </html>
