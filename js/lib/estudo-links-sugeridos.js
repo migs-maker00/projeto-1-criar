@@ -173,6 +173,64 @@ export const LINKS_SUGERIDOS = [
     titulo: "Trabalho focado — ideias de Cal Newport",
     url: "https://www.youtube.com/watch?v=3E7hkPZ5ZzM",
   },
+
+  // —— Criadores favoritos ——
+  {
+    id: "sug-clovis-brio",
+    livroId: null,
+    tipo: "video",
+    titulo: "Clóvis de Barros — Motivação para estudar (BRIO)",
+    url: "https://www.youtube.com/watch?v=TRPBY_lxJfE",
+  },
+  {
+    id: "sug-clovis-platao",
+    livroId: "platao-republica",
+    tipo: "video",
+    titulo: "Clóvis de Barros — Platão e o Mito da Caverna",
+    url: "https://www.youtube.com/watch?v=ZgR6Sjk8O8w",
+  },
+  {
+    id: "sug-clovis-estoicismo",
+    livroId: null,
+    tipo: "video",
+    titulo: "Clóvis de Barros — Estoicismo (Os Sócios Podcast)",
+    url: "https://www.youtube.com/watch?v=iTFuK50vY_s",
+  },
+  {
+    id: "sug-ctd-espaco",
+    livroId: null,
+    tipo: "video",
+    titulo: "Ciência Todo Dia — O Espaço-Tempo Explicado",
+    url: "https://www.youtube.com/watch?v=kJ5xNaSIeTI",
+  },
+  {
+    id: "sug-ctd-bigbang",
+    livroId: null,
+    tipo: "video",
+    titulo: "Ciência Todo Dia — O Big Bang Explicado",
+    url: "https://www.youtube.com/watch?v=nNAuuTIf3LE",
+  },
+  {
+    id: "sug-pinho-coisas",
+    livroId: null,
+    tipo: "video",
+    titulo: "Pinho — Será que você tem coisas demais?",
+    url: "https://www.youtube.com/watch?v=HP58-xxWt9E",
+  },
+  {
+    id: "sug-ludo-filosofia",
+    livroId: null,
+    tipo: "video",
+    titulo: "Ludo Viajante — Ideias da filosofia (pra ouvir estudando)",
+    url: "https://www.youtube.com/watch?v=aY3IMJfBCpw",
+  },
+  {
+    id: "sug-ludo-sartre",
+    livroId: "sartre-existencialismo",
+    tipo: "video",
+    titulo: "Ludo Viajante — Cansado da vida? Filosofia de Sartre",
+    url: "https://www.youtube.com/watch?v=2YtBZaqe3Mo",
+  },
 ];
 
 export function linksSugeridosPorTipo(tipo, livroId = null) {
