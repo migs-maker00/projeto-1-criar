@@ -1,7 +1,8 @@
-import { APP_VERSION } from "./config.js?v=2.5.2";
+import { APP_VERSION } from "./config.js?v=2.5.3";
 import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=2.4.3";
 import {
   criarHabitoAgua,
+  criarSelectMetaSemanal,
   detectarTextoAgua,
   ehHabitoAgua,
   ehAtivoHoje,
@@ -16,11 +17,13 @@ import {
   nomeAguaLimpo,
   normalizarHabito,
   normalizarImportancia,
+  normalizarMetaSemanal,
   parseMicroPassosTexto,
   parsePrepararTexto,
   passosTotal,
   progressoNoDia,
   rotuloImportancia,
+  rotuloMetaSemanal,
   textoHorariosLembretes,
   textoPlanoB,
   todosMicroFeitos,
@@ -782,9 +785,21 @@ function removerHabito(id) {
 }
 
 function renomearHabito(id, novoNome) {
-  habitos = habitos.map((habito) =>
-    habito.id === id ? { ...habito, nome: novoNome } : habito
-  );
+  salvarHabitoEdicao(id, { nome: novoNome });
+}
+
+function salvarHabitoEdicao(id, { nome, metaSemanal } = {}) {
+  habitos = habitos.map((habito) => {
+    if (habito.id !== id) return habito;
+    const atualizado = { ...habito };
+    if (typeof nome === "string" && nome.trim()) {
+      atualizado.nome = nome.trim();
+    }
+    if (metaSemanal !== undefined) {
+      atualizado.metaSemanal = normalizarMetaSemanal(metaSemanal);
+    }
+    return atualizado;
+  });
   salvar();
   desenhar();
 }
@@ -799,23 +814,46 @@ function reordenar(idOrigem, idDestino) {
   desenhar();
 }
 
-function iniciarEdicao(habito, linha, nomeSpan) {
+function iniciarEdicao(habito, linha) {
+  const form = document.createElement("div");
+  form.className = "item-edicao";
+
   const input = document.createElement("input");
   input.type = "text";
   input.className = "editar-nome";
   input.value = habito.nome;
   input.maxLength = 60;
+  input.setAttribute("aria-label", "Nome do hábito");
+
+  const rotuloMeta = document.createElement("label");
+  rotuloMeta.className = "editar-meta-rotulo";
+  rotuloMeta.textContent = "Na semana";
+
+  const select = criarSelectMetaSemanal(habito.metaSemanal);
+
+  form.appendChild(input);
+  form.appendChild(rotuloMeta);
+  form.appendChild(select);
 
   let finalizado = false;
   function confirmar() {
     if (finalizado) return;
     finalizado = true;
-    const novo = input.value.trim();
-    if (novo) {
-      renomearHabito(habito.id, novo);
+    const novoNome = input.value.trim();
+    if (novoNome) {
+      salvarHabitoEdicao(habito.id, {
+        nome: novoNome,
+        metaSemanal: Number(select.value),
+      });
+      mostrarFeedback("Hábito atualizado.");
     } else {
       desenhar();
     }
+  }
+
+  function cancelar(evento) {
+    if (evento?.relatedTarget && form.contains(evento.relatedTarget)) return;
+    confirmar();
   }
 
   input.addEventListener("keydown", (evento) => {
@@ -825,11 +863,44 @@ function iniciarEdicao(habito, linha, nomeSpan) {
       desenhar();
     }
   });
-  input.addEventListener("blur", confirmar);
+  select.addEventListener("keydown", (evento) => {
+    if (evento.key === "Enter") confirmar();
+    if (evento.key === "Escape") {
+      finalizado = true;
+      desenhar();
+    }
+  });
+  input.addEventListener("blur", cancelar);
+  select.addEventListener("blur", cancelar);
+  select.addEventListener("change", confirmar);
 
-  linha.replaceChild(input, nomeSpan);
+  linha.replaceWith(form);
   input.focus();
   input.select();
+}
+
+function iniciarEdicaoMeta(habito, chip) {
+  const select = criarSelectMetaSemanal(habito.metaSemanal, "meta-chip-select campo-opcao");
+  let finalizado = false;
+
+  function confirmar() {
+    if (finalizado) return;
+    finalizado = true;
+    salvarHabitoEdicao(habito.id, { metaSemanal: Number(select.value) });
+    mostrarFeedback("Frequência atualizada.");
+  }
+
+  select.addEventListener("change", confirmar);
+  select.addEventListener("blur", confirmar);
+  select.addEventListener("keydown", (evento) => {
+    if (evento.key === "Escape") {
+      finalizado = true;
+      desenhar();
+    }
+  });
+
+  chip.replaceWith(select);
+  select.focus();
 }
 
 function impedirArrasteNoBotao(botao) {
@@ -2214,6 +2285,19 @@ function criarItem(habito) {
   tag.textContent = habito.categoria || "Geral";
   meta.appendChild(tag);
 
+  const chipMeta = document.createElement("button");
+  chipMeta.type = "button";
+  chipMeta.className = "meta-chip";
+  chipMeta.textContent = rotuloMetaSemanal(habito.metaSemanal);
+  chipMeta.title = "Editar vezes na semana";
+  chipMeta.setAttribute("aria-label", `Frequência: ${rotuloMetaSemanal(habito.metaSemanal)}. Toque para editar.`);
+  impedirArrasteNoBotao(chipMeta);
+  chipMeta.addEventListener("click", (evento) => {
+    evento.stopPropagation();
+    iniciarEdicaoMeta(habito, chipMeta);
+  });
+  meta.appendChild(chipMeta);
+
   if (multi) {
     const passos = document.createElement("div");
     passos.className = "passos-pontos";
@@ -2244,9 +2328,10 @@ function criarItem(habito) {
     }
   }
 
-  if (habito.metaSemanal < 7) {
+  const metaAlvo = normalizarMetaSemanal(habito.metaSemanal);
+  if (metaAlvo < 7) {
     const feitosSemana = feitosNaSemana(habito);
-    const alvo = habito.metaSemanal;
+    const alvo = metaAlvo;
     const semana = document.createElement("span");
     semana.className = "meta-info" + (feitosSemana >= alvo ? " cumprida" : "");
     semana.textContent = `${feitosSemana}/${alvo} esta semana`;
@@ -2300,12 +2385,12 @@ function criarItem(habito) {
   const botaoEditar = document.createElement("button");
   botaoEditar.className = "botao-editar";
   botaoEditar.textContent = "✎";
-  botaoEditar.title = "Editar nome";
-  botaoEditar.setAttribute("aria-label", "Editar nome");
+  botaoEditar.title = "Editar nome e frequência";
+  botaoEditar.setAttribute("aria-label", "Editar nome e frequência");
   impedirArrasteNoBotao(botaoEditar);
   botaoEditar.addEventListener("click", (evento) => {
     evento.stopPropagation();
-    iniciarEdicao(habito, linha, nome);
+    iniciarEdicao(habito, linha);
   });
 
   const botaoRemover = document.createElement("button");

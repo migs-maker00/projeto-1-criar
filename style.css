@@ -1116,6 +1116,7 @@ body {
 
 .editar-nome {
   flex: 1;
+  min-width: 0;
   padding: 4px 8px;
   border: 1px solid var(--destaque);
   border-radius: 8px;
@@ -1124,6 +1125,51 @@ body {
   color: var(--texto);
   background: var(--superficie);
   outline: none;
+}
+
+.item-edicao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  width: 100%;
+}
+
+.item-edicao .editar-nome {
+  flex: 1 1 160px;
+}
+
+.editar-meta-rotulo {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.editar-meta,
+.meta-chip-select {
+  min-width: 118px;
+  font-size: 0.82rem;
+}
+
+.meta-chip {
+  border: 1px solid color-mix(in srgb, var(--marca) 25%, var(--borda));
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--marca);
+  background: color-mix(in srgb, var(--marca) 8%, var(--superficie-elevada));
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.5;
+  touch-action: manipulation;
+}
+
+.meta-chip:hover {
+  border-color: var(--marca);
+  background: color-mix(in srgb, var(--marca) 14%, var(--superficie-elevada));
 }
 
 .botao-editar,
