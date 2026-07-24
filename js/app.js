@@ -1,4 +1,4 @@
-import { APP_VERSION } from "./config.js?v=2.5.1";
+import { APP_VERSION } from "./config.js?v=2.5.2";
 import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=2.4.3";
 import {
   criarHabitoAgua,
@@ -126,6 +126,7 @@ import {
   revisaoManhaDoDia,
   salvarPrioridades,
   salvarTemaSemana,
+  sincronizarPrioridadesOrfas,
   sugestaoAgora,
 } from "./lib/tdah.js?v=2.4.3";
 
@@ -175,6 +176,7 @@ const sugestaoHabito = document.getElementById("sugestao-habito");
 const sugestaoTexto = document.getElementById("sugestao-texto");
 const botaoUsarSugestao = document.getElementById("botao-usar-sugestao");
 const feedbackAdicao = document.getElementById("feedback-adicao");
+const feedbackGlobal = document.getElementById("feedback-global");
 const tituloPainel = document.querySelector(".titulo-dia");
 const rotinaPerfil = document.getElementById("rotina-perfil");
 const rotinaHorarios = document.getElementById("rotina-horarios");
@@ -620,13 +622,14 @@ function novoIdHabito() {
 }
 
 function mostrarFeedback(texto, tipo = "ok") {
-  if (!feedbackAdicao) return;
-  feedbackAdicao.textContent = texto;
-  feedbackAdicao.className = "feedback-adicao feedback-" + tipo;
-  feedbackAdicao.hidden = false;
+  const alvo = feedbackGlobal || feedbackAdicao;
+  if (!alvo) return;
+  alvo.textContent = texto;
+  alvo.className = (feedbackGlobal ? "feedback-global" : "feedback-adicao") + " feedback-" + tipo;
+  alvo.hidden = false;
   clearTimeout(mostrarFeedback._timer);
   mostrarFeedback._timer = setTimeout(() => {
-    feedbackAdicao.hidden = true;
+    alvo.hidden = true;
   }, 3200);
 }
 
@@ -1624,7 +1627,8 @@ function irParaHabito(id) {
 }
 
 function alternarFocoHabito(habitoId) {
-  const resultado = alternarPrioridade(hojeStr(), habitoId);
+  sincronizarPrioridadesOrfas(habitos, hojeStr());
+  const resultado = alternarPrioridade(hojeStr(), habitoId, carregarPrioridades(), habitos);
   if (!resultado.ok) {
     mostrarFeedback(resultado.mensagem, "aviso");
     return;
@@ -2320,8 +2324,10 @@ function criarItem(habito) {
   botaoFoco.textContent = emFoco ? "★" : "☆";
   botaoFoco.title = `Prioridade de hoje (máx. ${MAX_PRIORIDADES})`;
   botaoFoco.setAttribute("aria-label", emFoco ? "Remover prioridade" : "Marcar como prioridade");
+  botaoFoco.setAttribute("data-acao-habito", "prioridade");
   impedirArrasteNoBotao(botaoFoco);
   botaoFoco.addEventListener("click", (evento) => {
+    evento.preventDefault();
     evento.stopPropagation();
     alternarFocoHabito(habito.id);
   });
@@ -2359,6 +2365,7 @@ function desenhar() {
   desenharFiltros();
 
   const chave = hojeStr();
+  sincronizarPrioridadesOrfas(habitos, chave);
   let base =
     filtroCategoria === "Todas"
       ? habitos
@@ -2389,7 +2396,11 @@ function desenhar() {
     toggleCerebroVazio.setAttribute("aria-pressed", modoCerebroVazio() ? "true" : "false");
   }
 
-  if (rotuloFoco) rotuloFoco.hidden = habitos.length === 0;
+  if (rotuloFoco) {
+    const totalPrioridades = prioridadesDoDia(chave).length;
+    rotuloFoco.textContent = `Prioridades de hoje (${totalPrioridades}/${MAX_PRIORIDADES}) — toque na ☆`;
+    rotuloFoco.hidden = habitos.length === 0;
+  }
 
   listaHabitos.innerHTML = "";
   if (habitos.length === 0) {

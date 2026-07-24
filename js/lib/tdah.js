@@ -3,6 +3,25 @@
 export const MAX_PRIORIDADES = 3;
 export const MAX_INBOX = 40;
 
+export function idHabitoIgual(a, b) {
+  const na = Number(a);
+  const nb = Number(b);
+  return Number.isFinite(na) && Number.isFinite(nb) && na === nb;
+}
+
+export function sincronizarPrioridadesOrfas(habitos, chave, mapa = carregarPrioridades()) {
+  const idsValidos = new Set(
+    habitos.map((h) => Number(h.id)).filter((id) => Number.isFinite(id))
+  );
+  const atual = prioridadesDoDia(chave, mapa);
+  const limpo = atual.filter((id) => idsValidos.has(id));
+  if (limpo.length === atual.length && limpo.every((id, indice) => id === atual[indice])) {
+    return limpo;
+  }
+  salvarPrioridades({ ...mapa, [chave]: limpo });
+  return limpo;
+}
+
 export function carregarInbox() {
   try {
     const lista = JSON.parse(localStorage.getItem("inbox-captura") || "[]");
@@ -79,7 +98,7 @@ export function definirModoCabecaLeve(ativo) {
 export function filtrarModoLeve(habitos, chave, mapa = carregarPrioridades()) {
   const prio = prioridadesDoDia(chave, mapa);
   return habitos.filter(
-    (h) => prio.includes(h.id) || normalizarImportancia(h.importancia) === 1
+    (h) => prio.some((id) => idHabitoIgual(h.id, id)) || normalizarImportancia(h.importancia) === 1
   );
 }
 
@@ -110,7 +129,12 @@ export function ehPrioridadeHoje(chave, habitoId, mapa = carregarPrioridades()) 
   return prioridadesDoDia(chave, mapa).includes(id);
 }
 
-export function alternarPrioridade(chave, habitoId, mapa = carregarPrioridades()) {
+export function alternarPrioridade(chave, habitoId, mapa = carregarPrioridades(), habitos = []) {
+  if (Array.isArray(habitos) && habitos.length) {
+    sincronizarPrioridadesOrfas(habitos, chave, mapa);
+    mapa = carregarPrioridades();
+  }
+
   const id = Number(habitoId);
   if (!Number.isFinite(id)) {
     return { ok: false, ids: prioridadesDoDia(chave, mapa), mensagem: "Hábito inválido." };
@@ -143,7 +167,7 @@ export function sugestaoAgora(habitos, chave, { estaPendente, ordenarPorHorario,
   if (!pendentes.length) return null;
 
   for (const id of prioridades) {
-    const habito = pendentes.find((h) => h.id === id);
+    const habito = pendentes.find((h) => idHabitoIgual(h.id, id));
     if (habito) return { habito, motivo: "Sua prioridade de hoje" };
   }
 
@@ -197,12 +221,12 @@ export function ordenarComPrioridades(lista, chave, mapa = carregarPrioridades()
   const resto = [];
 
   prio.forEach((id) => {
-    const habito = lista.find((h) => h.id === id);
+    const habito = lista.find((h) => idHabitoIgual(h.id, id));
     if (habito) emFoco.push(habito);
   });
 
   lista.forEach((habito) => {
-    if (!prio.includes(habito.id)) resto.push(habito);
+    if (!prio.some((id) => idHabitoIgual(habito.id, id))) resto.push(habito);
   });
 
   resto.sort(compararImportancia);
@@ -308,11 +332,11 @@ export function aplicarLimiteDiario(lista, chave, mapa = carregarPrioridades()) 
   const resto = [];
 
   prio.forEach((id) => {
-    const h = lista.find((item) => item.id === id);
+    const h = lista.find((item) => idHabitoIgual(item.id, id));
     if (h) emFoco.push(h);
   });
   lista.forEach((h) => {
-    if (!prio.includes(h.id)) resto.push(h);
+    if (!prio.some((id) => idHabitoIgual(h.id, id))) resto.push(h);
   });
 
   const combinado = [...emFoco, ...resto];
@@ -330,7 +354,7 @@ export function definirModoCerebroVazio(ativo) {
 export function filtrarCerebroVazio(lista, chave, mapa = carregarPrioridades()) {
   const prio = prioridadesDoDia(chave, mapa);
   if (prio.length) {
-    const h = lista.find((item) => item.id === prio[0]);
+    const h = lista.find((item) => idHabitoIgual(item.id, prio[0]));
     return h ? [h] : lista.slice(0, 1);
   }
   return lista.slice(0, 1);

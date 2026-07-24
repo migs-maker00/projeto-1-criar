@@ -20,7 +20,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=2.5.1" />
+  <link rel="stylesheet" href="style.css?v=2.5.2" />
 </head>
 <body>
   <div class="ambiente">
@@ -43,6 +43,8 @@
         <button type="button" class="nav-item" data-painel="insights">Insights</button>
         <button type="button" class="nav-item" data-painel="ajustes">Ajustes</button>
       </nav>
+
+      <p id="feedback-global" class="feedback-global" hidden role="status" aria-live="polite"></p>
 
       <!-- ESTUDO: vídeo, áudio, prática e falar -->
       <section id="painel-estudo" class="painel" aria-label="Estudo" hidden>
@@ -466,7 +468,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script type="module" src="js/main.js?v=2.5.1"></script>
+  <script type="module" src="js/main.js?v=2.5.2"></script>
   <script defer src="sync.js?v=4"></script>
 </body>
 </html>
