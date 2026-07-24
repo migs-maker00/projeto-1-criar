@@ -99,16 +99,25 @@ export function salvarPrioridades(mapa) {
 export function prioridadesDoDia(chave, mapa = carregarPrioridades()) {
   const lista = mapa[chave];
   if (!Array.isArray(lista)) return [];
-  return lista.filter((id) => Number.isFinite(Number(id))).slice(0, MAX_PRIORIDADES);
+  return lista
+    .map((id) => Number(id))
+    .filter((id) => Number.isFinite(id))
+    .slice(0, MAX_PRIORIDADES);
 }
 
 export function ehPrioridadeHoje(chave, habitoId, mapa = carregarPrioridades()) {
-  return prioridadesDoDia(chave, mapa).includes(habitoId);
+  const id = Number(habitoId);
+  return prioridadesDoDia(chave, mapa).includes(id);
 }
 
 export function alternarPrioridade(chave, habitoId, mapa = carregarPrioridades()) {
+  const id = Number(habitoId);
+  if (!Number.isFinite(id)) {
+    return { ok: false, ids: prioridadesDoDia(chave, mapa), mensagem: "Hábito inválido." };
+  }
+
   const atual = [...prioridadesDoDia(chave, mapa)];
-  const indice = atual.indexOf(habitoId);
+  const indice = atual.indexOf(id);
 
   if (indice >= 0) {
     atual.splice(indice, 1);
@@ -124,7 +133,7 @@ export function alternarPrioridade(chave, habitoId, mapa = carregarPrioridades()
     };
   }
 
-  atual.push(habitoId);
+  atual.push(id);
   salvarPrioridades({ ...mapa, [chave]: atual });
   return { ok: true, ids: atual, mensagem: "Marcado como prioridade de hoje." };
 }

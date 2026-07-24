@@ -1,4 +1,4 @@
-import { APP_VERSION } from "./config.js?v=2.5.0";
+import { APP_VERSION } from "./config.js?v=2.5.1";
 import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=2.4.3";
 import {
   criarHabitoAgua,
@@ -796,7 +796,7 @@ function reordenar(idOrigem, idDestino) {
   desenhar();
 }
 
-function iniciarEdicao(habito, item, nomeSpan) {
+function iniciarEdicao(habito, linha, nomeSpan) {
   const input = document.createElement("input");
   input.type = "text";
   input.className = "editar-nome";
@@ -824,9 +824,19 @@ function iniciarEdicao(habito, item, nomeSpan) {
   });
   input.addEventListener("blur", confirmar);
 
-  item.replaceChild(input, nomeSpan);
+  linha.replaceChild(input, nomeSpan);
   input.focus();
   input.select();
+}
+
+function impedirArrasteNoBotao(botao) {
+  botao.type = "button";
+  botao.addEventListener("mousedown", (evento) => evento.stopPropagation());
+  botao.addEventListener("touchstart", (evento) => evento.stopPropagation(), { passive: true });
+  botao.addEventListener("dragstart", (evento) => {
+    evento.preventDefault();
+    evento.stopPropagation();
+  });
 }
 
 // ============ EXPORTAR / IMPORTAR ============
@@ -2287,20 +2297,34 @@ function criarItem(habito) {
   botaoEditar.className = "botao-editar";
   botaoEditar.textContent = "✎";
   botaoEditar.title = "Editar nome";
-  botaoEditar.addEventListener("click", () => iniciarEdicao(habito, conteudo, nome));
+  botaoEditar.setAttribute("aria-label", "Editar nome");
+  impedirArrasteNoBotao(botaoEditar);
+  botaoEditar.addEventListener("click", (evento) => {
+    evento.stopPropagation();
+    iniciarEdicao(habito, linha, nome);
+  });
 
   const botaoRemover = document.createElement("button");
   botaoRemover.className = "botao-remover";
   botaoRemover.textContent = "×";
   botaoRemover.title = "Remover hábito";
-  botaoRemover.addEventListener("click", () => removerHabito(habito.id));
+  botaoRemover.setAttribute("aria-label", "Remover hábito");
+  impedirArrasteNoBotao(botaoRemover);
+  botaoRemover.addEventListener("click", (evento) => {
+    evento.stopPropagation();
+    removerHabito(habito.id);
+  });
 
   const botaoFoco = document.createElement("button");
-  botaoFoco.type = "button";
   botaoFoco.className = "botao-foco" + (emFoco ? " ativo" : "");
   botaoFoco.textContent = emFoco ? "★" : "☆";
   botaoFoco.title = `Prioridade de hoje (máx. ${MAX_PRIORIDADES})`;
-  botaoFoco.addEventListener("click", () => alternarFocoHabito(habito.id));
+  botaoFoco.setAttribute("aria-label", emFoco ? "Remover prioridade" : "Marcar como prioridade");
+  impedirArrasteNoBotao(botaoFoco);
+  botaoFoco.addEventListener("click", (evento) => {
+    evento.stopPropagation();
+    alternarFocoHabito(habito.id);
+  });
 
   // Arrastar para reordenar (Drag and Drop API)
   item.addEventListener("dragstart", () => {
