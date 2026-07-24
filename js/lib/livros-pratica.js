@@ -3,6 +3,7 @@
 import {
   LIVRO_PADRAO,
   TODOS_LIVROS,
+  temaPorId,
 } from "./livros-dados.js";
 
 export { LIVRO_PADRAO, TODOS_LIVROS };
@@ -18,9 +19,12 @@ function normalizarBusca(texto) {
     .trim();
 }
 
-export function buscarLivros(termo = "", categoria = "todos") {
+export function buscarLivros(termo = "", categoria = "todos", temaId = null) {
   const q = normalizarBusca(termo);
+  const tema = temaId ? temaPorId(temaId) : null;
+
   return TODOS_LIVROS.filter((livro) => {
+    if (tema && !tema.livroIds.includes(livro.id)) return false;
     if (categoria !== "todos" && livro.categoria !== categoria) return false;
     if (!q) return true;
     const blob = normalizarBusca(
@@ -165,7 +169,7 @@ export function metaDiariaAtingida(progresso, chaveDia) {
   return progresso.perguntasHoje >= META_PERGUNTAS_DIA;
 }
 
-export { CATEGORIAS_LIVRO } from "./livros-dados.js";
+export { CATEGORIAS_LIVRO, TEMAS_LIVRO } from "./livros-dados.js";
 
 export function progressoGeral(livro, progresso) {
   const pl = progressoDoLivroAtual(progresso);

@@ -1,5 +1,7 @@
 // Catálogo de livros — metadados + módulos de estudo (texto original, sem copiar obras)
 
+import { LIVROS_EXTRAS } from "./livros-extras.js";
+
 export const LIVRO_8_HABITOS = {
   id: "8-habitos-sharma",
   titulo: "A Riqueza que o Dinheiro Não Compra",
@@ -1123,6 +1125,7 @@ export const TODOS_LIVROS = [
   LIVRO_CAMUS,
   LIVRO_SARTRE,
   LIVRO_NOITES_BRANCAS,
+  ...LIVROS_EXTRAS,
 ];
 
 export const LIVRO_PADRAO = LIVRO_8_HABITOS;
@@ -1133,3 +1136,5 @@ export const CATEGORIAS_LIVRO = [
   { id: "filosofia", rotulo: "Filosofia" },
   { id: "literatura", rotulo: "Literatura" },
 ];
+
+export { TEMAS_LIVRO, temaPorId } from "./livros-temas.js";
