@@ -1497,6 +1497,29 @@ body {
   color: var(--marca);
 }
 
+.diario-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 12px;
+}
+
+.diario-status {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+  min-height: 1.25em;
+}
+
+.diario-status-ok {
+  color: var(--marca);
+}
+
+.diario-status-aviso {
+  color: var(--aviso, #b45309);
+}
+
 .lista-diario {
   display: flex;
   flex-direction: column;
