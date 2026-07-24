@@ -1525,15 +1525,6 @@ function atualizarInfoVersao() {
   if (!infoVersao) return;
   const online = location.hostname.includes("github.io");
   infoVersao.textContent = `Versão ${APP_VERSION}${online ? " · online" : " · local"}`;
-
-  const salva = localStorage.getItem("app-versao-carregada");
-  if (avisoAtualizacao) {
-    const desatualizado = Boolean(salva && salva !== APP_VERSION);
-    avisoAtualizacao.hidden = !desatualizado;
-    avisoAtualizacao.textContent = desatualizado
-      ? `Há uma versão nova (${APP_VERSION}). Toque em Buscar atualização.`
-      : "";
-  }
 }
 
 async function buscarAtualizacaoApp() {
@@ -2633,6 +2624,7 @@ function ligarTodosEventos() {
     definirRevisaoCampo(hojeStr(), "amanha", revisaoAmanha.value);
   });
   botaoLembretes?.addEventListener("click", ativarLembretes);
+  botaoAtualizarApp?.addEventListener("click", buscarAtualizacaoApp);
   botaoArquivarInbox?.addEventListener("click", arquivarInbox);
   toggleCabecaLeve?.addEventListener("click", () => {
     definirModoCabecaLeve(!modoCabecaLeve());
