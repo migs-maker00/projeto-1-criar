@@ -2335,6 +2335,46 @@ body {
   margin: 0 0 12px;
 }
 
+.estudo-sugestoes {
+  margin: 0 0 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--marca) 6%, var(--superficie));
+  border: 1px dashed color-mix(in srgb, var(--marca) 28%, var(--borda));
+}
+
+.estudo-sugestoes-lista {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.estudo-sugestao-btn {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--superficie);
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--texto);
+}
+
+.estudo-sugestao-add {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--marca);
+  white-space: nowrap;
+}
+
 .estudo-links {
   list-style: none;
   margin: 0 0 12px;
