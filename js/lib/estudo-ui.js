@@ -14,7 +14,7 @@ import {
   parseMediaUrl,
   removerLink,
   resumoSessao,
-} from "./estudo-hub.js?v=2.6.2";
+} from "./estudo-hub.js?v=2.7.0";
 import {
   escutarPronuncia,
   pararEscuta,
@@ -38,12 +38,13 @@ import {
   progressoGeral,
   registrarResposta,
   selecionarLivro,
+  TEMAS_LIVRO,
 } from "./livros-pratica.js";
 import {
   linkSugeridoPorId,
   linksSugeridosPorTipo,
   urlJaSalva,
-} from "./estudo-links-sugeridos.js?v=2.6.2";
+} from "./estudo-links-sugeridos.js?v=2.7.0";
 
 function esc(s) {
   return String(s)
@@ -342,23 +343,19 @@ function renderFalar(dados) {
     </section>`;
 }
 
-function renderLivros(dados) {
+function htmlListaLivros(dados) {
   const progresso = carregarProgressoLivro();
   const ativo = livroAtivo();
-  const g = progressoGeral(ativo, progresso);
   const termo = dados.buscaLivro || "";
   const cat = dados.categoriaLivro || "todos";
-  const resultados = buscarLivros(termo, cat);
+  const tema = dados.temaLivro || null;
+  const resultados = buscarLivros(termo, cat, tema);
 
-  const chips = CATEGORIAS_LIVRO.map(
-    (c) =>
-      `<button type="button" class="estudo-cat-chip ${cat === c.id ? "ativo" : ""}" data-estudo-cat="${c.id}">${c.rotulo}</button>`
-  ).join("");
+  if (resultados.length === 0) {
+    return `<p class="estudo-vazio">Nenhum livro encontrado. Tente outro tema ou busque: <strong>frankl</strong>, <strong>foco</strong>, <strong>hesse</strong>.</p>`;
+  }
 
-  const lista =
-    resultados.length === 0
-      ? `<p class="estudo-vazio">Nenhum livro encontrado. Tente: <strong>nietzsche</strong>, <strong>platão</strong>, <strong>schopenhauer</strong>.</p>`
-      : `<ul class="estudo-livros-lista">
+  return `<ul class="estudo-livros-lista">
     ${resultados
       .map((livro) => {
         const prog = progressoGeral(livro, progresso);
@@ -378,26 +375,59 @@ function renderLivros(dados) {
       })
       .join("")}
   </ul>`;
+}
+
+export function atualizarResultadoLivros(root, dados) {
+  const wrap = root.querySelector("[data-estudo-livros-resultado]");
+  if (!wrap) return;
+  wrap.innerHTML = htmlListaLivros(dados);
+}
+
+function renderLivros(dados) {
+  const progresso = carregarProgressoLivro();
+  const ativo = livroAtivo();
+  const g = progressoGeral(ativo, progresso);
+  const termo = dados.buscaLivro || "";
+  const cat = dados.categoriaLivro || "todos";
+  const temaAtivo = dados.temaLivro || null;
+
+  const chips = CATEGORIAS_LIVRO.map(
+    (c) =>
+      `<button type="button" class="estudo-cat-chip ${cat === c.id && !temaAtivo ? "ativo" : ""}" data-estudo-cat="${c.id}">${c.rotulo}</button>`
+  ).join("");
+
+  const temas = TEMAS_LIVRO.map(
+    (t) => `
+    <button type="button" class="estudo-tema-card ${temaAtivo === t.id ? "ativo" : ""}" data-estudo-tema="${t.id}">
+      <span class="estudo-tema-titulo">${esc(t.titulo)}</span>
+      <span class="estudo-tema-desc">${esc(t.descricao)}</span>
+    </button>`
+  ).join("");
 
   return `
     <section class="estudo-bloco estudo-biblioteca">
       <h2 class="bloco-titulo">Biblioteca</h2>
-      <p class="bloco-apoio">Busque um livro, escolha e pratique com questões — sem precisar ler capítulo por capítulo.</p>
+      <p class="bloco-apoio">Escolha um tema ou busque por autor — pratique com questões, no seu ritmo.</p>
       <div class="estudo-lendo-agora">
         <span class="estudo-lendo-rotulo">Lendo agora</span>
         ${cabecalhoLivro(ativo, { destaque: true })}
         <span class="estudo-lendo-pct">${g.pct}% do estudo</span>
       </div>
+      <div class="estudo-temas" role="list" aria-label="Coleções temáticas">
+        ${temas}
+      </div>
       <input
         type="search"
         class="campo-opcao estudo-busca-livro"
         data-estudo-busca-livro
-        placeholder="Buscar: nietzsche, platão, schopenhauer, camus…"
+        placeholder="Buscar: frankl, foco, hesse, essencialismo…"
         value="${esc(termo)}"
         maxlength="80"
+        autocomplete="off"
+        enterkeyhint="search"
       />
       <div class="estudo-categorias">${chips}</div>
-      ${lista}
+      <div data-estudo-livros-resultado>${htmlListaLivros(dados)}</div>
     </section>`;
 }
 
@@ -457,7 +487,7 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
     if (!origem) return;
 
     const alvo = origem.closest(
-      "[data-estudo-acao], [data-estudo-aba], [data-estudo-link], [data-estudo-remover], [data-estudo-sugerir], [data-estudo-timer], [data-estudo-marcar], [data-estudo-ouvir], [data-estudo-mic], [data-estudo-selecionar-livro], [data-estudo-cat], .estudo-pratica-confirmar, .estudo-pratica-opcao, [data-ir-painel]"
+      "[data-estudo-acao], [data-estudo-aba], [data-estudo-link], [data-estudo-remover], [data-estudo-sugerir], [data-estudo-timer], [data-estudo-marcar], [data-estudo-ouvir], [data-estudo-mic], [data-estudo-selecionar-livro], [data-estudo-cat], [data-estudo-tema], .estudo-pratica-confirmar, .estudo-pratica-opcao, [data-ir-painel]"
     );
 
     if (!alvo) return;
@@ -492,7 +522,19 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
     }
 
     if (alvo.dataset.estudoCat) {
-      setState({ ...dados, categoriaLivro: alvo.dataset.estudoCat });
+      setState({ ...dados, categoriaLivro: alvo.dataset.estudoCat, temaLivro: null });
+      return;
+    }
+
+    if (alvo.dataset.estudoTema) {
+      const id = alvo.dataset.estudoTema;
+      const mesmo = dados.temaLivro === id;
+      setState({
+        ...dados,
+        temaLivro: mesmo ? null : id,
+        categoriaLivro: "todos",
+        buscaLivro: "",
+      });
       return;
     }
 
@@ -599,7 +641,8 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
     const campo = evento.target.closest("[data-estudo-busca-livro]");
     if (!campo) return;
     const dados = getState();
-    setState({ ...dados, buscaLivro: campo.value });
+    const novo = { ...dados, buscaLivro: campo.value, temaLivro: null };
+    setState(novo, { somenteLivros: true });
   });
 
   root.addEventListener("submit", (evento) => {

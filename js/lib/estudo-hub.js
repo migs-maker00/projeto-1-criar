@@ -23,6 +23,7 @@ function estadoInicial() {
     abaAtiva: "sessao",
     buscaLivro: "",
     categoriaLivro: "todos",
+    temaLivro: null,
     falaFeedback: null,
   };
 }
