@@ -14,7 +14,7 @@ import {
   parseMediaUrl,
   removerLink,
   resumoSessao,
-} from "./estudo-hub.js?v=2.7.0";
+} from "./estudo-hub.js?v=2.7.1";
 import {
   escutarPronuncia,
   pararEscuta,
@@ -38,13 +38,13 @@ import {
   progressoGeral,
   registrarResposta,
   selecionarLivro,
-  TEMAS_LIVRO,
-} from "./livros-pratica.js";
+} from "./livros-pratica.js?v=2.7.1";
+import { TEMAS_LIVRO } from "./livros-temas.js?v=2.7.1";
 import {
   linkSugeridoPorId,
   linksSugeridosPorTipo,
   urlJaSalva,
-} from "./estudo-links-sugeridos.js?v=2.7.0";
+} from "./estudo-links-sugeridos.js?v=2.7.1";
 
 function esc(s) {
   return String(s)

@@ -3,10 +3,12 @@
 import {
   LIVRO_PADRAO,
   TODOS_LIVROS,
+  CATEGORIAS_LIVRO,
+  TEMAS_LIVRO,
   temaPorId,
 } from "./livros-dados.js";
 
-export { LIVRO_PADRAO, TODOS_LIVROS };
+export { LIVRO_PADRAO, TODOS_LIVROS, CATEGORIAS_LIVRO, TEMAS_LIVRO };
 export const LIVROS_DISPONIVEIS = TODOS_LIVROS;
 
 const CHAVE_PROGRESSO = "livro-pratica-progresso-v2";
@@ -168,8 +170,6 @@ export function metaDiariaAtingida(progresso, chaveDia) {
   if (progresso.ultimoDia !== chaveDia) return false;
   return progresso.perguntasHoje >= META_PERGUNTAS_DIA;
 }
-
-export { CATEGORIAS_LIVRO, TEMAS_LIVRO } from "./livros-dados.js";
 
 export function progressoGeral(livro, progresso) {
   const pl = progressoDoLivroAtual(progresso);
