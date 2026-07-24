@@ -1,16 +1,51 @@
 /* Service worker — lembretes agendados + cache do app (PWA) */
 
-const CACHE = "agenda-v2.5.3";
+const CACHE = "agenda-v2.5.4";
 const alarmes = new Map();
 
 const ARQUIVOS_CACHE = [
-  "./",
-  "./index.html",
-  "./style.css",
   "./manifest.webmanifest",
   "./icon-192.png",
-  "./js/main.js",
+  "./favicon-32.png",
+  "./favicon-16.png",
+  "./apple-touch-icon.png",
 ];
+
+function ehArquivoDoApp(url) {
+  const caminho = url.pathname;
+  if (caminho.endsWith("/") || caminho.endsWith("/index.html")) return true;
+  if (caminho.includes("/js/")) return true;
+  if (caminho.endsWith("/style.css")) return true;
+  if (caminho.endsWith("/sync.js")) return true;
+  if (caminho.endsWith("/firebase-config.js")) return true;
+  return false;
+}
+
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    throw new Error("offline");
+  }
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response.ok) {
+    const cache = await caches.open(CACHE);
+    cache.put(request, response.clone());
+  }
+  return response;
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -20,17 +55,24 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((chaves) =>
-      Promise.all(chaves.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((chaves) => Promise.all(chaves.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-  event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
-  );
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
+
+  if (ehArquivoDoApp(url)) {
+    event.respondWith(networkFirst(event.request));
+    return;
+  }
+
+  event.respondWith(cacheFirst(event.request));
 });
 
 function limparAlarmes() {
@@ -58,7 +100,12 @@ function agendarItem(item) {
 
 self.addEventListener("message", (event) => {
   const dados = event.data;
-  if (!dados || dados.type !== "AGENDAR") return;
+  if (!dados) return;
+  if (dados.type === "SKIP_WAITING") {
+    self.skipWaiting();
+    return;
+  }
+  if (dados.type !== "AGENDAR") return;
 
   limparAlarmes();
   const lista = Array.isArray(dados.agenda) ? dados.agenda : [];

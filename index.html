@@ -20,7 +20,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="style.css?v=2.5.3" />
+  <link rel="stylesheet" href="style.css?v=2.5.4" />
 </head>
 <body>
   <div class="ambiente">
@@ -443,32 +443,23 @@
             Sua agenda pessoal — compromissos, anotações e visão da semana.
             Use pouco. Use todo dia.
           </p>
+          <p class="bloco-apoio">
+            Se a versão não mudar sozinha, toque em <strong>Buscar atualização</strong> abaixo.
+          </p>
           <p id="info-versao" class="info-versao"></p>
+          <button type="button" id="botao-atualizar-app" class="botao-secundario">
+            Buscar atualização
+          </button>
         </section>
       </section>
     </main>
   </div>
 
-  <script>
-    (function () {
-      var V = "2.4.3";
-      var salva = localStorage.getItem("app-versao");
-      if (salva && salva !== V) {
-        localStorage.setItem("app-versao", V);
-        var u = new URL(location.href);
-        u.searchParams.set("v", V);
-        u.searchParams.set("t", Date.now());
-        location.replace(u.toString());
-      } else {
-        localStorage.setItem("app-versao", V);
-      }
-    })();
-  </script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script type="module" src="js/main.js?v=2.5.3"></script>
+  <script type="module" src="js/main.js?v=2.5.4"></script>
   <script defer src="sync.js?v=4"></script>
 </body>
 </html>
