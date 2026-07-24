@@ -26,6 +26,45 @@ export function rotuloImportancia(habito) {
   return ROTULOS_IMPORTANCIA[normalizarImportancia(habito.importancia)] || "Normal";
 }
 
+export function normalizarMetaSemanal(valor) {
+  const n = Math.round(Number(valor));
+  if (!Number.isFinite(n) || n < 1) return 7;
+  if (n > 7) return 7;
+  return n;
+}
+
+export function rotuloMetaSemanal(meta) {
+  const n = normalizarMetaSemanal(meta);
+  if (n >= 7) return "Todo dia";
+  if (n === 1) return "1x/semana";
+  return `${n}x/semana`;
+}
+
+export const OPCOES_META_SEMANAL = [
+  { valor: 7, rotulo: "Todo dia" },
+  { valor: 1, rotulo: "1x/semana" },
+  { valor: 2, rotulo: "2x/semana" },
+  { valor: 3, rotulo: "3x/semana" },
+  { valor: 4, rotulo: "4x/semana" },
+  { valor: 5, rotulo: "5x/semana" },
+  { valor: 6, rotulo: "6x/semana" },
+];
+
+export function criarSelectMetaSemanal(valorAtual, classe = "editar-meta campo-opcao") {
+  const select = document.createElement("select");
+  select.className = classe;
+  select.setAttribute("aria-label", "Vezes na semana");
+  const atual = normalizarMetaSemanal(valorAtual);
+  OPCOES_META_SEMANAL.forEach(({ valor, rotulo }) => {
+    const opcao = document.createElement("option");
+    opcao.value = String(valor);
+    opcao.textContent = rotulo;
+    if (valor === atual) opcao.selected = true;
+    select.appendChild(opcao);
+  });
+  return select;
+}
+
 export function listaPreparar(habito) {
   if (!Array.isArray(habito.preparar)) return [];
   return habito.preparar
@@ -158,7 +197,7 @@ export function normalizarHabito(h) {
     id: h.id,
     nome: h.nome,
     categoria: h.categoria || "Geral",
-    metaSemanal: h.metaSemanal || 7,
+    metaSemanal: normalizarMetaSemanal(h.metaSemanal),
     horario: h.horario || "",
     importancia: normalizarImportancia(h.importancia),
     historico: h.historico || {},
