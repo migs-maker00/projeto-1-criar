@@ -1,7 +1,9 @@
 /**
  * Ponto de entrada do app — expõe API para sync.js e inicializa a UI.
  */
-import { APP_VERSION } from "./config.js?v=2.5.3";
+import { APP_VERSION } from "./config.js?v=2.5.4";
+
+const CHAVE_VERSAO_LOCAL = "app-versao-carregada";
 
 function mostrarErroCarregamento(erro) {
   const detalhe = erro?.message || String(erro);
@@ -17,23 +19,84 @@ function mostrarErroCarregamento(erro) {
       <p style="margin:12px 0 0;font-size:.8rem;color:#666">${detalhe}</p>
     </div>`;
   document.getElementById("botao-recarregar-erro")?.addEventListener("click", () => {
-    const u = new URL(location.href);
-    u.searchParams.set("v", APP_VERSION);
-    u.searchParams.set("t", Date.now());
-    location.replace(u.toString());
+    forcarRecargaComVersaoNova();
   });
 }
 
-try {
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register(`./sw.js?v=${APP_VERSION}`).catch(() => {});
+export function forcarRecargaComVersaoNova() {
+  const u = new URL(location.href);
+  u.searchParams.set("v", APP_VERSION);
+  u.searchParams.set("t", Date.now());
+  location.replace(u.toString());
+}
+
+async function limparCachesAntigos() {
+  if (!("caches" in window)) return;
+  const chaves = await caches.keys();
+  await Promise.all(chaves.map((chave) => caches.delete(chave)));
+}
+
+async function configurarServiceWorker() {
+  if (!("serviceWorker" in navigator)) return null;
+
+  const registration = await navigator.serviceWorker.register(`./sw.js?v=${APP_VERSION}`);
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    forcarRecargaComVersaoNova();
+  });
+
+  if (registration.waiting) {
+    registration.waiting.postMessage({ type: "SKIP_WAITING" });
   }
+
+  registration.addEventListener("updatefound", () => {
+    const novo = registration.installing;
+    if (!novo) return;
+    novo.addEventListener("statechange", () => {
+      if (novo.state === "installed" && navigator.serviceWorker.controller) {
+        novo.postMessage({ type: "SKIP_WAITING" });
+      }
+    });
+  });
+
+  await registration.update();
+  return registration;
+}
+
+export async function forcarAtualizacaoApp() {
+  if ("serviceWorker" in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((reg) => reg.unregister()));
+  }
+  await limparCachesAntigos();
+  localStorage.setItem(CHAVE_VERSAO_LOCAL, APP_VERSION);
+  forcarRecargaComVersaoNova();
+}
+
+function verificarVersaoCarregada() {
+  const salva = localStorage.getItem(CHAVE_VERSAO_LOCAL);
+  if (salva && salva !== APP_VERSION) {
+    localStorage.setItem(CHAVE_VERSAO_LOCAL, APP_VERSION);
+    forcarRecargaComVersaoNova();
+    return true;
+  }
+  localStorage.setItem(CHAVE_VERSAO_LOCAL, APP_VERSION);
+  return false;
+}
+
+try {
+  if (verificarVersaoCarregada()) {
+    throw new Error("Atualizando versão…");
+  }
+
+  await configurarServiceWorker();
 
   const app = await import(`./app.js?v=${APP_VERSION}`);
 
   app.initApp();
 
   window.APP_VERSION = APP_VERSION;
+  window.forcarAtualizacaoApp = forcarAtualizacaoApp;
   window.getEstadoHabitos = app.getEstadoExportavel;
   window.aplicarEstadoRemoto = app.aplicarEstadoRemoto;
   window.aplicarTema = app.aplicarTema;
@@ -42,6 +105,10 @@ try {
   window.carregarNotaDiario = app.carregarNotaDiario;
   window.hojeStr = app.hojeStr;
 } catch (erro) {
-  console.error(erro);
-  mostrarErroCarregamento(erro);
+  if (String(erro?.message || erro).includes("Atualizando versão")) {
+    // reload em andamento
+  } else {
+    console.error(erro);
+    mostrarErroCarregamento(erro);
+  }
 }

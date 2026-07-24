@@ -1,4 +1,4 @@
-import { APP_VERSION } from "./config.js?v=2.5.3";
+import { APP_VERSION } from "./config.js?v=2.5.4";
 import { fraseFilosoficaDoDia } from "./lib/filosofia.js?v=2.4.3";
 import {
   criarHabitoAgua,
@@ -196,6 +196,7 @@ const botaoMontarAdicionar = document.getElementById("botao-montar-adicionar");
 const dicaInicio = document.getElementById("dica-inicio");
 const botaoDicaFechar = document.getElementById("dica-fechar");
 const infoVersao = document.getElementById("info-versao");
+const botaoAtualizarApp = document.getElementById("botao-atualizar-app");
 const agoraConteudo = document.getElementById("agora-conteudo");
 const estudoResumoConteudo = document.getElementById("estudo-resumo-conteudo");
 const estudoPainelRoot = document.getElementById("estudo-painel-root");
@@ -835,6 +836,12 @@ function iniciarEdicao(habito, linha) {
   form.appendChild(rotuloMeta);
   form.appendChild(select);
 
+  const botaoSalvar = document.createElement("button");
+  botaoSalvar.type = "button";
+  botaoSalvar.className = "botao-secundario item-edicao-salvar";
+  botaoSalvar.textContent = "Salvar";
+  form.appendChild(botaoSalvar);
+
   let finalizado = false;
   function confirmar() {
     if (finalizado) return;
@@ -851,11 +858,7 @@ function iniciarEdicao(habito, linha) {
     }
   }
 
-  function cancelar(evento) {
-    if (evento?.relatedTarget && form.contains(evento.relatedTarget)) return;
-    confirmar();
-  }
-
+  botaoSalvar.addEventListener("click", confirmar);
   input.addEventListener("keydown", (evento) => {
     if (evento.key === "Enter") confirmar();
     if (evento.key === "Escape") {
@@ -870,9 +873,9 @@ function iniciarEdicao(habito, linha) {
       desenhar();
     }
   });
-  input.addEventListener("blur", cancelar);
-  select.addEventListener("blur", cancelar);
-  select.addEventListener("change", confirmar);
+  select.addEventListener("change", () => {
+    mostrarFeedback("Frequência selecionada — toque Salvar.");
+  });
 
   linha.replaceWith(form);
   input.focus();
@@ -891,7 +894,6 @@ function iniciarEdicaoMeta(habito, chip) {
   }
 
   select.addEventListener("change", confirmar);
-  select.addEventListener("blur", confirmar);
   select.addEventListener("keydown", (evento) => {
     if (evento.key === "Escape") {
       finalizado = true;
@@ -900,7 +902,15 @@ function iniciarEdicaoMeta(habito, chip) {
   });
 
   chip.replaceWith(select);
-  select.focus();
+  if (typeof select.showPicker === "function") {
+    try {
+      select.showPicker();
+    } catch {
+      select.focus();
+    }
+  } else {
+    select.focus();
+  }
 }
 
 function impedirArrasteNoBotao(botao) {
@@ -1515,6 +1525,18 @@ function atualizarInfoVersao() {
   if (!infoVersao) return;
   const online = location.hostname.includes("github.io");
   infoVersao.textContent = `Versão ${APP_VERSION}${online ? " · online" : " · local"}`;
+}
+
+async function buscarAtualizacaoApp() {
+  if (typeof window.forcarAtualizacaoApp === "function") {
+    mostrarFeedback("Buscando atualização…");
+    await window.forcarAtualizacaoApp();
+    return;
+  }
+  const u = new URL(location.href);
+  u.searchParams.set("v", APP_VERSION);
+  u.searchParams.set("t", Date.now());
+  location.replace(u.toString());
 }
 
 function desenharCardsInsights() {
@@ -2602,6 +2624,7 @@ function ligarTodosEventos() {
     definirRevisaoCampo(hojeStr(), "amanha", revisaoAmanha.value);
   });
   botaoLembretes?.addEventListener("click", ativarLembretes);
+  botaoAtualizarApp?.addEventListener("click", buscarAtualizacaoApp);
   botaoArquivarInbox?.addEventListener("click", arquivarInbox);
   toggleCabecaLeve?.addEventListener("click", () => {
     definirModoCabecaLeve(!modoCabecaLeve());
