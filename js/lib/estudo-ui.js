@@ -100,15 +100,19 @@ function renderFormLink(placeholder) {
 
 function renderSugestoesLinks(dados, tipo) {
   const livro = livroAtivo();
-  const sugestoes = linksSugeridosPorTipo(tipo, livro.id).filter((s) => !urlJaSalva(dados, s.url));
-  if (!sugestoes.length) return "";
+  const todas = linksSugeridosPorTipo(tipo, livro.id).filter((s) => !urlJaSalva(dados, s.url));
+  if (!todas.length) return "";
 
+  const doLivro = todas.filter((s) => s.livroId === livro.id);
+  const criadores = todas.filter((s) => !s.livroId);
   const icone = tipo === "video" ? "▶" : "🎧";
-  return `
-    <div class="estudo-sugestoes">
-      <p class="estudo-form-rotulo">Sugestões para ${esc(livro.titulo)}</p>
+
+  const bloco = (titulo, itens) => {
+    if (!itens.length) return "";
+    return `
+      <p class="estudo-form-rotulo">${esc(titulo)}</p>
       <ul class="estudo-sugestoes-lista">
-        ${sugestoes
+        ${itens
           .map(
             (s) => `
           <li>
@@ -120,7 +124,13 @@ function renderSugestoesLinks(dados, tipo) {
           </li>`
           )
           .join("")}
-      </ul>
+      </ul>`;
+  };
+
+  return `
+    <div class="estudo-sugestoes">
+      ${bloco(`Sugestões para ${livro.titulo}`, doLivro)}
+      ${bloco("Canais favoritos", criadores)}
     </div>`;
 }
 
