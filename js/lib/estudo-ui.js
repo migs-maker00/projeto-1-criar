@@ -8,13 +8,16 @@ import {
   falarTexto,
   htmlPlayer,
   linkAtivo,
+  linkTemNota,
   linksPorTipo,
   marcarSessao,
+  notaMidia,
   palavraAtual,
   parseMediaUrl,
   removerLink,
   resumoSessao,
-} from "./estudo-hub.js?v=2.7.2";
+  salvarNotaMidia,
+} from "./estudo-hub.js?v=2.8.0";
 import {
   escutarPronuncia,
   pararEscuta,
@@ -37,13 +40,13 @@ import {
   progressoGeral,
   registrarResposta,
   selecionarLivro,
-} from "./livros-pratica.js?v=2.7.2";
-import { CATEGORIAS_LIVRO, TEMAS_LIVRO } from "./livros-dados.js?v=2.7.2";
+} from "./livros-pratica.js?v=2.8.0";
+import { CATEGORIAS_LIVRO, TEMAS_LIVRO } from "./livros-dados.js?v=2.8.0";
 import {
   linkSugeridoPorId,
   linksSugeridosPorTipo,
   urlJaSalva,
-} from "./estudo-links-sugeridos.js?v=2.7.2";
+} from "./estudo-links-sugeridos.js?v=2.8.0";
 
 function esc(s) {
   return String(s)
@@ -134,7 +137,28 @@ function renderSugestoesLinks(dados, tipo) {
     </div>`;
 }
 
-function renderListaLinks(links, ativoId, filtro) {
+function renderNotasMidia(ativo, dados) {
+  if (!ativo) return "";
+  const nota = notaMidia(dados, ativo.id);
+  const rotulo = ativo.tipo === "video" ? "vídeo" : "áudio";
+  return `
+    <div class="estudo-notas-midia" data-estudo-notas-bloco="${ativo.id}">
+      <label class="estudo-form-rotulo" for="estudo-nota-${ativo.id}">Anotações sobre este ${rotulo}</label>
+      <p class="estudo-notas-dica">Ideias, citações, minutagem — salva sozinho enquanto você escreve.</p>
+      <textarea
+        id="estudo-nota-${ativo.id}"
+        class="nota-campo estudo-nota-midia"
+        data-estudo-nota-midia
+        data-estudo-nota-link="${ativo.id}"
+        rows="4"
+        maxlength="2000"
+        placeholder="Ex.: 5:20 — ideia sobre foco e distrações..."
+      >${esc(nota)}</textarea>
+      <p class="estudo-notas-status" data-estudo-nota-status hidden aria-live="polite">Salvo ✓</p>
+    </div>`;
+}
+
+function renderListaLinks(links, ativoId, dados) {
   if (!links.length) {
     return `<p class="estudo-vazio">Nenhum link ainda. Cole um URL do YouTube, Spotify ou arquivo de áudio (.mp3).</p>`;
   }
@@ -146,6 +170,7 @@ function renderListaLinks(links, ativoId, filtro) {
         <button type="button" class="estudo-link-btn" data-estudo-link="${l.id}">
           <span class="estudo-link-tipo">${l.tipo === "video" ? "▶" : "🎧"}</span>
           <span class="estudo-link-titulo">${esc(l.titulo)}</span>
+          ${linkTemNota(dados, l.id) ? `<span class="estudo-link-nota" aria-label="Tem anotação">✎</span>` : ""}
         </button>
         <button type="button" class="estudo-link-remover" data-estudo-remover="${l.id}" aria-label="Remover">×</button>
       </li>`
@@ -165,8 +190,9 @@ function renderAssistir(dados) {
       <h2 class="bloco-titulo">Assistir</h2>
       <p class="bloco-apoio">Vídeos do YouTube aqui dentro — sem sair do app.</p>
       ${player}
+      ${renderNotasMidia(ativo, dados)}
       ${renderSugestoesLinks(dados, "video")}
-      ${renderListaLinks(links, dados.linkAtivoId, "video")}
+      ${renderListaLinks(links, dados.linkAtivoId, dados)}
       ${renderFormLink("https://youtube.com/watch?v=...")}
       <div class="estudo-acoes-timer">
         <button type="button" class="botao-secundario" data-estudo-timer="15">Timer 15 min</button>
@@ -187,8 +213,9 @@ function renderOuvir(dados) {
       <h2 class="bloco-titulo">Ouvir</h2>
       <p class="bloco-apoio">Podcast, Spotify ou arquivo de áudio (.mp3).</p>
       ${player}
+      ${renderNotasMidia(ativo, dados)}
       ${renderSugestoesLinks(dados, "audio")}
-      ${renderListaLinks(links, ativo?.id, "audio")}
+      ${renderListaLinks(links, ativo?.id, dados)}
       ${renderFormLink("https://open.spotify.com/episode/... ou link .mp3")}
       <div class="estudo-acoes-timer">
         <button type="button" class="botao-secundario" data-estudo-timer="10">Timer 10 min</button>
@@ -475,6 +502,23 @@ export function renderResumoHoje(dados, chaveDia) {
     <button type="button" class="botao-secundario estudo-ir-aba" data-ir-painel="estudo">Abrir Estudo →</button>`;
 }
 
+function atualizarIndicadorNotaLink(root, linkId, temNota) {
+  const btn = root.querySelector(`[data-estudo-link="${linkId}"]`);
+  if (!btn) return;
+  let badge = btn.querySelector(".estudo-link-nota");
+  if (temNota) {
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.className = "estudo-link-nota";
+      badge.setAttribute("aria-label", "Tem anotação");
+      badge.textContent = "✎";
+      btn.appendChild(badge);
+    }
+  } else if (badge) {
+    badge.remove();
+  }
+}
+
 export function ligarPainelEstudo(root, getState, setState, opts = {}) {
   if (!root || root.dataset.estudoLigado === "1") return;
   root.dataset.estudoLigado = "1";
@@ -637,12 +681,46 @@ export function ligarPainelEstudo(root, getState, setState, opts = {}) {
   });
 
   root.addEventListener("input", (evento) => {
-    const campo = evento.target.closest("[data-estudo-busca-livro]");
-    if (!campo) return;
-    const dados = getState();
-    const novo = { ...dados, buscaLivro: campo.value, temaLivro: null };
-    setState(novo, { somenteLivros: true });
+    const campoBusca = evento.target.closest("[data-estudo-busca-livro]");
+    if (campoBusca) {
+      const dados = getState();
+      const novo = { ...dados, buscaLivro: campoBusca.value, temaLivro: null };
+      setState(novo, { somenteLivros: true });
+      return;
+    }
+
+    const campoNota = evento.target.closest("[data-estudo-nota-midia]");
+    if (campoNota) {
+      const linkId = campoNota.dataset.estudoNotaLink;
+      if (!linkId) return;
+      const dados = getState();
+      const novo = salvarNotaMidia({ ...dados }, linkId, campoNota.value);
+      setState(novo, { somenteNotas: true, semResumo: true });
+      const status = root.querySelector("[data-estudo-nota-status]");
+      if (status) {
+        status.hidden = false;
+        status.textContent = "Salvando…";
+      }
+    }
   });
+
+  root.addEventListener(
+    "blur",
+    (evento) => {
+      const campoNota = evento.target.closest("[data-estudo-nota-midia]");
+      if (!campoNota) return;
+      const status = root.querySelector("[data-estudo-nota-status]");
+      if (status) {
+        status.hidden = false;
+        status.textContent = "Salvo ✓";
+      }
+      const linkId = campoNota.dataset.estudoNotaLink;
+      if (!linkId) return;
+      const dados = getState();
+      atualizarIndicadorNotaLink(root, linkId, linkTemNota(dados, linkId));
+    },
+    true
+  );
 
   root.addEventListener("submit", (evento) => {
     evento.preventDefault();

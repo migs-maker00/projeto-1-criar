@@ -2423,6 +2423,44 @@ body {
   font-size: 1.1rem;
 }
 
+.estudo-link-nota {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--bege-escuro, #8b7355);
+  opacity: 0.9;
+}
+
+.estudo-notas-midia {
+  margin: 12px 0 16px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--bege, #d4c4a8) 40%, var(--borda));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bege, #f5f0e8) 35%, var(--superficie));
+}
+
+.estudo-notas-midia .estudo-form-rotulo {
+  margin-top: 0;
+}
+
+.estudo-notas-dica {
+  margin: 4px 0 10px;
+  font-size: 0.78rem;
+  color: var(--texto-suave);
+  line-height: 1.4;
+}
+
+.estudo-nota-midia {
+  min-height: 5.5rem;
+  resize: vertical;
+}
+
+.estudo-notas-status {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  color: var(--texto-suave);
+  text-align: right;
+}
+
 .estudo-form-link,
 .estudo-form-vocab {
   display: flex;
